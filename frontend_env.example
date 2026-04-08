@@ -1,0 +1,5 @@
+# URL de tu backend en Railway (la obtienes al desplegar)
+REACT_APP_BACKEND_URL=https://TU-APP.up.railway.app
+
+# Google OAuth Client ID
+REACT_APP_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com

@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pydantic
+motor
+pymongo
+python-dotenv
+passlib
+python-jose
+bcrypt
+requests
+python-multipart
+anthropic
+cloudinary
+google-auth
+google-auth-oauthlib
