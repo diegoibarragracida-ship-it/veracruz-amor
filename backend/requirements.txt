@@ -9,7 +9,7 @@ python-jose
 bcrypt
 requests
 python-multipart
-anthropic
+google-generativeai
 cloudinary
 google-auth
 google-auth-oauthlib

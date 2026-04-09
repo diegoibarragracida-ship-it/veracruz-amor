@@ -2338,9 +2338,9 @@ async def track_search(request: Request):
     return {"status": "tracked"}
 
 # ============== CHATBOT ENDPOINT ==============
-import anthropic
+import google.generativeai as genai
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 async def get_platform_context():
     """Fetch real data from DB to give the AI context"""
@@ -2433,7 +2433,7 @@ async def chat_endpoint(request: Request):
         if not message:
             raise HTTPException(status_code=400, detail="Message is required")
 
-        if not ANTHROPIC_API_KEY:
+        if not GEMINI_API_KEY:
             raise HTTPException(status_code=500, detail="LLM key not configured")
 
         # Store user message in DB
@@ -2466,21 +2466,26 @@ async def chat_endpoint(request: Request):
                 messages_for_api.append({"role": h["role"], "content": h["content"]})
         messages_for_api.append({"role": "user", "content": message})
 
-        # Call Anthropic API
+        # Call Gemini API (gratis)
         import asyncio
-        anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        genai.configure(api_key=GEMINI_API_KEY)
 
-        def call_anthropic():
-            result = anthropic_client.messages.create(
-                model="claude-haiku-4-5",
-                max_tokens=1024,
-                system=full_system,
-                messages=messages_for_api
+        def call_gemini():
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=full_system
             )
-            return result.content[0].text
+            # Convertir historial al formato de Gemini
+            gemini_history = []
+            for msg in messages_for_api[:-1]:
+                role = "user" if msg["role"] == "user" else "model"
+                gemini_history.append({"role": role, "parts": [msg["content"]]})
+            chat = model.start_chat(history=gemini_history)
+            result = chat.send_message(message)
+            return result.text
 
         loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(None, call_anthropic)
+        response = await loop.run_in_executor(None, call_gemini)
 
         # Store assistant response in DB
         await db.chat_messages.insert_one({
@@ -2522,10 +2527,11 @@ async def root():
 app.include_router(api_router)
 
 # CORS Middleware
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -2535,9 +2541,10 @@ app.add_middleware(
 async def startup_event():
     logger.info("Starting Veracruz Contigo API...")
     try:
-        init_storage()
+        init_cloudinary()
+        logger.info("Cloudinary configured")
     except Exception as e:
-        logger.warning(f"Storage init skipped: {e}")
+        logger.warning(f"Cloudinary init skipped: {e}")
     
     await seed_municipios()
     await seed_admin()
