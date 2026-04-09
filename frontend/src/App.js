@@ -43,10 +43,6 @@ const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
-    if (window.location.hash?.includes('session_id=')) {
-      setLoading(false);
-      return;
-    }
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
@@ -68,7 +64,7 @@ const AuthProvider = ({ children }) => {
   };
 
   const loginWithGoogle = () => {
-    const redirectUrl = 'https://veracruz-amor-git-main-diegoanis-projects.vercel.app/auth/callback';
+    const redirectUrl = 'https://veracruz-amor-git-main-diegoanis-projects.vercel.app/oauth/callback';
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=email%20profile`;
   };
 
@@ -177,11 +173,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function AppRouter() {
   const location = useLocation();
 
-  if (location.hash?.includes('session_id=')) {
-    return <AuthCallback />;
-  }
-
-  if (location.pathname === '/auth/callback') {
+  if (location.pathname === '/oauth/callback') {
     return <AuthCallback />;
   }
 
@@ -196,7 +188,7 @@ function AppRouter() {
       <Route path="/guia" element={<GuiaPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registro-prestador" element={<PrestadorRegistration />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/oauth/callback" element={<AuthCallback />} />
 
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
