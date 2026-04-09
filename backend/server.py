@@ -1280,7 +1280,8 @@ async def login(credentials: UserLogin, response: Response):
     
     user.pop("password_hash", None)
     return user
-    @api_router.post("/auth/google/callback")
+
+@api_router.post("/auth/google/callback")
 async def google_callback(request: Request):
     body = await request.json()
     code = body.get("code")
