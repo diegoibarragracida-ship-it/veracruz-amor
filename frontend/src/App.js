@@ -114,19 +114,21 @@ const AuthCallback = () => {
     hasProcessed.current = true;
 
     const processAuth = async () => {
-      const hash = window.location.hash;
-      const sessionId = hash.split('session_id=')[1]?.split('&')[0];
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  
+  console.log('URL completa:', window.location.href);
+  console.log('Code:', code);
 
-      if (!sessionId) {
-        navigate('/login');
-        return;
-      }
+  if (!code) {
+    navigate('/login');
+    return;
+  }
+       
 
       try {
-        const response = await axios.post(`${API}/auth/session`, { session_id: sessionId });
+        const response = await axios.post(`${API}/auth/google/callback`, { code });
         setUser(response.data);
-        
-        // Redirect based on role
         const role = response.data.rol;
         if (role === 'superadmin') {
           navigate('/admin', { replace: true });
@@ -145,6 +147,8 @@ const AuthCallback = () => {
 
     processAuth();
   }, [navigate, setUser]);
+
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
