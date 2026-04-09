@@ -1280,6 +1280,79 @@ async def login(credentials: UserLogin, response: Response):
     
     user.pop("password_hash", None)
     return user
+    @api_router.post("/auth/google/callback")
+async def google_callback(request: Request):
+    body = await request.json()
+    code = body.get("code")
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="Code requerido")
+    
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    REDIRECT_URI = os.environ.get("FRONTEND_URL", "") + "/auth/callback"
+    
+    try:
+        # Intercambiar code por tokens
+        token_response = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri": REDIRECT_URI,
+                "grant_type": "authorization_code"
+            }
+        )
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        id_token_str = tokens.get("id_token")
+        
+        # Verificar el ID token
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        id_info = id_token.verify_oauth2_token(
+            id_token_str,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+        
+        email = id_info.get("email", "").lower()
+        name = id_info.get("name", "Turista")
+        picture = id_info.get("picture", "")
+        
+        # Buscar o crear usuario
+        user = await db.usuarios.find_one({"email": email})
+        if not user:
+            user_data = {
+                "id": str(uuid.uuid4()),
+                "email": email,
+                "nombre": name,
+                "foto_url": picture,
+                "rol": "turista",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.usuarios.insert_one(user_data)
+            user = user_data
+        
+        # Generar JWT
+        token = jwt.encode(
+            {"sub": user["email"], "rol": user.get("rol", "turista"), 
+             "exp": datetime.now(timezone.utc) + timedelta(days=7)},
+            JWT_SECRET, algorithm=JWT_ALGORITHM
+        )
+        
+        return {
+            "token": token,
+            "email": user["email"],
+            "nombre": user.get("nombre", name),
+            "rol": user.get("rol", "turista"),
+            "foto_url": user.get("foto_url", picture)
+        }
+        
+    except Exception as e:
+        logger.error(f"Google callback error: {e}")
+        raise HTTPException(status_code=401, detail="Error en autenticación con Google")
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
