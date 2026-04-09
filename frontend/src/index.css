@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 96%;
+    --foreground: 150 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 150 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 25% 15%;
+    --primary: 125 76% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 201 98% 37%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 45 97% 56%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 125 76% 24%;
+    --radius: 0.75rem;
+    
+    /* Custom Veracruz colors */
+    --veracruz-green: #1B5E20;
+    --veracruz-blue: #0277BD;
+    --veracruz-gold: #F9A825;
+    --veracruz-red: #D32F2F;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20;
+}
+
+.glass-dark {
+  @apply bg-black/40 backdrop-blur-xl;
+}
+
+/* Animations */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 20px rgba(211, 47, 47, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Hero gradient overlay */
+.hero-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(27, 94, 32, 0.8) 100%
+  );
+}
+
+/* Pueblo Mágico badge */
+.pueblo-magico-badge {
+  background: linear-gradient(135deg, #F9A825 0%, #F57F17 100%);
+  box-shadow: 0 2px 10px rgba(249, 168, 37, 0.4);
+}
+
+/* Card hover effect */
+.card-hover {
+  @apply transition-all duration-300;
+}
+
+.card-hover:hover {
+  @apply -translate-y-1 shadow-xl;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Map container */
+.map-container {
+  @apply w-full h-[400px] md:h-[500px] rounded-2xl overflow-hidden;
+}
+
+/* Skeleton loading */
+.skeleton {
+  @apply animate-shimmer rounded-lg;
+}
+
+/* Badge styles */
+.badge-verified {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-[#1B5E20] hover:bg-[#145218] text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-[#0277BD] hover:bg-[#01579B] text-white font-medium px-6 py-3 rounded-xl transition-all duration-300;
+}
+
+.btn-gold {
+  @apply bg-[#F9A825] hover:bg-[#F57F17] text-white font-medium px-6 py-3 rounded-xl transition-all duration-300;
+}
+
+/* Input styles */
+.input-search {
+  @apply w-full px-6 py-4 bg-white/90 backdrop-blur-sm border-0 rounded-2xl shadow-lg focus:ring-2 focus:ring-[#1B5E20] focus:outline-none text-gray-800 placeholder-gray-500;
+}
+
+/* Navigation active state */
+.nav-active {
+  @apply text-[#1B5E20] font-semibold;
+}
+
+/* Bento grid */
+.bento-grid {
+  @apply grid gap-4 md:gap-6;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.bento-item-large {
+  @apply col-span-12 md:col-span-8 row-span-2;
+}
+
+.bento-item-medium {
+  @apply col-span-12 md:col-span-4;
+}
+
+.bento-item-small {
+  @apply col-span-6 md:col-span-4;
+}
+
+/* Data debug wrapper */
+[data-debug-wrapper="true"] {
+  display: contents !important;
+}
