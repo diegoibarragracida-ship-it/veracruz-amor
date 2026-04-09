@@ -38,19 +38,15 @@ export const useAuth = () => {
   return context;
 };
 
-// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
-    // CRITICAL: If returning from OAuth callback, skip the /me check.
-    // AuthCallback will exchange the session_id and establish the session first.
     if (window.location.hash?.includes('session_id=')) {
       setLoading(false);
       return;
     }
-    
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
@@ -72,9 +68,9 @@ const AuthProvider = ({ children }) => {
   };
 
   const loginWithGoogle = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
     const redirectUrl = 'https://veracruz-amor-git-main-diegoanis-projects.vercel.app/auth/callback';
-window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=email%20profile`;
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=email%20profile`;
+  };
 
   const logout = async () => {
     try {
@@ -113,17 +109,13 @@ const AuthCallback = () => {
     hasProcessed.current = true;
 
     const processAuth = async () => {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  
-  console.log('URL completa:', window.location.href);
-  console.log('Code:', code);
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
 
-  if (!code) {
-    navigate('/login');
-    return;
-  }
-       
+      if (!code) {
+        navigate('/login');
+        return;
+      }
 
       try {
         const response = await axios.post(`${API}/auth/google/callback`, { code });
@@ -146,8 +138,6 @@ const AuthCallback = () => {
 
     processAuth();
   }, [navigate, setUser]);
-
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
@@ -187,19 +177,16 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function AppRouter() {
   const location = useLocation();
 
-  // Check URL fragment for session_id - must be synchronous during render
   if (location.hash?.includes('session_id=')) {
     return <AuthCallback />;
   }
 
-  // Check path for auth callback
   if (location.pathname === '/auth/callback') {
     return <AuthCallback />;
   }
 
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/explorar" element={<ExplorePage />} />
       <Route path="/municipio/:slug" element={<MunicipioPage />} />
@@ -211,35 +198,30 @@ function AppRouter() {
       <Route path="/registro-prestador" element={<PrestadorRegistration />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
 
-      {/* Protected Routes - Turista */}
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
           <PerfilPage />
         </ProtectedRoute>
       } />
 
-      {/* Protected Routes - Super Admin */}
       <Route path="/admin/*" element={
         <ProtectedRoute allowedRoles={["superadmin"]}>
           <AdminDashboard />
         </ProtectedRoute>
       } />
 
-      {/* Protected Routes - Encargado Municipal */}
       <Route path="/encargado/*" element={
         <ProtectedRoute allowedRoles={["encargado", "superadmin"]}>
           <EncargadoDashboard />
         </ProtectedRoute>
       } />
 
-      {/* Protected Routes - Prestador */}
       <Route path="/prestador-panel/*" element={
         <ProtectedRoute allowedRoles={["prestador", "superadmin"]}>
           <PrestadorDashboard />
         </ProtectedRoute>
       } />
 
-      {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
