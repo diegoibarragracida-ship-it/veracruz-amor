@@ -63,7 +63,7 @@ const LoginPage = () => {
     }
   };
 
-  const heroImage = "https://static.prod-images.emergentagent.com/jobs/07c629d5-0a32-4a39-ad2b-56c36d398877/images/9f31289e3d692be5a5536974f5874e1ff3ebd7f2e93435a4161c8fa9e08fc76b.png";
+  const heroImage = "https://res.cloudinary.com/dcdjo3rtm/image/upload/v1775722094/hero-login.png_qnsnlk.png";
 
   return (
     <div className="min-h-screen flex" data-testid="login-page">

@@ -43,7 +43,7 @@ const HomePage = () => {
     fetchData();
   }, []);
 
-  const heroImage = "https://static.prod-images.emergentagent.com/jobs/07c629d5-0a32-4a39-ad2b-56c36d398877/images/1dfbd1ccc2e730f1e11eae34660eec121d4642954de69a16ec66025b0dfad602.png";
+  const heroImage = "https://res.cloudinary.com/dcdjo3rtm/image/upload/v1775722096/hero-home.png_xsvo9l.png";
 
   const quickLinks = [
     { href: "/explorar", label: "Explorar", icon: MapPin, color: "bg-[#1B5E20]" },
