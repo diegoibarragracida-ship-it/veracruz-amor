@@ -9,9 +9,9 @@ import EventoCard from "@/components/EventoCard";
 import PanicButton from "@/components/PanicButton";
 import AlertBanner from "@/components/AlertBanner";
 import { Link } from "react-router-dom";
-import { MapPin, Calendar, Users, ShieldAlert, BookOpen, Star, ChevronRight, Shield, BadgeCheck, Heart } from "lucide-react";
+import { MapPin, Calendar, Users, ShieldAlert, BookOpen, Star, ChevronRight, Shield, BadgeCheck, Heart, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, ..., Map } from "lucide-react";
+
 
 const HomePage = () => {
   const [municipios, setMunicipios] = useState([]);
