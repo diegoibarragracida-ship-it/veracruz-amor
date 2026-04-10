@@ -64,9 +64,9 @@ const AuthProvider = ({ children }) => {
   };
 
   const loginWithGoogle = () => {
-    const redirectUrl = 'https://veracruz-amor-git-main-diegoanis-projects.vercel.app/oauth/callback';
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.REACT_APP_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUrl)}&response_type=code&scope=email%20profile`;
-  };
+  window.location.href =
+    "https://veracruz-amor-production.up.railway.app/api/auth/google/redirect";
+};
 
   const logout = async () => {
     try {
