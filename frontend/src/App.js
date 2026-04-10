@@ -15,6 +15,8 @@ import GuiaPage from "@/pages/GuiaPage";
 import LoginPage from "@/pages/LoginPage";
 import PerfilPage from "@/pages/PerfilPage";
 import PrestadorRegistration from "@/pages/PrestadorRegistration";
+import RutasPage from "@/pages/RutasPage";
+import ChatBot from "@/components/ChatBot";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -204,6 +206,8 @@ function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registro-prestador" element={<PrestadorRegistration />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/rutas" element={<RutasPage />} />
+      <Route path="/rutas/:region" element={<RutasPage />} />
 
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
@@ -251,6 +255,7 @@ function App() {
       <AuthProvider>
         <AppRouter />
         <Toaster position="top-right" richColors />
+        <ChatBot />  {/* ← AQUÍ, así aparece en TODAS las páginas */}
       </AuthProvider>
     </BrowserRouter>
   );

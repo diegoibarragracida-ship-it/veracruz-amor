@@ -11,6 +11,7 @@ import AlertBanner from "@/components/AlertBanner";
 import { Link } from "react-router-dom";
 import { MapPin, Calendar, Users, ShieldAlert, BookOpen, Star, ChevronRight, Shield, BadgeCheck, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MapPin, Calendar, ..., Map } from "lucide-react";
 
 const HomePage = () => {
   const [municipios, setMunicipios] = useState([]);
@@ -45,12 +46,13 @@ const HomePage = () => {
 
   const heroImage = "https://res.cloudinary.com/dcdjo3rtm/image/upload/v1775722096/hero-home.png_xsvo9l.png";
 
-  const quickLinks = [
-    { href: "/explorar", label: "Explorar", icon: MapPin, color: "bg-[#1B5E20]" },
-    { href: "/emergencia", label: "Emergencias", icon: ShieldAlert, color: "bg-[#D32F2F]" },
-    { href: "/eventos", label: "Eventos", icon: Calendar, color: "bg-[#0277BD]" },
-    { href: "/prestadores", label: "Prestadores", icon: Users, color: "bg-[#F9A825]" },
-  ];
+ const quickLinks = [
+  { href: "/explorar",   label: "Explorar",    icon: MapPin,    color: "bg-[#1B5E20]" },
+  { href: "/rutas",      label: "Rutas",        icon: Map,       color: "bg-[#6A1B9A]" }, // ← NUEVO
+  { href: "/emergencia", label: "Emergencias",  icon: ShieldAlert, color: "bg-[#D32F2F]" },
+  { href: "/eventos",    label: "Eventos",      icon: Calendar,  color: "bg-[#0277BD]" },
+  { href: "/prestadores",label: "Prestadores",  icon: Users,     color: "bg-[#F9A825]" },
+];
 
   const features = [
     { icon: Shield, title: "Viaja con Seguridad", description: "Botón de pánico con GPS para emergencias las 24 horas" },
