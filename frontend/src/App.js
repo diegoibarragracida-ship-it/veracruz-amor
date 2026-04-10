@@ -188,9 +188,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function AppRouter() {
   const location = useLocation();
 
-  if (location.pathname === '/oauth/callback') {
-    return <AuthCallback />;
-  }
+  if (location.pathname === '/auth/callback') {
+  return <AuthCallback />;
+}
 
   return (
     <Routes>
@@ -203,7 +203,7 @@ function AppRouter() {
       <Route path="/guia" element={<GuiaPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registro-prestador" element={<PrestadorRegistration />} />
-      <Route path="/oauth/callback" element={<AuthCallback />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
