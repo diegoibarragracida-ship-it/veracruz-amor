@@ -1282,7 +1282,7 @@ async def login(credentials: UserLogin, response: Response):
     return user
 
 @api_router.post("/auth/google/callback")
-async def google_callback(request: Request):
+async def google_callback(request: Request, response: Response):
     body = await request.json()
     code = body.get("code")
     
@@ -1291,7 +1291,7 @@ async def google_callback(request: Request):
     
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-    REDIRECT_URI = os.environ.get("FRONTEND_URL", "") + "/oauth/callback"
+    REDIRECT_URI = os.environ.get("FRONTEND_URL", "") + "/auth/callback"
     
     try:
         # Intercambiar code por tokens
@@ -1323,32 +1323,43 @@ async def google_callback(request: Request):
         picture = id_info.get("picture", "")
         
         # Buscar o crear usuario
-        user = await db.usuarios.find_one({"email": email})
+        user = await db.usuarios.find_one({"email": email}, {"_id": 0})
         if not user:
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
             user_data = {
-                "id": str(uuid.uuid4()),
+                "user_id": user_id,
                 "email": email,
                 "nombre": name,
                 "foto_url": picture,
                 "rol": "turista",
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "municipio_id": None,
+                "activo": True,
+                "fecha_registro": datetime.now(timezone.utc).isoformat(),
+                "ultimo_acceso": datetime.now(timezone.utc).isoformat()
             }
             await db.usuarios.insert_one(user_data)
             user = user_data
+        else:
+            user_id = user["user_id"]
+            await db.usuarios.update_one(
+                {"email": email},
+                {"$set": {"ultimo_acceso": datetime.now(timezone.utc).isoformat()}}
+            )
         
-        # Generar JWT
-        token = jwt.encode(
-            {"sub": user["email"], "rol": user.get("rol", "turista"), 
-             "exp": datetime.now(timezone.utc) + timedelta(days=7)},
-            JWT_SECRET, algorithm=JWT_ALGORITHM
-        )
+        # Generar JWT y cookie de sesión
+        access_token = create_access_token(user["user_id"], email, user.get("rol", "turista"))
+        refresh_token = create_refresh_token(user["user_id"])
+        
+        response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False, samesite="lax", max_age=86400, path="/")
+        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
         
         return {
-            "token": token,
+            "user_id": user["user_id"],
             "email": user["email"],
             "nombre": user.get("nombre", name),
             "rol": user.get("rol", "turista"),
-            "foto_url": user.get("foto_url", picture)
+            "foto_url": user.get("foto_url", picture),
+            "activo": user.get("activo", True)
         }
         
     except Exception as e:
