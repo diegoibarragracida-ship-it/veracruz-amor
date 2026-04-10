@@ -64,8 +64,23 @@ const AuthProvider = ({ children }) => {
   };
 
   const loginWithGoogle = () => {
-  window.location.href =
-    "https://veracruz-amor-production.up.railway.app/api/auth/google/redirect";
+  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+  const redirectUri =
+    "https://veracruz-amor.vercel.app/auth/callback";
+
+  const scope = "email profile";
+
+  const googleUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth` +
+    `?client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&access_type=offline` +
+    `&prompt=consent`;
+
+  window.location.href = googleUrl;
 };
 
   const logout = async () => {
