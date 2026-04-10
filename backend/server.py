@@ -1291,7 +1291,7 @@ async def google_callback(request: Request):
     
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-    REDIRECT_URI = os.environ.get("FRONTEND_URL", "") + "/auth/callback"
+    REDIRECT_URI = os.environ.get("FRONTEND_URL", "") + "/oauth/callback"
     
     try:
         # Intercambiar code por tokens
