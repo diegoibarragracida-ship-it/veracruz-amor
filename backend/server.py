@@ -3298,7 +3298,7 @@ INSTRUCCIONES:
 
     def call_gemini_itinerario():
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-2.0-flash",
             system_instruction="Eres un experto guía turístico de Veracruz, México. Creas itinerarios detallados, prácticos y emocionantes."
         )
         result = model.generate_content(prompt)
