@@ -3331,8 +3331,6 @@ async def root():
 # Include the router
 app.include_router(api_router)
 
-# CORS Middleware
-CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -3340,6 +3338,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router)
 # Startup event
 @app.on_event("startup")
 async def startup_event():
