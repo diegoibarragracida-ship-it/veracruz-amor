@@ -12,4 +12,5 @@ python-multipart
 google-generativeai
 cloudinary
 google-auth
-google-auth-oauthlib
+google-auth-oauthlibgroq
+groq
