@@ -315,6 +315,78 @@ class ItinerarioRequest(BaseModel):
     intereses: List[str] = []
     num_personas: int = 2
 
+class LugarEnItinerario(BaseModel):
+    lugar_id: str
+    nombre: str
+    tipo: str
+    municipio: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    foto_portada: Optional[str] = None
+    hora_visita: Optional[str] = None
+    duracion_min: int = 120
+    costo_estimado: int = 0
+    estado: str = "pendiente"
+    nota: Optional[str] = None
+    fotos_usuario: List[str] = []
+    incluido: bool = True
+
+class ServicioExtra(BaseModel):
+    tipo: str
+    nombre: str
+    descripcion: Optional[str] = None
+    precio_estimado: int = 0
+    incluido: bool = False
+
+class DiarioDelDia(BaseModel):
+    dia_num: int
+    fecha: Optional[str] = None
+    titulo: Optional[str] = None
+    lugares: List[LugarEnItinerario] = []
+
+class ItinerarioCreate(BaseModel):
+    nombre: str
+    region: str
+    fecha_inicio: Optional[str] = None
+    fecha_fin: Optional[str] = None
+    num_personas: int = 2
+    dias: List[DiarioDelDia] = []
+    servicios_extra: List[ServicioExtra] = []
+    costo_total_estimado: int = 0
+    notas_generales: Optional[str] = None
+
+class ItinerarioBase(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    nombre: str
+    region: str
+    fecha_inicio: Optional[str] = None
+    fecha_fin: Optional[str] = None
+    num_personas: int = 2
+    dias: List[Dict[str, Any]] = []
+    servicios_extra: List[Dict[str, Any]] = []
+    costo_total_estimado: int = 0
+    notas_generales: Optional[str] = None
+    estado: str = "planificado"
+    creado_en: str
+    actualizado_en: str
+
+class LugarEstadoUpdate(BaseModel):
+    dia_num: int
+    lugar_id: str
+    estado: str
+    nota: Optional[str] = None
+
+class NotaCreate(BaseModel):
+    dia_num: int
+    lugar_id: str
+    nota: str
+
+class FotoUploadResponse(BaseModel):
+    url: str
+    public_id: str
+
 # ============== HELPER FUNCTIONS ==============
 
 def hash_password(password: str) -> str:
@@ -3007,6 +3079,184 @@ INSTRUCCIONES:
     }
 
 
+# ─── PRESTADORES POR REGIÓN (para el mapa) ───────────────────
+
+@api_router.get("/prestadores/mapa")
+async def get_prestadores_mapa(
+    region: Optional[str] = None,
+    municipio_id: Optional[str] = None,
+    tipo: Optional[str] = None,
+):
+    query: Dict[str, Any] = {"verificado": True, "activo": True}
+    if region:
+        municipios_region = await db.municipios.find(
+            {"region": region.capitalize()}, {"_id": 0, "id": 1}
+        ).to_list(100)
+        ids = [m["id"] for m in municipios_region]
+        query["municipio_id"] = {"$in": ids}
+    if municipio_id:
+        query["municipio_id"] = municipio_id
+    if tipo:
+        query["tipo"] = tipo
+    query["lat"] = {"$exists": True, "$ne": None}
+    query["lng"] = {"$exists": True, "$ne": None}
+    cursor = db.prestadores.find(
+        query,
+        {"_id": 0, "id": 1, "nombre": 1, "tipo": 1, "subtipo": 1,
+         "municipio_id": 1, "municipio_nombre": 1, "lat": 1, "lng": 1,
+         "descripcion": 1, "foto_url": 1, "calificacion_promedio": 1,
+         "horarios": 1, "direccion": 1, "telefono": 1, "whatsapp": 1}
+    ).limit(200)
+    prestadores = await cursor.to_list(200)
+    return {"prestadores": prestadores, "total": len(prestadores)}
+
+
+# ─── ITINERARIOS GUARDADOS ────────────────────────────────────
+
+@api_router.post("/itinerarios")
+async def crear_itinerario(datos: ItinerarioCreate, request: Request):
+    current_user = await get_current_user(request)
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["user_id"],
+        "nombre": datos.nombre,
+        "region": datos.region,
+        "fecha_inicio": datos.fecha_inicio,
+        "fecha_fin": datos.fecha_fin,
+        "num_personas": datos.num_personas,
+        "dias": [d.model_dump() for d in datos.dias],
+        "servicios_extra": [s.model_dump() for s in datos.servicios_extra],
+        "costo_total_estimado": datos.costo_total_estimado,
+        "notas_generales": datos.notas_generales,
+        "estado": "planificado",
+        "creado_en": now,
+        "actualizado_en": now,
+    }
+    await db.itinerarios.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.get("/itinerarios")
+async def mis_itinerarios(request: Request):
+    current_user = await get_current_user(request)
+    cursor = db.itinerarios.find(
+        {"user_id": current_user["user_id"]}, {"_id": 0}
+    ).sort("creado_en", -1)
+    items = await cursor.to_list(50)
+    return {"itinerarios": items, "total": len(items)}
+
+
+@api_router.get("/itinerarios/{itinerario_id}")
+async def get_itinerario(itinerario_id: str, request: Request):
+    current_user = await get_current_user(request)
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    return doc
+
+
+@api_router.delete("/itinerarios/{itinerario_id}")
+async def eliminar_itinerario(itinerario_id: str, request: Request):
+    current_user = await get_current_user(request)
+    result = await db.itinerarios.delete_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    return {"ok": True}
+
+
+# ─── ACTUALIZAR ESTADO DE UN LUGAR (diario) ──────────────────
+
+@api_router.put("/itinerarios/{itinerario_id}/lugar")
+async def actualizar_lugar(itinerario_id: str, update: LugarEstadoUpdate, request: Request):
+    current_user = await get_current_user(request)
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+
+    dias = doc.get("dias", [])
+    updated = False
+    for dia in dias:
+        if dia["dia_num"] == update.dia_num:
+            for lugar in dia.get("lugares", []):
+                if lugar["lugar_id"] == update.lugar_id:
+                    lugar["estado"] = update.estado
+                    if update.nota is not None:
+                        lugar["nota"] = update.nota
+                    updated = True
+                    break
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Lugar no encontrado en el itinerario")
+
+    total_lugares = sum(len(d.get("lugares", [])) for d in dias)
+    visitados = sum(
+        sum(1 for l in d.get("lugares", []) if l.get("estado") == "visitado")
+        for d in dias
+    )
+    estado_general = "planificado"
+    if visitados > 0 and visitados < total_lugares:
+        estado_general = "en_curso"
+    elif visitados == total_lugares and total_lugares > 0:
+        estado_general = "completado"
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.itinerarios.update_one(
+        {"id": itinerario_id},
+        {"$set": {"dias": dias, "estado": estado_general, "actualizado_en": now}}
+    )
+    return {"ok": True, "estado_general": estado_general, "visitados": visitados, "total": total_lugares}
+
+
+# ─── SUBIR FOTO AL DIARIO ─────────────────────────────────────
+
+@api_router.post("/itinerarios/{itinerario_id}/foto")
+async def subir_foto_diario(
+    itinerario_id: str,
+    dia_num: int,
+    lugar_id: str,
+    file: UploadFile = File(...),
+    request: Request = None,
+):
+    current_user = await get_current_user(request)
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+
+    content = await file.read()
+    content_type = file.content_type or "image/jpeg"
+    path = f"diarios/{itinerario_id}/{dia_num}/{lugar_id}/{uuid.uuid4()}.jpg"
+
+    try:
+        result = put_object(path, content, content_type)
+        foto_url = result["url"]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error subiendo foto: {e}")
+
+    dias = doc.get("dias", [])
+    for dia in dias:
+        if dia["dia_num"] == dia_num:
+            for lugar in dia.get("lugares", []):
+                if lugar["lugar_id"] == lugar_id:
+                    lugar.setdefault("fotos_usuario", []).append(foto_url)
+                    break
+
+    await db.itinerarios.update_one(
+        {"id": itinerario_id},
+        {"$set": {"dias": dias, "actualizado_en": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"url": foto_url}
+
+
 # ============== HEALTH CHECK ==============
 
 @api_router.get("/health")
@@ -3059,6 +3309,9 @@ async def startup_event():
     await db.lugares.create_index("slug")
     await db.lugares.create_index("destacado")
     await db.paquetes.create_index("region")
+    await db.itinerarios.create_index("user_id")
+    await db.itinerarios.create_index("id", unique=True)
+    await db.itinerarios.create_index([("user_id", 1), ("creado_en", -1)])
     await db.itinerarios.create_index("user_id")
     await db.itinerarios.create_index("id", unique=True)
     
