@@ -3,6 +3,7 @@ import axios from "axios";
 import { API } from "@/App";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MapaPrestadores from "@/components/MapaPrestadores";
 import {
   MapPin, Clock, DollarSign, Mountain, X, Star,
   Phone, Globe, Calendar, Sparkles, Navigation,
