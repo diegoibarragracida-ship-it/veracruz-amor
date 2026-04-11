@@ -3124,7 +3124,7 @@ async def chat_endpoint(request: Request):
 
         def call_gemini():
             model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
+                model_name="gemini-2.0-flash",
                 system_instruction=full_system
             )
             # Convertir historial al formato de Gemini
