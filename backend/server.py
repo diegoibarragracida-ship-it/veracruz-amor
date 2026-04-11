@@ -3059,6 +3059,8 @@ async def startup_event():
     await db.lugares.create_index("slug")
     await db.lugares.create_index("destacado")
     await db.paquetes.create_index("region")
+    await db.itinerarios.create_index("user_id")
+    await db.itinerarios.create_index("id", unique=True)
     
     logger.info("Veracruz Contigo API ready!")
 

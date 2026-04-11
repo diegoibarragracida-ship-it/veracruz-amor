@@ -747,6 +747,8 @@ const RutasPage = () => {
                 { v: "lugares",    l: `📍 Lugares`, count: lugares.length },
                 { v: "paquete",    l: "📦 Paquete" },
                 { v: "itinerario", l: "✨ Planear con IA" },
+                { v: "mapa",        l: "🗺️ Mapa" },
+                { v: "constructor", l: "🛠️ Armar paquete" },
               ].map(({ v, l, count }) => (
                 <button key={v} onClick={() => setTab(v)}
                   className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
@@ -760,6 +762,8 @@ const RutasPage = () => {
             {tab === "lugares"    && <LugaresBento lugares={lugares} color={color} onSelect={setLugarSel} />}
             {tab === "paquete"    && <PaqueteTab paquete={paquete} color={color} light={light} />}
             {tab === "itinerario" && <CalculadoraTab region={regionSlug} color={color} />}
+            {tab === "mapa"        && <MapaPrestadores region={regionSlug} color={color} />}
+            {tab === "constructor" && <ConstructorPaquete lugares={lugares} rutaData={rutaData} region={regionSlug} color={color} />}
           </div>
         )}
       </main>
