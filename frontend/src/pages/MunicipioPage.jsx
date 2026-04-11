@@ -22,6 +22,7 @@ const MunicipioPage = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [atracciones, setAtracciones] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,12 +41,14 @@ const MunicipioPage = () => {
         
         // Fetch related data
         if (munRes.data.id) {
-          const [prestRes, eventosRes] = await Promise.all([
+          const [prestRes, eventosRes, atracRes] = await Promise.all([
             axios.get(`${API}/prestadores`, { params: { municipio_id: munRes.data.id, verificado: true } }),
             axios.get(`${API}/eventos`, { params: { municipio_id: munRes.data.id, publicado: true } }),
+            axios.get(`${API}/lugares`, { params: { municipio: munRes.data.nombre, limit: 20 } }).catch(() => ({ data: { lugares: [] } })),
           ]);
           setPrestadores(prestRes.data.prestadores || []);
           setEventos(eventosRes.data.eventos || []);
+          setAtracciones(atracRes.data.lugares || []);
         }
       } catch (error) {
         console.error("Error fetching municipio:", error);
@@ -413,6 +416,70 @@ const MunicipioPage = () => {
                   <div className="bg-white rounded-2xl p-12 text-center">
                     <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <p className="text-gray-500">No hay prestadores verificados en este municipio aún</p>
+                  </div>
+                )}
+              </TabsContent>
+
+
+              <TabsContent value="atracciones">
+                {atracciones.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {atracciones.map((lugar) => (
+                      <div key={lugar.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+                        <div className="relative h-48 bg-gray-100 overflow-hidden">
+                          {lugar.foto_portada || lugar.fotos?.[0] ? (
+                            <img src={lugar.foto_portada || lugar.fotos[0]} alt={lugar.nombre}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-green-50 to-green-100">
+                              {lugar.tipo === "atraccion" ? "🏛️" : lugar.tipo === "actividad" ? "🎯" : "📍"}
+                            </div>
+                          )}
+                          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 capitalize">
+                            {lugar.tipo}
+                          </span>
+                          {lugar.destacado && (
+                            <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-amber-900 flex items-center gap-1">
+                              <Star className="w-3 h-3 fill-current" /> Destacado
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-5">
+                          <h3 className="font-bold text-gray-900 mb-1 text-base" style={{ fontFamily: "Playfair Display, serif" }}>
+                            {lugar.nombre}
+                          </h3>
+                          <p className="text-gray-500 text-sm mb-3 line-clamp-2">{lugar.descripcion}</p>
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <div className="flex items-center gap-3">
+                              {lugar.costo_min !== undefined && (
+                                <span className="font-medium text-gray-700">
+                                  {lugar.costo_min === 0 ? "✅ Gratis" : `💲 $${lugar.costo_min}`}
+                                </span>
+                              )}
+                              {lugar.horarios && <span>🕐 {lugar.horarios}</span>}
+                            </div>
+                            {lugar.calificacion && (
+                              <span className="flex items-center gap-1 text-amber-600 font-semibold">
+                                <Star className="w-3.5 h-3.5 fill-current" /> {lugar.calificacion}
+                              </span>
+                            )}
+                          </div>
+                          {lugar.lat && lugar.lng && (
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-[#1B5E20] hover:underline">
+                              <Navigation className="w-3.5 h-3.5" /> Cómo llegar
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-2xl p-12 text-center">
+                    <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-500 text-lg font-medium">Sin atracciones registradas aún</p>
+                    <p className="text-sm text-gray-400 mt-2">El encargado del municipio puede agregar lugares desde su panel.</p>
                   </div>
                 )}
               </TabsContent>
