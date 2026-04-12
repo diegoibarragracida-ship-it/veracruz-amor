@@ -1682,12 +1682,6 @@ async def update_municipio(slug: str, data: MunicipioUpdate, request: Request):
     
     return await db.municipios.find_one({"slug": slug}, {"_id": 0})
 
-@api_router.get("/seed-orizaba")
-async def seed_orizaba():
-     from seed_orizaba_prestadores import main
-     await main()
-     return {"status": "ok"}
-
 # ============== PRESTADORES ENDPOINTS ==============
 
 @api_router.get("/prestadores")
@@ -1733,10 +1727,10 @@ async def create_prestador(data: PrestadorCreate, request: Request):
         **data.model_dump(),
         "calificacion_promedio": 0.0,
         "total_resenas": 0,
-        "verificado": user["rol"] in ["superadmin", "encargado"],  # encargado auto-verifica
+        "verificado": user["rol"] == "superadmin",
         "activo": True,
         "propuesto_por_id": user["user_id"] if user["rol"] == "encargado" else None,
-        "aprobado_por_id": user["user_id"] if user["rol"] in ["superadmin", "encargado"] else None,
+        "aprobado_por_id": user["user_id"] if user["rol"] == "superadmin" else None,
         "user_id": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -1761,7 +1755,7 @@ async def update_prestador(prestador_id: str, request: Request):
         raise HTTPException(status_code=403, detail="No tienes permiso")
     
     allowed_fields = ["nombre", "descripcion", "foto_url", "telefono", "whatsapp", "horarios", "direccion"]
-    if user["rol"] in ["superadmin", "encargado"]:
+    if user["rol"] == "superadmin":
         allowed_fields.extend(["verificado", "activo", "tipo", "subtipo"])
     
     update_data = {k: v for k, v in body.items() if k in allowed_fields}
@@ -1773,36 +1767,14 @@ async def update_prestador(prestador_id: str, request: Request):
 @api_router.post("/prestadores/{prestador_id}/verificar")
 async def verificar_prestador(prestador_id: str, request: Request):
     user = await get_current_user(request)
-    if user["rol"] not in ["superadmin", "encargado"]:
-        raise HTTPException(status_code=403, detail="Solo el Admin o Encargado puede verificar")
+    if user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo el Super Admin puede verificar")
     
     await db.prestadores.update_one(
         {"id": prestador_id},
         {"$set": {"verificado": True, "aprobado_por_id": user["user_id"]}}
     )
     return {"message": "Prestador verificado"}
-
-@api_router.post("/prestadores/{prestador_id}/desverificar")
-async def desverificar_prestador(prestador_id: str, request: Request):
-    user = await get_current_user(request)
-    if user["rol"] not in ["superadmin", "encargado"]:
-        raise HTTPException(status_code=403, detail="Sin permiso")
-    await db.prestadores.update_one(
-        {"id": prestador_id},
-        {"$set": {"verificado": False, "aprobado_por_id": None}}
-    )
-    return {"message": "Prestador desverificado"}
-
-@api_router.delete("/prestadores/{prestador_id}")
-async def delete_prestador(prestador_id: str, request: Request):
-    user = await get_current_user(request)
-    if user["rol"] not in ["superadmin", "encargado"]:
-        raise HTTPException(status_code=403, detail="Sin permiso")
-    prestador = await db.prestadores.find_one({"id": prestador_id}, {"_id": 0})
-    if not prestador:
-        raise HTTPException(status_code=404, detail="Prestador no encontrado")
-    await db.prestadores.delete_one({"id": prestador_id})
-    return {"message": "Prestador eliminado"}
 
 # ============== EVENTOS ENDPOINTS ==============
 
@@ -3143,6 +3115,66 @@ INSTRUCCIONES:
         "paquete_info": paquete,
     }
 
+
+
+# ============== SEED ENDPOINTS (uso único, borrar después) ==============
+
+@api_router.post("/admin/seed-orizaba-atracciones")
+async def seed_orizaba_atracciones_endpoint(request: Request):
+    user = await get_current_user(request)
+    if user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo superadmin")
+
+    municipio = await db.municipios.find_one(
+        {"nombre": {"$regex": "^Orizaba$", "$options": "i"}},
+        {"_id": 0, "id": 1, "nombre": 1}
+    )
+    if not municipio:
+        raise HTTPException(status_code=404, detail="Municipio Orizaba no encontrado")
+
+    municipio_id = municipio["id"]
+
+    ATRACCIONES = [
+        {"nombre": "Pico de Orizaba (Citlaltépetl)", "tipo": "atraccion", "subtipo": "Volcán / montañismo", "descripcion": "El volcán más alto de México y tercera montaña más alta de América del Norte con 5,636 msnm.", "descripcion_larga": "El Pico de Orizaba, también conocido como Citlaltépetl, es el volcán más alto de México y la tercera montaña más alta de América del Norte, con una altitud aproximada de 5,636 metros sobre el nivel del mar. Se trata de un volcán inactivo cubierto de nieve en su cima durante gran parte del año, lo que lo convierte en un destino emblemático para el montañismo y la exploración de alta montaña.", "horarios": "Libre acceso", "costo": "Variable", "costo_min": 0, "costo_max": 3000, "lat": 19.0306, "lng": -97.2686, "foto_portada": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85"], "tags": ["volcán", "montañismo", "naturaleza", "aventura"], "calificacion": 4.9, "destacado": True, "direccion": "Parque Nacional Pico de Orizaba"},
+        {"nombre": "Teleférico de Orizaba", "tipo": "atraccion", "subtipo": "Transporte turístico", "descripcion": "Uno de los teleféricos urbanos más importantes de México. Conecta el centro con el Cerro del Borrego en 5 minutos con vistas panorámicas.", "descripcion_larga": "El Teleférico de Orizaba tiene una longitud aproximada de 917 metros y conecta la zona centro con el Cerro del Borrego. Opera con cabinas cerradas con capacidad para 6 personas mientras se disfruta de vistas panorámicas del río, el centro histórico y el Pico de Orizaba.", "horarios": "10:00–18:00", "costo": "$50–$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85"], "tags": ["teleférico", "vistas", "aventura", "familia"], "calificacion": 4.7, "destacado": True, "direccion": "Sur 4 #50, Centro, Orizaba"},
+        {"nombre": "Cerro del Borrego", "tipo": "atraccion", "subtipo": "Ecoparque / sitio histórico", "descripcion": "Ecoparque histórico a 1,240 msnm, escenario de la batalla contra la intervención francesa (1862). Senderos, miradores y Atalaya de Cristal.", "descripcion_larga": "El Cerro del Borrego es un espacio natural y sitio histórico emblemático de Orizaba. Fue escenario de una importante batalla durante la intervención francesa en 1862. Cuenta con senderos, miradores naturales y es accesible a pie o por teleférico.", "horarios": "9:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8620, "lng": -97.0980, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "historia", "senderismo", "miradores"], "calificacion": 4.7, "destacado": True, "direccion": "Cerro del Borrego, Centro, Orizaba"},
+        {"nombre": "Atalaya de Cristal", "tipo": "actividad", "subtipo": "Mirador", "descripcion": "Mirador con piso de vidrio en la cima del Cerro del Borrego. Vista de 300 metros hacia la ciudad. Experiencia visual única.", "descripcion_larga": "La Atalaya de Cristal es un mirador contemporáneo con plataforma de piso de vidrio que permite observar directamente hacia abajo desde más de 300 metros de altura sobre la ciudad. Ideal para fotografías impactantes.", "horarios": "10:00–18:00", "costo": "Bajo costo", "costo_min": 30, "costo_max": 60, "lat": 18.8625, "lng": -97.0978, "foto_portada": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85"], "tags": ["mirador", "adrenalina", "fotografía", "vistas"], "calificacion": 4.8, "destacado": True, "direccion": "Cima del Cerro del Borrego, Orizaba"},
+        {"nombre": "Tobogán de la Montaña", "tipo": "actividad", "subtipo": "Alpine coaster", "descripcion": "Alpine coaster de 650 metros en el Cerro del Borrego. El usuario controla la velocidad. Naturaleza y adrenalina en familia.", "descripcion_larga": "El Tobogán de la Montaña es una atracción tipo alpine coaster de 650 metros integrado en el entorno natural del Cerro del Borrego. Cada usuario controla la velocidad mediante un sistema de freno manual.", "horarios": "10:00–18:00", "costo": "$50–$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8618, "lng": -97.0982, "foto_portada": "https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85"], "tags": ["adrenalina", "familia", "aventura"], "calificacion": 4.6, "destacado": False, "direccion": "Cerro del Borrego, Orizaba"},
+        {"nombre": "Paseo del Río Orizaba", "tipo": "atraccion", "subtipo": "Parque lineal", "descripcion": "Parque lineal de 5 km a orillas del río con puentes peatonales, zoológico, zonas culturales y áreas verdes. El mejor proyecto de recuperación urbana.", "descripcion_larga": "El Paseo del Río Orizaba es un parque lineal de aproximadamente 5 kilómetros que sigue el curso del río. Cuenta con áreas verdes, puentes peatonales, zonas de descanso, un pequeño zoológico y espacios culturales.", "horarios": "9:00–20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8498, "lng": -97.0991, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["parque", "familia", "naturaleza", "gratuito", "río"], "calificacion": 4.6, "destacado": True, "direccion": "Paseo del Río, Centro, Orizaba"},
+        {"nombre": "Laguna de Ojo de Agua", "tipo": "atraccion", "subtipo": "Balneario natural", "descripcion": "Nacimiento natural de agua cristalina de manantiales subterráneos. Popular para nadar y refrescarse en temporada de calor.", "descripcion_larga": "La Laguna de Ojo de Agua es un nacimiento natural de agua cristalina proveniente de manantiales subterráneos. Es muy popular para nadar y convivir, especialmente en temporadas de calor.", "horarios": "8:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8456, "lng": -97.0934, "foto_portada": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85"], "tags": ["agua", "naturaleza", "gratuito", "balneario"], "calificacion": 4.4, "destacado": False, "direccion": "Col. Ojo de Agua, Orizaba"},
+        {"nombre": "Parque Nacional Cerro de Escamela", "tipo": "atraccion", "subtipo": "Parque nacional", "descripcion": "Zona natural protegida con bosque húmedo y cascadas. Senderos naturales para ecoturismo y senderismo auténtico.", "descripcion_larga": "El Parque Nacional Cerro de Escamela es una zona natural protegida con bosque húmedo y cascadas. Cuenta con senderos naturales poco intervenidos, ideal para ecoturismo y tranquilidad.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8234, "lng": -97.0534, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "senderismo", "cascadas", "ecoturismo", "gratuito"], "calificacion": 4.5, "destacado": False, "direccion": "Escamela, Orizaba, Ver."},
+        {"nombre": "Cañón de la Carbonera", "tipo": "actividad", "subtipo": "Aventura / rappel", "descripcion": "Formación natural en Nogales con paredes rocosas. Rappel y senderismo nivel medio. Paisajes naturales únicos de aventura.", "descripcion_larga": "El Cañón de la Carbonera en Nogales tiene paredes rocosas ideales para rappel y senderismo de nivel medio. Se recomienda ir con guía.", "horarios": "Libre", "costo": "Gratis (guía opcional)", "costo_min": 0, "costo_max": 500, "lat": 18.8012, "lng": -97.1534, "foto_portada": "https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85"], "tags": ["aventura", "rappel", "senderismo", "naturaleza"], "calificacion": 4.4, "destacado": False, "direccion": "Nogales, Ver."},
+        {"nombre": "Palacio de Hierro de Orizaba", "tipo": "atraccion", "subtipo": "Museo / patrimonio", "descripcion": "Joya art nouveau construida en Bélgica (1894), atribuida al taller de Gustave Eiffel. Complejo cultural con museos y exposiciones.", "descripcion_larga": "El Palacio de Hierro fue construido en el siglo XIX con estructura de hierro prefabricado de estilo europeo atribuido a Gustave Eiffel. Actualmente es un complejo cultural con museos y espacios de exposición.", "horarios": "10:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg", "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"], "tags": ["arquitectura", "museo", "historia", "arte", "gratuito"], "calificacion": 4.8, "destacado": True, "direccion": "Madero s/n, Centro, Orizaba"},
+        {"nombre": "Catedral de San Miguel Arcángel", "tipo": "atraccion", "subtipo": "Templo religioso", "descripcion": "Principal templo religioso de Orizaba. Siglo XVIII, estilo neoclásico. Centro del recorrido cultural del centro histórico.", "descripcion_larga": "La Catedral de San Miguel Arcángel es el principal templo religioso de Orizaba, construida en el siglo XVIII con estilo neoclásico. Sede de las principales celebraciones litúrgicas.", "horarios": "7:00–20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8531, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85"], "tags": ["religión", "historia", "arquitectura", "gratuito"], "calificacion": 4.6, "destacado": False, "direccion": "Centro Histórico, Orizaba"},
+        {"nombre": "Museo de Arte del Estado de Veracruz", "tipo": "atraccion", "subtipo": "Museo", "descripcion": "Antiguo convento convertido en museo. Arte novohispano, exposiciones permanentes y temporales. Uno de los recintos más importantes del estado.", "descripcion_larga": "Ubicado en un antiguo convento, alberga colección de arte novohispano y exposiciones temporales. Uno de los recintos culturales más importantes del estado.", "horarios": "10:00–18:00", "costo": "$20–$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8545, "lng": -97.1003, "foto_portada": "https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85"], "tags": ["museo", "arte", "historia", "cultura"], "calificacion": 4.5, "destacado": False, "direccion": "Norte 4 #27, Centro, Orizaba"},
+        {"nombre": "Museo de la Cerveza", "tipo": "atraccion", "subtipo": "Museo interactivo", "descripcion": "Museo interactivo sobre la tradición cervecera de Orizaba. Historia de la industria y procesos de producción de la cerveza veracruzana.", "descripcion_larga": "Museo interactivo que muestra la historia de la industria cervecera en Orizaba. Incluye exhibiciones sobre procesos de producción e historia de la cerveza.", "horarios": "10:00–18:00", "costo": "$30–$60 MXN", "costo_min": 30, "costo_max": 60, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85"], "tags": ["museo", "cerveza", "historia", "interactivo"], "calificacion": 4.3, "destacado": False, "direccion": "Palacio de Hierro, Orizaba"},
+        {"nombre": "Museo Cri-Cri", "tipo": "atraccion", "subtipo": "Museo temático", "descripcion": "Museo dedicado a Francisco Gabilondo Soler 'Cri-Cri', nacido en Orizaba. Contenido infantil, música y experiencias interactivas para familias.", "descripcion_larga": "Museo dedicado a Cri-Cri con enfoque infantil y cultural. Presenta contenido educativo, música y elementos interactivos para familias.", "horarios": "10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85"], "tags": ["museo", "familia", "niños", "Cri-Cri"], "calificacion": 4.5, "destacado": False, "direccion": "Alameda, Orizaba"},
+        {"nombre": "Museo Casa de las Leyendas", "tipo": "atraccion", "subtipo": "Museo temático", "descripcion": "Museo de leyendas y tradiciones orales de la región. Experiencias narrativas que recrean historias locales misteriosas.", "descripcion_larga": "Museo temático enfocado en leyendas y tradiciones orales de la región. Ofrece experiencias narrativas que recrean historias locales.", "horarios": "10:00–18:00", "costo": "$40 MXN", "costo_min": 40, "costo_max": 40, "lat": 18.8529, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85"], "tags": ["museo", "leyendas", "misterio", "cultura"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Poliforum Mier y Pesado", "tipo": "atraccion", "subtipo": "Centro cultural", "descripcion": "Complejo cultural con jardines de estilo europeo. Sede de eventos, exposiciones y conciertos. Arquitectura y jardines únicos en Orizaba.", "descripcion_larga": "El Poliforum Mier y Pesado es un complejo cultural con jardines de estilo europeo usado para eventos culturales, exposiciones y conciertos.", "horarios": "9:00–18:00", "costo": "$20–$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8528, "lng": -97.1005, "foto_portada": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85"], "tags": ["cultura", "jardines", "eventos", "arquitectura"], "calificacion": 4.4, "destacado": False, "direccion": "Oriente 6 #500, Orizaba"},
+        {"nombre": "Parque Castillo", "tipo": "atraccion", "subtipo": "Plaza histórica", "descripcion": "Plaza central emblemática rodeada de edificios históricos. Los domingos hay son jarocho. Corazón de la vida pública de Orizaba.", "descripcion_larga": "Plaza central que funciona como punto de reunión social, rodeada de edificios históricos y actividad comercial. Los domingos se presentan grupos de son jarocho.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8538, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["plaza", "historia", "gratuito", "centro"], "calificacion": 4.5, "destacado": False, "direccion": "Centro Histórico, Orizaba"},
+        {"nombre": "Alameda Francisco Gabilondo Soler", "tipo": "atraccion", "subtipo": "Parque urbano", "descripcion": "Parque urbano emblemático dedicado a Cri-Cri. Áreas verdes y espacios de convivencia familiar en el centro histórico.", "descripcion_larga": "Parque urbano emblemático de Orizaba, ideal para recreación familiar. Vinculado culturalmente con la figura de Cri-Cri.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85"], "tags": ["parque", "familia", "gratuito", "Cri-Cri"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Mercado Melchor Ocampo", "tipo": "atraccion", "subtipo": "Mercado tradicional", "descripcion": "Mercado tradicional más importante de Orizaba. Alimentos frescos, comida típica y gastronomía local auténtica. Experiencia cotidiana imperdible.", "descripcion_larga": "Mercado tradicional con gran variedad de productos, desde alimentos frescos hasta comida típica preparada. Un excelente lugar para conocer la gastronomía local.", "horarios": "7:00–18:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8521, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["mercado", "gastronomía", "cultura", "tradición"], "calificacion": 4.5, "destacado": False, "direccion": "Poniente 7, Orizaba"},
+        {"nombre": "Mercado de Artesanías de Orizaba", "tipo": "atraccion", "subtipo": "Mercado artesanal", "descripcion": "Espacio dedicado a artesanos locales. Textiles nahuas, souvenirs y productos típicos veracruzanos. Comercio justo directo con artesanos.", "descripcion_larga": "Mercado turístico con productos elaborados por artesanos locales: textiles, recuerdos, figuras y artículos representativos de la cultura veracruzana.", "horarios": "9:00–20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8527, "lng": -97.1009, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["artesanías", "compras", "cultura", "souvenirs"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Panteón Municipal de Orizaba", "tipo": "atraccion", "subtipo": "Patrimonio cultural", "descripcion": "Cementerio histórico con mausoleos y esculturas de distintas épocas. Patrimonio funerario. Muy visitado en Día de Muertos.", "descripcion_larga": "El Panteón Municipal alberga tumbas antiguas, mausoleos y esculturas de diferentes épocas. Visitado por interesados en historia local y arquitectura funeraria, especialmente en Día de Muertos.", "horarios": "8:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8489, "lng": -97.1023, "foto_portada": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85"], "tags": ["historia", "patrimonio", "Día de Muertos", "gratuito"], "calificacion": 4.1, "destacado": False, "direccion": "Sur 11, Orizaba"},
+    ]
+
+    import re as re_mod
+    def slugify_local(text):
+        text = text.lower()
+        for a, b in [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"),("ñ","n")]:
+            text = text.replace(a, b)
+        text = re_mod.sub(r"[^a-z0-9\s-]", "", text)
+        text = re_mod.sub(r"[\s]+", "-", text.strip())
+        return text
+
+    deleted = await db.lugares.delete_many({"municipio_id": municipio_id})
+    docs = []
+    for a in ATRACCIONES:
+        doc = {**a, "id": str(uuid.uuid4()), "municipio_id": municipio_id, "municipio": municipio["nombre"], "region": "centro", "slug": slugify_local(a["nombre"]), "created_at": datetime.now(timezone.utc).isoformat()}
+        docs.append(doc)
+    await db.lugares.insert_many(docs)
+
+    return {"ok": True, "insertados": len(docs), "eliminados_anteriores": deleted.deleted_count, "municipio": municipio["nombre"]}
 
 # ============== HEALTH CHECK ==============
 
