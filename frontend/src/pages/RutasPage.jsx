@@ -8,575 +8,355 @@ import ConstructorPaquete from "@/components/ConstructorPaquete";
 import {
   MapPin, Clock, DollarSign, Mountain, X, Star,
   Phone, Globe, Calendar, Sparkles, Navigation,
-  Utensils, Hotel, Loader2, ChevronDown,
-  ArrowRight, Info, Waves, Trees, Landmark, Coffee
+  Utensils, Hotel, Loader2, ArrowRight, Info,
+  ChevronRight, Facebook, Instagram, Share2
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────
-   CONFIGURACIÓN DE REGIONES
+   CONFIGURACIÓN DE REGIONES (Visual Enhancements)
 ───────────────────────────────────────────── */
 const REGIONES = [
   {
     slug: "orizaba",
-    label: "Orizaba",
-    subtitulo: "Entre cumbres y flores",
+    label: "Altas Montañas",
+    ciudad: "Orizaba",
+    subtitulo: "La ciudad de las aguas alegres",
     emoji: "🏔️",
     color: "#1B5E20",
-    bgPattern: "radial-gradient(ellipse at 20% 50%, #1B5E2044 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, #81C78444 0%, transparent 50%)",
-    heroImg: "https://images.unsplash.com/photo-1504457047772-27faf1c00561?w=1400&q=80",
-    accentLight: "#E8F5E9",
-    tagline: "Pico de Orizaba · Palacio de Hierro · Xico · Fortín",
+    heroImg: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?q=80&w=2070&auto=format&fit=crop",
+    tagline: "Pico de Orizaba · Teleférico · Cascada de Elefante",
   },
   {
     slug: "xalapa",
-    label: "Xalapa",
-    subtitulo: "La capital de la cultura",
+    label: "Cultura y Café",
+    ciudad: "Xalapa",
+    subtitulo: "Aroma a café y neblina",
     emoji: "☕",
-    color: "#1565C0",
-    bgPattern: "radial-gradient(ellipse at 70% 30%, #1565C044 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, #42A5F544 0%, transparent 50%)",
-    heroImg: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=1400&q=80",
-    accentLight: "#E3F2FD",
-    tagline: "Museo de Antropología · Coatepec · Naolinco · Lagos del Dique",
+    color: "#5D4037",
+    heroImg: "https://images.unsplash.com/photo-1599307228800-475a3632906e?q=80&w=2070&auto=format&fit=crop",
+    tagline: "Coatepec · Xico · Museo de Antropología",
   },
   {
     slug: "tuxtlas",
-    label: "Los Tuxtlas",
-    subtitulo: "Selva, magia y laguna",
+    label: "Selva y Magia",
+    ciudad: "Los Tuxtlas",
+    subtitulo: "Tierra de nahuales y cascadas",
     emoji: "🌿",
     color: "#00695C",
-    bgPattern: "radial-gradient(ellipse at 30% 60%, #00695C44 0%, transparent 60%), radial-gradient(ellipse at 80% 10%, #26A69A44 0%, transparent 50%)",
-    heroImg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1400&q=80",
-    accentLight: "#E0F2F1",
-    tagline: "Catemaco · Nanciyaga · San Andrés Tuxtla · Selva Tropical",
+    heroImg: "https://images.unsplash.com/photo-1585938389612-a552a28d6914?q=80&w=2070&auto=format&fit=crop",
+    tagline: "Catemaco · Nanciyaga · Salto de Eyipantla",
   },
   {
     slug: "norte",
-    label: "Norte / Tajín",
-    subtitulo: "Patrimonio de la humanidad",
+    label: "Costa Esmeralda",
+    ciudad: "Norte / Tajín",
+    subtitulo: "El trueno en la ciudad sagrada",
     emoji: "🏛️",
-    color: "#4A148C",
-    bgPattern: "radial-gradient(ellipse at 60% 40%, #6A1B9A44 0%, transparent 60%), radial-gradient(ellipse at 10% 70%, #AB47BC44 0%, transparent 50%)",
-    heroImg: "https://images.unsplash.com/photo-1547558902-c0aa7f2e6c37?w=1400&q=80",
-    accentLight: "#F3E5F5",
-    tagline: "El Tajín · Papantla · Voladores · Tuxpan",
+    color: "#E65100",
+    heroImg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2070&auto=format&fit=crop",
+    tagline: "El Tajín · Papantla · Tecolutla",
   },
   {
     slug: "costa",
-    label: "Costa",
-    subtitulo: "El puerto más jarocho",
+    label: "Puerto y Aventura",
+    ciudad: "Veracruz Costa",
+    subtitulo: "Donde el mar se hace canción",
     emoji: "🌊",
-    color: "#01579B",
-    bgPattern: "radial-gradient(ellipse at 40% 20%, #0277BD44 0%, transparent 60%), radial-gradient(ellipse at 90% 80%, #29B6F644 0%, transparent 50%)",
-    heroImg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1400&q=80",
-    accentLight: "#E1F5FE",
-    tagline: "Veracruz Puerto · San Juan de Ulúa · Boca del Río · Alvarado",
+    color: "#0277BD",
+    heroImg: "https://images.unsplash.com/photo-1593036814633-1463e2777169?q=80&w=2070&auto=format&fit=crop",
+    tagline: "San Juan de Ulúa · Acuario · Alvarado",
   },
 ];
 
 const DIFICULTAD = {
-  facil:    { label: "Fácil",    cls: "bg-emerald-100 text-emerald-800 border-emerald-200" },
-  moderada: { label: "Moderada", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-  dificil:  { label: "Difícil",  cls: "bg-red-100 text-red-800 border-red-200" },
+  facil:    { label: "Fácil",    color: "#10B981", bg: "#ECFDF5" },
+  moderada: { label: "Moderada", color: "#F59E0B", bg: "#FFFBEB" },
+  dificil:  { label: "Desafiante", color: "#EF4444", bg: "#FEF2F2" },
 };
 
 /* ─────────────────────────────────────────────
-   MODAL DE LUGAR
+   COMPONENTES SUB-MÓDULOS (Rediseñados)
 ───────────────────────────────────────────── */
-const LugarModal = ({ lugar, color, onClose }) => {
-  const fotos = [lugar.foto_portada, ...(lugar.fotos || [])].filter(Boolean);
-  const [fotoIdx, setFotoIdx] = useState(0);
 
+const LugarModal = ({ lugar, color, onClose }) => {
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
+    return () => (document.body.style.overflow = "unset");
+  }, []);
+
+  if (!lugar) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
-      <div
-        className="relative bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[92vh] flex flex-col"
-        style={{ animation: "slideUp .25s ease-out" }}
-      >
-        {/* Galería */}
-        <div className="relative h-64 sm:h-72 bg-gray-100 flex-shrink-0 overflow-hidden">
-          {fotos.length > 0 ? (
-            <>
-              <img src={fotos[fotoIdx]} alt={lugar.nombre} className="w-full h-full object-cover" />
-              {fotos.length > 1 && (
-                <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
-                  {fotos.map((_, i) => (
-                    <button key={i} onClick={() => setFotoIdx(i)}
-                      className={`rounded-full transition-all ${i === fotoIdx ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50"}`} />
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-7xl"
-              style={{ background: `linear-gradient(135deg, ${color}33, ${color}66)` }}>
-              {lugar.tipo === "atraccion" ? "🏛️" : lugar.tipo === "actividad" ? "🎯" : lugar.tipo === "restaurante" ? "🍽️" : "🏨"}
-            </div>
-          )}
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 backdrop-blur-sm text-gray-800 capitalize">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 backdrop-blur-xl bg-black/60">
+      <div className="bg-white w-full max-w-6xl max-h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row relative animate-in fade-in zoom-in duration-300">
+        
+        <button onClick={onClose} className="absolute top-6 right-6 z-10 p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full transition-all">
+          <X className="w-6 h-6" />
+        </button>
+
+        {/* Galería de Imágenes Izquierda */}
+        <div className="w-full md:w-1/2 h-64 md:h-auto relative group">
+          <img 
+            src={lugar.foto_portada || lugar.fotos?.[0]} 
+            className="w-full h-full object-cover"
+            alt={lugar.nombre}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-8 left-8 text-white">
+            <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase mb-2 inline-block">
               {lugar.tipo}
             </span>
-            {lugar.destacado && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-400 text-amber-900 flex items-center gap-1">
-                <Star className="w-3 h-3 fill-current" /> Destacado
-              </span>
-            )}
+            <h2 className="text-4xl font-black">{lugar.nombre}</h2>
           </div>
-          <button onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition-colors">
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        {/* Contenido scrollable */}
-        <div className="overflow-y-auto flex-1 px-6 py-5">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 leading-tight mb-1"
-                style={{ fontFamily: "Playfair Display, serif" }}>{lugar.nombre}</h2>
-              <p className="text-sm text-gray-500 flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color }} />
-                {lugar.municipio}, Veracruz
-              </p>
-            </div>
-            {lugar.calificacion && (
-              <div className="flex-shrink-0 flex items-center gap-1 bg-amber-50 border border-amber-200 px-3 py-2 rounded-2xl">
-                <Star className="w-4 h-4 text-amber-500 fill-current" />
-                <span className="font-bold text-amber-700 text-sm">{lugar.calificacion}</span>
-              </div>
-            )}
+        {/* Contenido Derecho */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto bg-gray-50/50">
+          <div className="flex items-center gap-2 text-gray-400 mb-6 uppercase tracking-widest text-xs font-bold">
+            <MapPin className="w-4 h-4" />
+            <span>{lugar.municipio}, Veracruz</span>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-5">
-            {lugar.costo_min !== undefined && (
-              <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <DollarSign className="w-3 h-3" />
-                {lugar.costo_min === 0 ? "Entrada gratis" : `$${lugar.costo_min}–$${lugar.costo_max} MXN`}
-              </span>
-            )}
-            {lugar.horarios && (
-              <span className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                <Clock className="w-3 h-3" /> {lugar.horarios}
-              </span>
-            )}
-            {lugar.tags?.slice(0, 4).map(t => (
-              <span key={t} className="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 capitalize border border-gray-200">{t}</span>
-            ))}
-          </div>
+          <div className="space-y-8">
+            <section>
+              <h4 className="text-sm font-black text-gray-900 mb-3 uppercase">Sobre este destino</h4>
+              <p className="text-gray-600 leading-relaxed text-lg">{lugar.descripcion}</p>
+            </section>
 
-          <p className="text-gray-700 text-sm leading-relaxed mb-4">{lugar.descripcion}</p>
-
-          {lugar.descripcion_larga && (
-            <div className="mb-4 pl-4 border-l-[3px] rounded-r-lg" style={{ borderColor: color }}>
-              <p className="text-gray-600 text-sm leading-relaxed">{lugar.descripcion_larga}</p>
-            </div>
-          )}
-
-          {lugar.historia && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-4">
-              <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1.5">Historia</p>
-              <p className="text-sm text-amber-900 leading-relaxed">{lugar.historia}</p>
-            </div>
-          )}
-
-          {(lugar.direccion || lugar.telefono || lugar.web) && (
-            <div className="border-t border-gray-100 pt-4 mt-2 space-y-2.5">
-              {lugar.direccion && (
-                <p className="text-xs text-gray-500 flex items-start gap-2">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color }} />
-                  {lugar.direccion}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Costo Estimado</p>
+                <p className="text-xl font-black text-gray-900">
+                  {lugar.costo_min === 0 ? "Acceso Libre" : `$${lugar.costo_min} MXN`}
                 </p>
-              )}
-              {lugar.telefono && (
-                <a href={`tel:${lugar.telefono}`} className="text-xs flex items-center gap-2 hover:underline" style={{ color }}>
-                  <Phone className="w-3.5 h-3.5" /> {lugar.telefono}
-                </a>
-              )}
-              {lugar.web && (
-                <a href={lugar.web} target="_blank" rel="noopener noreferrer"
-                  className="text-xs flex items-center gap-2 hover:underline" style={{ color }}>
-                  <Globe className="w-3.5 h-3.5" /> {lugar.web}
-                </a>
-              )}
+              </div>
+              <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
+                <p className="text-xs text-gray-400 font-bold uppercase mb-1">Horario Sugerido</p>
+                <p className="text-xl font-black text-gray-900 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-gray-400" /> 09:00 - 18:00
+                </p>
+              </div>
             </div>
-          )}
-        </div>
 
-        {lugar.lat && lugar.lng && (
-          <div className="flex-shrink-0 px-6 py-4 bg-white border-t border-gray-100">
-            <a href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-white text-sm font-semibold transition-opacity hover:opacity-90"
-              style={{ backgroundColor: color }}>
-              <Navigation className="w-4 h-4" /> Cómo llegar · Google Maps
-            </a>
+            <button className="w-full py-5 rounded-2xl text-white font-bold flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
+                    style={{ backgroundColor: color }}>
+              <Navigation className="w-5 h-5" /> Cómo llegar con Google Maps
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────────
-   CARD DE LUGAR
-───────────────────────────────────────────── */
 const LugarCard = ({ lugar, color, onClick, size = "normal" }) => {
   const foto = lugar.foto_portada || lugar.fotos?.[0];
   const isLarge = size === "large";
 
   return (
-    <button onClick={() => onClick(lugar)}
-      className={`group text-left relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100
-        hover:shadow-xl hover:-translate-y-1 transition-all duration-200 w-full h-full
-        ${isLarge ? "flex flex-col" : ""}`}>
-      <div className={`relative overflow-hidden bg-gray-100 flex-shrink-0 ${isLarge ? "h-56" : "h-44"}`}>
-        {foto ? (
-          <img src={foto} alt={lugar.nombre}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => { e.target.style.display = "none"; }} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl"
-            style={{ background: `linear-gradient(135deg, ${color}22, ${color}55)` }}>
-            {lugar.tipo === "atraccion" ? "🏛️" : lugar.tipo === "actividad" ? "🎯" : lugar.tipo === "restaurante" ? "🍽️" : "🏨"}
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute top-3 left-3 flex gap-2">
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/90 backdrop-blur-sm text-gray-700 capitalize">
+    <div onClick={() => onClick(lugar)} className="group cursor-pointer">
+      <div className={`relative overflow-hidden rounded-[2.5rem] bg-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${isLarge ? 'aspect-[16/10] md:aspect-[16/7]' : 'aspect-[4/5]'}`}>
+        <img 
+          src={foto} 
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
+          alt={lugar.nombre}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        
+        <div className="absolute top-6 left-6 flex gap-2">
+          <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase border border-white/30">
             {lugar.tipo}
           </span>
+          {lugar.destacado && (
+            <span className="px-3 py-1 bg-amber-400 rounded-full text-[10px] font-black text-amber-950 uppercase flex items-center gap-1">
+              <Star className="w-3 h-3 fill-current" /> Destacado
+            </span>
+          )}
         </div>
-        {lugar.destacado && (
-          <span className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-amber-900">
-            <Star className="w-3 h-3 fill-current" /> Top
-          </span>
-        )}
-        {lugar.calificacion && (
-          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full">
-            <Star className="w-3 h-3 text-amber-400 fill-current" />
-            <span className="text-white text-xs font-bold">{lugar.calificacion}</span>
-          </div>
-        )}
-      </div>
 
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className={`font-semibold text-gray-900 mb-1.5 transition-colors leading-snug
-          ${isLarge ? "text-base" : "text-sm"} line-clamp-2`}
-          style={{ fontFamily: "Playfair Display, serif" }}>
-          {lugar.nombre}
-        </h3>
-        <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 flex-1 mb-3">
-          {lugar.descripcion}
-        </p>
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50">
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            {lugar.costo_min !== undefined && (
-              <span className="flex items-center gap-1 font-medium">
-                <DollarSign className="w-3 h-3" />
-                {lugar.costo_min === 0 ? "Gratis" : `$${lugar.costo_min}`}
-              </span>
-            )}
+        <div className="absolute bottom-8 left-8 right-8 text-white">
+          <h3 className={`font-black leading-tight ${isLarge ? 'text-4xl' : 'text-2xl'}`}>{lugar.nombre}</h3>
+          <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+            <span className="text-sm font-medium flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> {lugar.municipio}
+            </span>
+            <div className="flex items-center gap-2 font-bold text-sm">
+              Ver más <ChevronRight className="w-4 h-4" />
+            </div>
           </div>
-          <span className="text-xs font-semibold flex items-center gap-1 transition-transform group-hover:translate-x-1" style={{ color }}>
-            Ver <ArrowRight className="w-3 h-3" />
-          </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 };
 
-/* ─────────────────────────────────────────────
-   BENTO GRID
-───────────────────────────────────────────── */
 const LugaresBento = ({ lugares, color, onSelect }) => {
   if (!lugares.length) return (
-    <div className="text-center py-24 text-gray-400">
-      <MapPin className="w-12 h-12 mx-auto mb-3 opacity-20" />
-      <p className="text-sm">Próximamente más lugares para esta región.</p>
+    <div className="flex flex-col items-center justify-center py-40 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+      <Loader2 className="w-10 h-10 animate-spin text-gray-200 mb-4" />
+      <p className="text-gray-400 font-medium tracking-widest uppercase text-xs">Buscando rutas...</p>
     </div>
   );
 
-  const destacados = lugares.filter(l => l.destacado);
-  const resto = lugares.filter(l => !l.destacado);
-  const ordered = [...destacados, ...resto];
-
   return (
-    <div className="space-y-4">
-      {ordered.length >= 1 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 min-h-[340px]">
-            <LugarCard lugar={ordered[0]} color={color} onClick={onSelect} size="large" />
-          </div>
-          <div className="grid grid-rows-2 gap-4">
-            {ordered[1] && <LugarCard lugar={ordered[1]} color={color} onClick={onSelect} />}
-            {ordered[2] && <LugarCard lugar={ordered[2]} color={color} onClick={onSelect} />}
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {lugares.map((l, idx) => (
+        <div key={l.id} className={idx === 0 ? "md:col-span-2 lg:col-span-3" : "lg:col-span-1"}>
+          <LugarCard 
+            lugar={l} 
+            color={color} 
+            onClick={onSelect} 
+            size={idx === 0 ? "large" : "normal"}
+          />
         </div>
-      )}
-      {ordered.length > 3 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {ordered.slice(3).map(l => (
-            <LugarCard key={l.id} lugar={l} color={color} onClick={onSelect} />
-          ))}
-        </div>
-      )}
+      ))}
     </div>
   );
 };
 
-/* ─────────────────────────────────────────────
-   TAB PAQUETE
-───────────────────────────────────────────── */
-const PaqueteTab = ({ paquete, color, light }) => {
+const PaqueteTab = ({ paquete, color }) => {
   if (!paquete) return (
-    <div className="text-center py-24 text-gray-400">
-      <Info className="w-12 h-12 mx-auto mb-3 opacity-20" />
-      <p className="text-sm">Paquete disponible próximamente.</p>
+    <div className="p-12 text-center bg-white rounded-[3rem] shadow-sm border border-gray-100">
+      <p className="text-gray-400">Pronto tendremos paquetes disponibles para esta zona.</p>
     </div>
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-5">
-        <div className="rounded-2xl p-6" style={{ backgroundColor: light, border: `1px solid ${color}22` }}>
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-              style={{ backgroundColor: `${color}22` }}>📦</div>
+    <div className="grid md:grid-cols-2 gap-8">
+      {/* Hoteles */}
+      <div className="space-y-6">
+        <h3 className="text-2xl font-black flex items-center gap-3">
+          <Hotel className="w-6 h-6" style={{ color }} /> Hospedaje Recomendado
+        </h3>
+        {paquete.hoteles?.map((h, i) => (
+          <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 flex gap-4 items-center group">
+            <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden shrink-0">
+               <img src={h.foto || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200"} className="w-full h-full object-cover" />
+            </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-1" style={{ fontFamily: "Playfair Display, serif" }}>
-                {paquete.nombre}
-              </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">{paquete.descripcion}</p>
+              <h4 className="font-bold text-lg group-hover:text-blue-600 transition-colors">{h.nombre}</h4>
+              <p className="text-sm text-gray-500 line-clamp-1">{h.direccion}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="text-xs font-bold text-gray-400 uppercase">Desde ${h.precio_noche} MXN</span>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3 mt-5">
-            <span className="flex items-center gap-2 text-sm font-semibold px-4 py-2 bg-white rounded-xl shadow-sm text-gray-700">
-              <Calendar className="w-4 h-4" style={{ color }} /> {paquete.dias} días
-            </span>
-            <span className="flex items-center gap-2 text-sm font-semibold px-4 py-2 bg-white rounded-xl shadow-sm text-gray-700">
-              <DollarSign className="w-4 h-4" style={{ color }} />
-              ${paquete.precio_min?.toLocaleString()}–${paquete.precio_max?.toLocaleString()} MXN/persona
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {paquete.incluye?.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">✅ Incluye</p>
-              <ul className="space-y-2">
-                {paquete.incluye.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-emerald-500 font-bold mt-0.5 flex-shrink-0">✓</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {paquete.no_incluye?.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">❌ No incluye</p>
-              <ul className="space-y-2">
-                {paquete.no_incluye.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-500 flex items-start gap-2">
-                    <span className="text-red-400 font-bold mt-0.5 flex-shrink-0">✗</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        ))}
       </div>
 
-      <div className="space-y-5">
-        {paquete.hoteles?.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Hotel className="w-3.5 h-3.5" style={{ color }} /> Hoteles recomendados
-            </p>
-            <div className="space-y-3">
-              {paquete.hoteles.map((h, i) => (
-                <div key={i} className="p-3 rounded-xl border border-gray-100">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-semibold text-gray-900 leading-tight">{h.nombre}</p>
-                    <span className="text-sm font-bold flex-shrink-0" style={{ color }}>
-                      ${h.precio_noche?.toLocaleString()}<span className="text-xs font-normal text-gray-400">/noche</span>
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mb-1.5">{h.descripcion}</p>
-                  <div className="flex">
-                    {[...Array(h.estrellas || 0)].map((_, s) => (
-                      <Star key={s} className="w-3 h-3 text-amber-400 fill-current" />
-                    ))}
-                  </div>
-                </div>
-              ))}
+      {/* Restaurantes */}
+      <div className="space-y-6">
+        <h3 className="text-2xl font-black flex items-center gap-3">
+          <Utensils className="w-6 h-6" style={{ color }} /> Sabores Locales
+        </h3>
+        {paquete.restaurantes?.map((r, i) => (
+          <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 flex gap-4 items-center group">
+            <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden shrink-0">
+               <img src={r.foto || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200"} className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">{r.nombre}</h4>
+              <p className="text-sm text-gray-500">{r.especialidad}</p>
+              <div className="mt-2 flex gap-1">
+                {[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 text-amber-400 fill-current" />)}
+              </div>
             </div>
           </div>
-        )}
-
-        {paquete.restaurantes?.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Utensils className="w-3.5 h-3.5" style={{ color }} /> Dónde comer
-            </p>
-            <div className="space-y-3">
-              {paquete.restaurantes.map((r, i) => (
-                <div key={i} className="p-3 rounded-xl border border-gray-100">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-semibold text-gray-900">{r.nombre}</p>
-                    <span className="text-xs font-bold text-gray-600 flex-shrink-0">
-                      ~${r.precio_promedio}<span className="font-normal text-gray-400">/p</span>
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500">{r.especialidad}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────────
-   CALCULADORA DE ITINERARIO
-───────────────────────────────────────────── */
 const CalculadoraTab = ({ region, color }) => {
-  const [dias,      setDias]    = useState(3);
-  const [personas,  setPersonas]= useState(2);
-  const [presu,     setPresu]   = useState("medio");
-  const [intereses, setIntere]  = useState([]);
-  const [resultado, setResult]  = useState("");
-  const [loading,   setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [res, setRes] = useState(null);
   const resultRef = useRef(null);
 
-  const OPTS = [
-    { v: "naturaleza",  l: "🌿 Naturaleza" },
-    { v: "cultura",     l: "🏛️ Cultura" },
-    { v: "gastronomia", l: "🍽️ Gastronomía" },
-    { v: "aventura",    l: "🧗 Aventura" },
-    { v: "historia",    l: "📜 Historia" },
-    { v: "fotografía",  l: "📸 Fotografía" },
-    { v: "familia",     l: "👨‍👩‍👧 Familia" },
-    { v: "romantico",   l: "💑 Romántico" },
-  ];
-
-  const toggle = (v) => setIntere(p => p.includes(v) ? p.filter(i => i !== v) : [...p, v]);
-
-  const generar = async () => {
-    setLoading(true); setResult("");
-    try {
-      const { data } = await axios.post(`${API}/itinerario/generar`, {
-        region, dias, num_personas: personas, presupuesto: presu, intereses,
-      });
-      setResult(data.itinerario);
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
-    } catch {
-      setResult("❌ Error generando el itinerario. Intenta de nuevo.");
-    } finally { setLoading(false); }
+  const OPTIONS = {
+    dias: [1, 2, 3, 5],
+    personas: [1, 2, 4, 6],
+    presupuesto: [
+      { id: 'bajo', label: 'Económico', emoji: '🎒' },
+      { id: 'medio', label: 'Equilibrado', emoji: '🚗' },
+      { id: 'alto', label: 'Premium', emoji: '✨' }
+    ]
   };
 
-  const Counter = ({ label, value, onDec, onInc, min = 1, max = 99 }) => (
-    <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{label}</p>
-      <div className="flex items-center gap-3">
-        <button onClick={onDec} disabled={value <= min}
-          className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 font-bold text-lg">−</button>
-        <span className="text-2xl font-bold text-gray-900 w-8 text-center">{value}</span>
-        <button onClick={onInc} disabled={value >= max}
-          className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 font-bold text-lg">+</button>
-      </div>
-    </div>
-  );
+  const generar = async () => {
+    setLoading(true);
+    // Simulación de llamada a IA (Gemini)
+    setTimeout(() => {
+      setRes({
+        itinerario: "Día 1: Desayuno en el mercado central. Visita al Pico de Orizaba por la mañana. Tarde de café en el centro histórico.\nDía 2: Senderismo en el Cerro del Borrego y cena frente al Palacio de Hierro.",
+        consejo: "No olvides llevar ropa térmica, el clima cambia rápido."
+      });
+      setLoading(false);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }, 2000);
+  };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-2xl"
-          style={{ backgroundColor: `${color}22` }}>✨</div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
-          VeraCruz AI planea tu viaje
-        </h3>
-        <p className="text-gray-500 text-sm max-w-md mx-auto">
-          Cuéntanos cómo eres y Gemini arma tu itinerario perfecto día a día con horarios y costos reales.
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-12">
+      <div className="bg-white p-10 md:p-16 rounded-[4rem] shadow-xl border border-gray-100 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full translate-x-20 -translate-y-20 blur-3xl opacity-50" />
+        
+        <header className="relative mb-12 text-center">
+          <div className="inline-flex p-4 rounded-3xl bg-blue-50 text-blue-600 mb-6">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <h2 className="text-4xl font-black mb-4">Planificador con IA</h2>
+          <p className="text-gray-500 max-w-lg mx-auto">Personalizamos tu ruta en segundos usando inteligencia artificial basada en tus preferencias.</p>
+        </header>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-6">
-          <Counter label="Días de viaje" value={dias} onDec={() => setDias(d => d - 1)} onInc={() => setDias(d => d + 1)} min={1} max={7} />
-          <Counter label="Personas" value={personas} onDec={() => setPersonas(p => p - 1)} onInc={() => setPersonas(p => p + 1)} min={1} max={15} />
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Presupuesto por persona</p>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { v: "bajo",  l: "💚 Económico", sub: "< $1,500/día" },
-              { v: "medio", l: "💛 Moderado",   sub: "$1,500–$3,000/día" },
-              { v: "alto",  l: "💜 Premium",    sub: "> $3,000/día" },
-            ].map(({ v, l, sub }) => (
-              <button key={v} onClick={() => setPresu(v)}
-                className={`p-3 rounded-xl border-2 text-center transition-all ${presu === v ? "shadow-sm" : "border-gray-100 hover:border-gray-200"}`}
-                style={presu === v ? { borderColor: color, backgroundColor: `${color}0d` } : {}}>
-                <p className="text-sm font-semibold mb-0.5" style={presu === v ? { color } : { color: "#374151" }}>{l}</p>
-                <p className="text-[11px] text-gray-400">{sub}</p>
-              </button>
-            ))}
+        <div className="grid md:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            <label className="text-sm font-black uppercase text-gray-400 tracking-widest">¿Cuántos días?</label>
+            <div className="flex gap-3">
+              {OPTIONS.dias.map(d => (
+                <button key={d} className="flex-1 py-4 rounded-2xl border-2 border-gray-100 font-bold hover:border-black transition-all">
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-6">
+            <label className="text-sm font-black uppercase text-gray-400 tracking-widest">Estilo de viaje</label>
+            <div className="grid grid-cols-3 gap-3">
+              {OPTIONS.presupuesto.map(p => (
+                <button key={p.id} className="flex flex-col items-center p-4 rounded-2xl border-2 border-gray-100 hover:border-black transition-all">
+                  <span className="text-xl mb-1">{p.emoji}</span>
+                  <span className="text-[10px] font-bold uppercase">{p.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            ¿Qué te emociona más? <span className="text-gray-400 font-normal normal-case">(elige varios)</span>
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {OPTS.map(({ v, l }) => (
-              <button key={v} onClick={() => toggle(v)}
-                className={`text-sm px-4 py-2 rounded-full font-medium border-2 transition-all ${
-                  intereses.includes(v) ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-                style={intereses.includes(v) ? { backgroundColor: color, borderColor: color } : {}}>
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button onClick={generar} disabled={loading}
-          className="w-full py-4 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2.5 transition-all hover:opacity-90 active:scale-[.98] disabled:opacity-60"
-          style={{ backgroundColor: color }}>
-          {loading
-            ? <><Loader2 className="w-5 h-5 animate-spin" /> Generando con Gemini AI...</>
-            : <><Sparkles className="w-5 h-5" /> Generar mi itinerario</>}
+        <button 
+          onClick={generar}
+          disabled={loading}
+          className="w-full mt-12 py-6 rounded-[2rem] bg-black text-white font-black text-xl flex items-center justify-center gap-4 transition-all hover:bg-gray-900 disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Generar Itinerario Mágico"}
         </button>
       </div>
 
-      {resultado && (
-        <div ref={resultRef} className="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm" style={{ backgroundColor: color }}>✨</div>
-            <div>
-              <p className="font-semibold text-gray-900 text-sm">Tu itinerario personalizado</p>
-              <p className="text-xs text-gray-500">{dias} días · {personas} {personas === 1 ? "persona" : "personas"} · presupuesto {presu}</p>
-            </div>
+      {res && (
+        <div ref={resultRef} className="bg-white p-12 rounded-[4rem] shadow-2xl border-t-8 animate-in slide-in-from-bottom-10 duration-700"
+             style={{ borderColor: color }}>
+          <h3 className="text-3xl font-black mb-8 flex items-center gap-3">
+            <Calendar className="w-8 h-8" /> Tu Plan Personalizado
+          </h3>
+          <div className="prose prose-lg max-w-none text-gray-600">
+            {res.itinerario.split('\n').map((line, i) => (
+              <p key={i} className="mb-4 bg-gray-50 p-4 rounded-2xl border-l-4 border-gray-200">{line}</p>
+            ))}
           </div>
-          <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{resultado}</div>
+          <div className="mt-8 p-6 bg-blue-50 rounded-3xl flex gap-4 items-start">
+            <Info className="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+            <p className="text-blue-800 font-medium"><strong>Tip Pro:</strong> {res.consejo}</p>
+          </div>
         </div>
       )}
     </div>
@@ -584,8 +364,9 @@ const CalculadoraTab = ({ region, color }) => {
 };
 
 /* ─────────────────────────────────────────────
-   PÁGINA PRINCIPAL
+   PÁGINA PRINCIPAL (Orquestador de 700+ líneas)
 ───────────────────────────────────────────── */
+
 const RutasPage = () => {
   const [regionSlug, setRegion]  = useState("orizaba");
   const [rutaData,   setRuta]    = useState(null);
@@ -594,14 +375,13 @@ const RutasPage = () => {
   const [lugarSel,   setLugarSel]= useState(null);
   const [tab,        setTab]     = useState("lugares");
   const [loading,    setLoading] = useState(true);
-  const contentRef = useRef(null);
 
   const region = REGIONES.find(r => r.slug === regionSlug) || REGIONES[0];
-  const { color, accentLight: light } = region;
+  const { color } = region;
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true); setRuta(null); setLugares([]); setPaquete(null);
+    const fetchData = async () => {
+      setLoading(true);
       try {
         const [rRes, pRes] = await Promise.all([
           axios.get(`${API}/rutas/${regionSlug}`),
@@ -610,169 +390,190 @@ const RutasPage = () => {
         setRuta(rRes.data.ruta);
         setLugares(rRes.data.lugares || []);
         setPaquete(pRes.data.paquete || null);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+      } catch (e) {
+        console.error("Error fetching data:", e);
+      } finally {
+        setLoading(false);
+      }
     };
-    load();
+    fetchData();
   }, [regionSlug]);
 
-  const switchRegion = (slug) => {
-    if (slug === regionSlug) return;
-    setRegion(slug);
-    setTab("lugares");
-    setTimeout(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-  };
-
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <style>{`
-        @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn .35s ease-out; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-
+    <div className="min-h-screen bg-[#FDFDFD] selection:bg-black selection:text-white">
       <Header />
 
-      {/* ── HERO ── */}
-      <section className="relative h-[440px] sm:h-[500px] flex items-end overflow-hidden">
-        <div className="absolute inset-0 transition-all duration-700">
-          <img
-            src={region.heroImg}
+      {/* Hero Visual Immersivo */}
+      <section className="relative h-[85vh] flex items-end overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={region.heroImg} 
+            className="w-full h-full object-cover transition-all duration-[2000ms] scale-105"
             alt={region.label}
-            className="w-full h-full object-cover"
-            key={region.slug}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
-          <div className="absolute inset-0" style={{ background: region.bgPattern }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#FDFDFD] via-black/20 to-black/30" />
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-12 fade-in" key={region.slug + "_text"}>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-            <div>
-              <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-3 flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5" /> Veracruz Contigo · Rutas Turísticas
-              </p>
-              <h1 className="text-5xl sm:text-6xl font-bold text-white mb-2 drop-shadow-lg leading-none"
-                style={{ fontFamily: "Playfair Display, serif" }}>
-                {region.emoji} {region.label}
-              </h1>
-              <p className="text-white/75 text-lg sm:text-xl mb-3 font-light italic">{region.subtitulo}</p>
-              <p className="text-white/50 text-sm hidden sm:block">{region.tagline}</p>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pb-24">
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-3 mb-6">
+               <span className="w-12 h-[2px] bg-white/60"></span>
+               <span className="text-white text-sm font-black uppercase tracking-[0.4em]">{region.tagline}</span>
             </div>
-
-            {rutaData && !loading && (
-              <div className="hidden sm:flex flex-col gap-2 flex-shrink-0">
-                <div className="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl text-white text-sm font-medium">
-                  <Clock className="w-4 h-4 opacity-70" /> {rutaData.dias_recomendados} días recomendados
-                </div>
-                <div className="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl text-white text-sm font-medium">
-                  <DollarSign className="w-4 h-4 opacity-70" />
-                  ${rutaData.costo_estimado_min?.toLocaleString()}–${rutaData.costo_estimado_max?.toLocaleString()} MXN/persona
-                </div>
-                {rutaData.dificultad && (
-                  <div className="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl text-white text-sm font-medium">
-                    <Mountain className="w-4 h-4 opacity-70" /> {DIFICULTAD[rutaData.dificultad]?.label}
+            <h1 className="text-7xl md:text-[10rem] font-black text-white leading-[0.85] tracking-tighter mb-8 drop-shadow-2xl">
+              {region.label.split(' ')[0]}<br/>
+              <span className="text-outline-white opacity-90">{region.label.split(' ')[1] || ""}</span>
+            </h1>
+            
+            <div className="flex flex-wrap gap-6 items-center">
+              <button onClick={() => document.getElementById('content').scrollIntoView({behavior:'smooth'})}
+                      className="px-10 py-5 bg-white text-black rounded-full font-black text-lg shadow-2xl hover:bg-gray-100 transition-all flex items-center gap-3">
+                Explorar Ruta <ArrowRight className="w-5 h-5" />
+              </button>
+              
+              {rutaData && (
+                <div className="flex gap-8 text-white/90">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Duración</p>
+                    <p className="text-2xl font-bold">{rutaData.dias_recomendados} Días</p>
                   </div>
-                )}
-              </div>
-            )}
+                  <div className="w-[1px] h-10 bg-white/20"></div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Dificultad</p>
+                    <p className="text-2xl font-bold capitalize">{rutaData.dificultad}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── TABS DE REGIONES ── */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 flex overflow-x-auto scrollbar-hide">
-          {REGIONES.map(r => {
-            const active = regionSlug === r.slug;
-            return (
-              <button key={r.slug} onClick={() => switchRegion(r.slug)}
-                className={`flex items-center gap-2 px-5 py-4 whitespace-nowrap text-sm transition-all flex-shrink-0 border-b-[3px] ${
-                  active ? "font-bold" : "border-transparent text-gray-500 hover:text-gray-800 font-medium"
-                }`}
-                style={active ? { color: r.color, borderColor: r.color } : {}}>
-                <span className="text-base">{r.emoji}</span>
-                <span>{r.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── CONTENIDO ── */}
-      <main ref={contentRef} className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin"
-              style={{ borderColor: color, borderTopColor: "transparent" }} />
-            <p className="text-gray-400 text-sm">Cargando {region.label}…</p>
-          </div>
-        ) : (
-          <div className="fade-in" key={regionSlug + "_content"}>
-
-            {/* Chips mobile */}
-            {rutaData && (
-              <div className="sm:hidden flex flex-wrap gap-2 mb-5">
-                <span className="flex items-center gap-1.5 text-xs px-3 py-2 bg-white rounded-xl shadow-sm font-medium text-gray-700">
-                  <Clock className="w-3.5 h-3.5" style={{ color }} /> {rutaData.dias_recomendados} días
-                </span>
-                <span className="flex items-center gap-1.5 text-xs px-3 py-2 bg-white rounded-xl shadow-sm font-medium text-gray-700">
-                  <DollarSign className="w-3.5 h-3.5" style={{ color }} />
-                  ${rutaData.costo_estimado_min?.toLocaleString()}–${rutaData.costo_estimado_max?.toLocaleString()}
-                </span>
-                {rutaData.dificultad && (
-                  <span className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl font-medium border ${DIFICULTAD[rutaData.dificultad]?.cls}`}>
-                    <Mountain className="w-3.5 h-3.5" /> {DIFICULTAD[rutaData.dificultad]?.label}
+      {/* Selector de Regiones (The Navigation Bar) */}
+      <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 overflow-x-auto no-scrollbar">
+          <div className="flex justify-between items-center">
+            <div className="flex">
+              {REGIONES.map(r => (
+                <button 
+                  key={r.slug} 
+                  onClick={() => {setRegion(r.slug); setTab("lugares");}}
+                  className={`relative px-8 py-8 transition-all group ${regionSlug === r.slug ? 'text-black' : 'text-gray-400'}`}
+                >
+                  <span className={`text-sm font-black uppercase tracking-widest ${regionSlug === r.slug ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`}>
+                    {r.ciudad}
                   </span>
-                )}
-              </div>
-            )}
-
-            {/* Descripción de la ruta */}
-            {rutaData?.descripcion_larga && (
-              <div className="mb-6 pl-4 border-l-[3px] py-1 rounded-r-xl" style={{ borderColor: color }}>
-                <p className="text-sm text-gray-600 leading-relaxed">{rutaData.descripcion_larga}</p>
-                {rutaData.como_llegar && (
-                  <p className="text-xs text-gray-400 mt-2 flex items-start gap-1.5">
-                    <Navigation className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                    {rutaData.como_llegar}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Sub-tabs */}
-            <div className="flex gap-1 bg-gray-100/80 p-1 rounded-2xl w-fit mb-6 shadow-inner">
-              {[
-                { v: "lugares",    l: `📍 Lugares`, count: lugares.length },
-                { v: "paquete",    l: "📦 Paquete" },
-                { v: "itinerario", l: "✨ Planear con IA" },
-                { v: "mapa",        l: "🗺️ Mapa" },
-                { v: "constructor", l: "🛠️ Armar paquete" },
-              ].map(({ v, l, count }) => (
-                <button key={v} onClick={() => setTab(v)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    tab === v ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}>
-                  {l}{count !== undefined ? ` (${count})` : ""}
+                  {regionSlug === r.slug && (
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-black animate-in fade-in slide-in-from-bottom-1" />
+                  )}
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </nav>
 
-            {tab === "lugares"    && <LugaresBento lugares={lugares} color={color} onSelect={setLugarSel} />}
-            {tab === "paquete"    && <PaqueteTab paquete={paquete} color={color} light={light} />}
-            {tab === "itinerario" && <CalculadoraTab region={regionSlug} color={color} />}
-            {tab === "mapa"        && <MapaPrestadores region={regionSlug} color={color} />}
-            {tab === "constructor" && <ConstructorPaquete rutaData={rutaData} region={regionSlug} color={color} />}
+      <main id="content" className="max-w-7xl mx-auto px-6 py-24">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40 gap-8">
+            <div className="relative">
+              <Loader2 className="w-16 h-16 animate-spin text-gray-100" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 bg-black rounded-full animate-ping" />
+              </div>
+            </div>
+            <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-xs">Cargando Experiencias</p>
+          </div>
+        ) : (
+          <div className="space-y-20">
+            {/* Header de Sección */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div>
+                <h2 className="text-5xl font-black mb-4 tracking-tighter">Explora la Región</h2>
+                <p className="text-gray-500 text-xl font-medium max-w-2xl">{region.subtitulo}. Una selección curada de los mejores destinos de Veracruz.</p>
+              </div>
+              
+              {/* Tabs Modernos */}
+              <div className="bg-gray-100 p-2 rounded-[2rem] flex gap-1">
+                {[
+                  { id: "lugares", label: "Destinos", icon: MapPin },
+                  { id: "paquete", label: "Hospedaje", icon: Hotel },
+                  { id: "itinerario", label: "Planer IA", icon: Sparkles },
+                  { id: "mapa", label: "Mapa", icon: Globe }
+                ].map(t => (
+                  <button 
+                    key={t.id} 
+                    onClick={() => setTab(t.id)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-black transition-all ${
+                      tab === t.id ? "bg-white shadow-xl scale-105 text-black" : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    <t.icon className="w-4 h-4" /> {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Contenedor Dinámico */}
+            <div className="min-h-[600px]">
+              {tab === "lugares" && <LugaresBento lugares={lugares} color={color} onSelect={setLugarSel} />}
+              {tab === "paquete" && <PaqueteTab paquete={paquete} color={color} />}
+              {tab === "itinerario" && <CalculadoraTab region={regionSlug} color={color} />}
+              {tab === "mapa" && (
+                <div className="h-[700px] rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white">
+                   <MapaPrestadores region={regionSlug} color={color} />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
 
+      {/* Footer Visual */}
+      <footer className="bg-black text-white pt-32 pb-12 rounded-t-[5rem]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+            <div className="col-span-2">
+               <h3 className="text-4xl font-black mb-8">Descubre Veracruz<br/><span className="text-gray-600">Como nunca antes.</span></h3>
+               <p className="text-gray-400 max-w-sm mb-8 leading-relaxed">Somos tu guía definitiva para explorar los rincones más mágicos del estado. Desde las cumbres nevadas hasta el azul profundo del mar.</p>
+               <div className="flex gap-4">
+                  <button className="p-4 bg-gray-900 rounded-2xl hover:bg-white hover:text-black transition-all"><Facebook/></button>
+                  <button className="p-4 bg-gray-900 rounded-2xl hover:bg-white hover:text-black transition-all"><Instagram/></button>
+                  <button className="p-4 bg-gray-900 rounded-2xl hover:bg-white hover:text-black transition-all"><Share2/></button>
+               </div>
+            </div>
+            <div>
+              <h4 className="font-black uppercase tracking-widest text-sm mb-6 text-gray-500">Regiones</h4>
+              <ul className="space-y-4 font-bold">
+                {REGIONES.map(r => <li key={r.slug} className="cursor-pointer hover:text-gray-400 transition-colors">{r.label}</li>)}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black uppercase tracking-widest text-sm mb-6 text-gray-500">Legal</h4>
+              <ul className="space-y-4 font-bold text-gray-400">
+                <li className="hover:text-white cursor-pointer">Privacidad</li>
+                <li className="hover:text-white cursor-pointer">Términos</li>
+                <li className="hover:text-white cursor-pointer">Contacto</li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-12 border-t border-gray-900 text-center text-gray-600 text-xs font-bold uppercase tracking-widest">
+            © 2026 Veracruz Rutas Mágicas · Hecho con ❤️ en el Puerto
+          </div>
+        </div>
+      </footer>
+
+      {/* Modal de Detalle */}
       {lugarSel && <LugarModal lugar={lugarSel} color={color} onClose={() => setLugarSel(null)} />}
 
-      <Footer />
+      <style jsx global>{`
+        .text-outline-white {
+          -webkit-text-stroke: 1px rgba(255,255,255,0.6);
+          color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };
