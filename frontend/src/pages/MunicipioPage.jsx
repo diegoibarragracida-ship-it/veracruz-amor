@@ -44,7 +44,7 @@ const MunicipioPage = () => {
           const [prestRes, eventosRes, atracRes] = await Promise.all([
             axios.get(`${API}/prestadores`, { params: { municipio_id: munRes.data.id, verificado: true } }),
             axios.get(`${API}/eventos`, { params: { municipio_id: munRes.data.id, publicado: true } }),
-            axios.get(`${API}/lugares`, { params: { municipio_id: munRes.data.id, limit: 20 } }).catch(() => ({ data: { lugares: [] } })),
+            axios.get(`${API}/lugares/municipio/${munRes.data.id}`).catch(() => ({ data: { lugares: [] } })),
           ]);
           setPrestadores(prestRes.data.prestadores || []);
           setEventos(eventosRes.data.eventos || []);
@@ -234,6 +234,10 @@ const MunicipioPage = () => {
                   <Camera className="w-4 h-4 mr-2" />
                   Galería
                 </TabsTrigger>
+                <TabsTrigger value="atracciones" className="rounded-lg">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Atracciones
+                </TabsTrigger>
                 <TabsTrigger value="prestadores" className="rounded-lg">
                   <Users className="w-4 h-4 mr-2" />
                   Servicios
@@ -405,22 +409,6 @@ const MunicipioPage = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="prestadores">
-                {prestadores.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {prestadores.map((p) => (
-                      <PrestadorCard key={p.id} prestador={p} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-2xl p-12 text-center">
-                    <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-500">No hay prestadores verificados en este municipio aún</p>
-                  </div>
-                )}
-              </TabsContent>
-
-
               <TabsContent value="atracciones">
                 {atracciones.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -480,6 +468,21 @@ const MunicipioPage = () => {
                     <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <p className="text-gray-500 text-lg font-medium mb-2">Sin atracciones registradas</p>
                     <p className="text-sm text-gray-400">El encargado del municipio puede agregar lugares desde su panel.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="prestadores">
+                {prestadores.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {prestadores.map((p) => (
+                      <PrestadorCard key={p.id} prestador={p} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-2xl p-12 text-center">
+                    <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-500">No hay prestadores verificados en este municipio aún</p>
                   </div>
                 )}
               </TabsContent>
