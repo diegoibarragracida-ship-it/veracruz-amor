@@ -44,7 +44,7 @@ const MunicipioPage = () => {
           const [prestRes, eventosRes, atracRes] = await Promise.all([
             axios.get(`${API}/prestadores`, { params: { municipio_id: munRes.data.id, verificado: true } }),
             axios.get(`${API}/eventos`, { params: { municipio_id: munRes.data.id, publicado: true } }),
-            axios.get(`${API}/lugares/municipio/${munRes.data.id}`).catch(() => ({ data: { lugares: [] } })),
+            axios.get(`${API}/lugares`, { params: { municipio_id: munRes.data.id } }).catch(() => ({ data: { lugares: [] } })),
           ]);
           setPrestadores(prestRes.data.prestadores || []);
           setEventos(eventosRes.data.eventos || []);
