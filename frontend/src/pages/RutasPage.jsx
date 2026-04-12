@@ -765,7 +765,7 @@ const RutasPage = () => {
             {tab === "paquete"    && <PaqueteTab paquete={paquete} color={color} light={light} />}
             {tab === "itinerario" && <CalculadoraTab region={regionSlug} color={color} />}
             {tab === "mapa"        && <MapaPrestadores region={regionSlug} color={color} />}
-            {tab === "constructor" && <ConstructorPaquete lugares={lugares} rutaData={rutaData} region={regionSlug} color={color} />}
+            {tab === "constructor" && <ConstructorPaquete rutaData={rutaData} region={regionSlug} color={color} />}
           </div>
         )}
       </main>

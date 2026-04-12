@@ -8,7 +8,7 @@ import {
   Car, Navigation, UserCheck, Shield, Camera, Package,
   ChevronRight, ChevronLeft, Save, Loader2, Star,
   Clock, MapPin, Hotel, Utensils, Mountain, Coffee,
-  Sunrise, Sun, Sunset, Moon
+  Sunrise, Sun, Sunset, Moon, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ const BLOQUES_DIA = [
 
 /* ── Servicios extra ──────────────────────────────────────── */
 const SERVICIOS_DISPONIBLES = [
-  { tipo: "auto",       nombre: "Renta de auto",       emoji: "🚗", precio_base: 800,  unidad: "por día",
+  { tipo: "auto",       nombre: "Renta de auto",        emoji: "🚗", precio_base: 800,  unidad: "por día",
     categorias: [{ label: "Compacto", precio: 600 }, { label: "SUV", precio: 1100 }, { label: "Camioneta", precio: 1400 }] },
   { tipo: "uber",       nombre: "Traslados Uber/taxi",  emoji: "🚖", precio_base: 400,  unidad: "por día", categorias: null },
   { tipo: "guia",       nombre: "Guía turístico local", emoji: "🧑‍🏫", precio_base: 1200, unidad: "por día",
@@ -67,7 +67,12 @@ const ItemCard = ({ item, incluido, onToggle, color, tipo }) => {
     >
       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-200">
         {foto ? (
-          <img src={foto} alt={item.nombre} className="w-full h-full object-cover" />
+          <img
+            src={foto}
+            alt={item.nombre}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.style.display = "none"; }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-2xl"
             style={{ background: `${color}22` }}>
@@ -83,14 +88,9 @@ const ItemCard = ({ item, incluido, onToggle, color, tipo }) => {
           {costo > 0 && (
             <span className="text-xs font-medium text-gray-600">· ${costo}</span>
           )}
-          {item.calificacion_promedio > 0 && (
+          {item.calificacion > 0 && (
             <span className="text-xs text-amber-600 flex items-center gap-0.5">
-              <Star className="w-3 h-3 fill-current" />{item.calificacion_promedio || item.calificacion}
-            </span>
-          )}
-          {item.calificacion > 0 && !item.calificacion_promedio && (
-            <span className="text-xs text-amber-600 flex items-center gap-0.5">
-              <Star className="w-3 h-3 fill-current" />{item.calificacion}
+              <Star className="w-3 h-3 fill-current" />{item.calificacion || item.calificacion_promedio}
             </span>
           )}
         </div>
@@ -106,29 +106,41 @@ const ItemCard = ({ item, incluido, onToggle, color, tipo }) => {
 };
 
 /* ── Paso 1: Fechas y personas ───────────────────────────── */
-const PasoFechas = ({ datos, onChange }) => (
+const PasoFechas = ({ datos, onChange, color }) => (
   <div className="space-y-6">
     <div>
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Nombre de tu viaje</label>
-      <input type="text" value={datos.nombre} onChange={e => onChange({ nombre: e.target.value })}
+      <input
+        type="text"
+        value={datos.nombre}
+        onChange={e => onChange({ nombre: e.target.value })}
         placeholder="Ej: Vacaciones en Orizaba 2025"
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-[#1B5E20] text-sm placeholder-gray-400" />
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none text-sm placeholder-gray-400"
+        style={{ focusBorderColor: color }}
+      />
     </div>
     <div>
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Fecha de llegada</label>
-      <input type="date" value={datos.fecha_inicio}
+      <input
+        type="date"
+        value={datos.fecha_inicio}
         min={new Date().toISOString().split("T")[0]}
         onChange={e => onChange({ fecha_inicio: e.target.value })}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-[#1B5E20] text-sm" />
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none text-sm"
+      />
     </div>
     <div>
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Número de personas</label>
       <div className="flex items-center gap-4">
-        <button onClick={() => onChange({ num_personas: Math.max(1, datos.num_personas - 1) })}
-          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-xl">−</button>
+        <button
+          onClick={() => onChange({ num_personas: Math.max(1, datos.num_personas - 1) })}
+          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-xl"
+        >−</button>
         <span className="text-3xl font-bold text-gray-900 w-10 text-center">{datos.num_personas}</span>
-        <button onClick={() => onChange({ num_personas: Math.min(20, datos.num_personas + 1) })}
-          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-xl">+</button>
+        <button
+          onClick={() => onChange({ num_personas: Math.min(20, datos.num_personas + 1) })}
+          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 font-bold text-xl"
+        >+</button>
         <span className="text-gray-500 text-sm">personas</span>
       </div>
     </div>
@@ -141,9 +153,9 @@ const PasoLugares = ({ diasConfig, onToggleItem, numDias, color, loading }) => {
   const dia = diasConfig[diaActivo];
 
   if (loading) return (
-    <div className="flex items-center justify-center py-16 gap-3">
+    <div className="flex flex-col items-center justify-center py-16 gap-3">
       <Loader2 className="w-6 h-6 animate-spin" style={{ color }} />
-      <span className="text-gray-500 text-sm">Cargando opciones...</span>
+      <span className="text-gray-500 text-sm">Cargando lugares de la región...</span>
     </div>
   );
 
@@ -152,11 +164,14 @@ const PasoLugares = ({ diasConfig, onToggleItem, numDias, color, loading }) => {
       {/* Selector de día */}
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
         {Array.from({ length: numDias }, (_, i) => (
-          <button key={i} onClick={() => setDiaActivo(i)}
+          <button
+            key={i}
+            onClick={() => setDiaActivo(i)}
             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               diaActivo === i ? "text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
-            style={diaActivo === i ? { backgroundColor: color } : {}}>
+            style={diaActivo === i ? { backgroundColor: color } : {}}
+          >
             Día {i + 1}
           </button>
         ))}
@@ -165,13 +180,12 @@ const PasoLugares = ({ diasConfig, onToggleItem, numDias, color, loading }) => {
       {/* Bloques del día */}
       <div className="space-y-4">
         {BLOQUES_DIA.map(bloque => {
-          const itemsDelBloque = dia.bloques?.[bloque.id] || [];
+          const itemsDelBloque = dia?.bloques?.[bloque.id] || [];
           const seleccionados = itemsDelBloque.filter(i => i.incluido).length;
           const BloqueIcon = bloque.icon;
 
           return (
             <div key={bloque.id} className="bg-gray-50 rounded-2xl overflow-hidden">
-              {/* Header bloque */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
                   style={{ backgroundColor: bloque.color ? `${bloque.color}20` : `${color}20` }}>
@@ -186,7 +200,6 @@ const PasoLugares = ({ diasConfig, onToggleItem, numDias, color, loading }) => {
                 </span>
               </div>
 
-              {/* Items */}
               <div className="p-3 space-y-2">
                 {itemsDelBloque.length === 0 ? (
                   <p className="text-xs text-gray-400 italic text-center py-2">
@@ -229,13 +242,19 @@ const PasoServicios = ({ servicios, onToggle, onCategoria, numDias, numPersonas,
       if (svc.unidad === "por persona") precioTotal *= numPersonas;
 
       return (
-        <div key={svc.tipo}
+        <div
+          key={svc.tipo}
           className={`rounded-2xl border-2 transition-all overflow-hidden ${incluido ? "shadow-sm" : "border-gray-100"}`}
-          style={incluido ? { borderColor: `${color}44` } : {}}>
-          <div className={`flex items-center gap-4 p-4 cursor-pointer ${!incluido ? "hover:bg-gray-50" : ""}`}
-            onClick={() => onToggle(svc)}>
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${!incluido ? "bg-gray-100" : ""}`}
-              style={incluido ? { backgroundColor: color } : {}}>
+          style={incluido ? { borderColor: `${color}44` } : {}}
+        >
+          <div
+            className={`flex items-center gap-4 p-4 cursor-pointer ${!incluido ? "hover:bg-gray-50" : ""}`}
+            onClick={() => onToggle(svc)}
+          >
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${!incluido ? "bg-gray-100" : ""}`}
+              style={incluido ? { backgroundColor: color } : {}}
+            >
               {svc.emoji}
             </div>
             <div className="flex-1">
@@ -245,11 +264,14 @@ const PasoServicios = ({ servicios, onToggle, onCategoria, numDias, numPersonas,
                   ~${precioTotal.toLocaleString()}
                 </p>
               </div>
-              <p className="text-xs text-gray-500">{svc.descripcion} · {svc.unidad}</p>
+              <p className="text-xs text-gray-500">{svc.unidad}</p>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-              incluido ? "border-transparent text-white" : "border-gray-300"
-            }`} style={incluido ? { backgroundColor: color } : {}}>
+            <div
+              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                incluido ? "border-transparent text-white" : "border-gray-300"
+              }`}
+              style={incluido ? { backgroundColor: color } : {}}
+            >
               {incluido && <Check className="w-3.5 h-3.5" />}
             </div>
           </div>
@@ -260,11 +282,14 @@ const PasoServicios = ({ servicios, onToggle, onCategoria, numDias, numPersonas,
                 {svc.categorias.map(cat => {
                   const sel = conf?.categoria === cat.label;
                   return (
-                    <button key={cat.label} onClick={() => onCategoria(svc.tipo, cat.label)}
+                    <button
+                      key={cat.label}
+                      onClick={() => onCategoria(svc.tipo, cat.label)}
                       className={`text-xs px-3 py-1.5 rounded-full font-medium border-2 transition-all ${
                         sel ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-600"
                       }`}
-                      style={sel ? { backgroundColor: color, borderColor: color } : {}}>
+                      style={sel ? { backgroundColor: color, borderColor: color } : {}}
+                    >
                       {cat.label} · ${cat.precio.toLocaleString()}
                     </button>
                   );
@@ -302,24 +327,30 @@ const PasoResumen = ({ datos, diasConfig, servicios, costoTotal, region, color, 
       </div>
 
       {diasConfig.map((dia, i) => {
-        const todosItems = BLOQUES_DIA.flatMap(b => (dia.bloques?.[b.id] || []).filter(l => l.incluido).map(l => ({ ...l, bloque: b.label, emoji: b.emoji })));
+        const todosItems = BLOQUES_DIA.flatMap(b =>
+          (dia.bloques?.[b.id] || [])
+            .filter(l => l.incluido)
+            .map(l => ({ ...l, bloque: b.label, emoji: b.emoji }))
+        );
         return (
           <div key={i} className="bg-gray-50 rounded-2xl p-4">
             <p className="font-bold text-gray-800 text-sm mb-3">
               Día {i + 1}
-              {datos.fecha_inicio && <span className="font-normal text-gray-400 ml-2">{formatFecha(addDays(datos.fecha_inicio, i))}</span>}
+              {datos.fecha_inicio && (
+                <span className="font-normal text-gray-400 ml-2">{formatFecha(addDays(datos.fecha_inicio, i))}</span>
+              )}
             </p>
             {todosItems.length > 0 ? (
               <div className="space-y-2">
                 {todosItems.map((l, j) => (
                   <div key={j} className="flex items-center gap-2.5">
                     <span className="text-base">{l.emoji}</span>
-                    <div>
-                      <p className="text-sm text-gray-800 font-medium">{l.nombre}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 font-medium truncate">{l.nombre}</p>
                       <p className="text-xs text-gray-400">{l.bloque}</p>
                     </div>
                     {l.costo_estimado > 0 && (
-                      <span className="text-xs text-gray-500 ml-auto">${l.costo_estimado}/persona</span>
+                      <span className="text-xs text-gray-500 flex-shrink-0">${l.costo_estimado}/p</span>
                     )}
                   </div>
                 ))}
@@ -343,27 +374,37 @@ const PasoResumen = ({ datos, diasConfig, servicios, costoTotal, region, color, 
         </div>
       )}
 
-      <div className="rounded-2xl p-5 flex items-center justify-between text-white"
-        style={{ backgroundColor: color }}>
+      <div
+        className="rounded-2xl p-5 flex items-center justify-between text-white"
+        style={{ backgroundColor: color }}
+      >
         <div>
           <p className="text-white/70 text-xs uppercase tracking-wide">Costo total estimado</p>
           <p className="text-3xl font-bold mt-0.5">${costoTotal.toLocaleString()} MXN</p>
-          <p className="text-white/60 text-xs mt-0.5">≈ ${Math.round(costoTotal / datos.num_personas).toLocaleString()} por persona</p>
+          <p className="text-white/60 text-xs mt-0.5">
+            ≈ ${Math.round(costoTotal / datos.num_personas).toLocaleString()} por persona
+          </p>
         </div>
         <Package className="w-10 h-10 opacity-40" />
       </div>
 
-      <button onClick={onGuardar} disabled={loading}
+      <button
+        onClick={onGuardar}
+        disabled={loading}
         className="w-full py-4 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2.5 hover:opacity-90 disabled:opacity-60 transition-all"
-        style={{ backgroundColor: color }}>
-        {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</> : <><Save className="w-5 h-5" /> Guardar mi itinerario</>}
+        style={{ backgroundColor: color }}
+      >
+        {loading
+          ? <><Loader2 className="w-5 h-5 animate-spin" /> Guardando...</>
+          : <><Save className="w-5 h-5" /> Guardar mi itinerario</>
+        }
       </button>
     </div>
   );
 };
 
 /* ── COMPONENTE PRINCIPAL ────────────────────────────────── */
-const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
+const ConstructorPaquete = ({ rutaData, region, color }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const numDias = rutaData?.dias_recomendados || 3;
@@ -371,106 +412,173 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
   const [paso, setPaso] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loadingItems, setLoadingItems] = useState(true);
+
+  // ── Datos reales desde MongoDB ──────────────────────────
+  const [lugaresDB, setLugaresDB] = useState([]);
   const [restaurantes, setRestaurantes] = useState([]);
   const [hoteles, setHoteles] = useState([]);
 
   const [datos, setDatos] = useState({ nombre: "", fecha_inicio: "", num_personas: 2 });
 
-  // Fetch prestadores al montar
+  // Fetch: municipio → lugares + prestadores
   useEffect(() => {
-    const fetchPrestadores = async () => {
+    const fetchTodo = async () => {
       setLoadingItems(true);
       try {
-        const [restRes, hotelRes] = await Promise.all([
-          axios.get(`${API}/prestadores`, { params: { tipo: "GASTRONOMÍA", verificado: true, limit: 20 } }),
-          axios.get(`${API}/prestadores`, { params: { tipo: "HOSPEDAJE", verificado: true, limit: 20 } }),
+        // 1. Obtener municipio por slug (region === "orizaba", "xalapa", etc.)
+        const munRes = await axios.get(`${API}/municipios/${region}`);
+        const municipioId = munRes.data?.id;
+
+        const [lugaresRes, restRes, hotelRes] = await Promise.all([
+          // Lugares del municipio — igual que MunicipioPage
+          municipioId
+            ? axios.get(`${API}/lugares`, { params: { municipio_id: municipioId } })
+            : axios.get(`${API}/lugares`, { params: { region } }),
+          axios.get(`${API}/prestadores`, {
+            params: { tipo: "GASTRONOMÍA", verificado: true, limit: 20 },
+          }),
+          axios.get(`${API}/prestadores`, {
+            params: { tipo: "HOSPEDAJE", verificado: true, limit: 20 },
+          }),
         ]);
+
+        setLugaresDB(lugaresRes.data.lugares || []);
         setRestaurantes(restRes.data.prestadores || []);
         setHoteles(hotelRes.data.prestadores || []);
       } catch (e) {
-        console.error("Error cargando prestadores:", e);
+        console.error("Error cargando datos del constructor:", e);
+        toast.error("Error cargando los lugares. Intenta de nuevo.");
       } finally {
         setLoadingItems(false);
       }
     };
-    fetchPrestadores();
-  }, []);
 
-  // Construir configuración de días con todos los bloques
+    fetchTodo();
+  }, [region]);
+
+  // Construir días cuando llegan los datos
   const [diasConfig, setDiasConfig] = useState(() =>
     Array.from({ length: numDias }, (_, i) => ({
       dia_num: i + 1,
       fecha: null,
-      bloques: {}, // se populará cuando llegen los datos
+      bloques: {},
     }))
   );
 
-  // Cuando llegan prestadores, populamos los bloques
   useEffect(() => {
     if (loadingItems) return;
-    setDiasConfig(Array.from({ length: numDias }, (_, diaIdx) => {
-      const lugaresBase = lugares.slice(
-        Math.floor((diaIdx / numDias) * lugares.length),
-        Math.floor(((diaIdx + 1) / numDias) * lugares.length)
-      );
 
-      return {
-        dia_num: diaIdx + 1,
-        fecha: null,
-        bloques: {
-          desayuno: restaurantes.slice(0, 4).map(r => ({
-            item_id: r.id, nombre: r.nombre, tipo: "GASTRONOMÍA",
-            subtipo: r.subtipo, foto_url: r.foto_url,
-            calificacion_promedio: r.calificacion_promedio,
-            horarios: r.horarios, costo_estimado: r.precio_promedio || 0,
-            incluido: diaIdx === 0 && restaurantes.indexOf(r) === 0,
-          })),
-          manana: lugaresBase.filter(l => l.tipo !== "restaurante").slice(0, 3).map((l, j) => ({
-            item_id: l.id, nombre: l.nombre, tipo: l.tipo,
-            foto_portada: l.foto_portada, fotos: l.fotos,
-            calificacion: l.calificacion, costo_estimado: l.costo_min || 0,
-            horarios: l.horarios, incluido: j === 0,
-          })),
-          comida: restaurantes.slice(0, 4).map(r => ({
-            item_id: r.id + "_comida", nombre: r.nombre, tipo: "GASTRONOMÍA",
-            subtipo: r.subtipo, foto_url: r.foto_url,
-            calificacion_promedio: r.calificacion_promedio,
-            horarios: r.horarios, costo_estimado: r.precio_promedio || 0,
-            incluido: restaurantes.indexOf(r) === 1,
-          })),
-          tarde: lugaresBase.filter(l => l.tipo !== "restaurante").slice(1, 4).map((l, j) => ({
-            item_id: l.id + "_tarde", nombre: l.nombre, tipo: l.tipo,
-            foto_portada: l.foto_portada, fotos: l.fotos,
-            calificacion: l.calificacion, costo_estimado: l.costo_min || 0,
-            horarios: l.horarios, incluido: j === 0,
-          })),
-          cena: restaurantes.slice(0, 4).map(r => ({
-            item_id: r.id + "_cena", nombre: r.nombre, tipo: "GASTRONOMÍA",
-            subtipo: r.subtipo, foto_url: r.foto_url,
-            calificacion_promedio: r.calificacion_promedio,
-            horarios: r.horarios, costo_estimado: r.precio_promedio || 0,
-            incluido: restaurantes.indexOf(r) === 2,
-          })),
-          hospedaje: hoteles.slice(0, 3).map((h, j) => ({
-            item_id: h.id, nombre: h.nombre, tipo: "HOSPEDAJE",
-            subtipo: h.subtipo, foto_url: h.foto_url,
-            calificacion_promedio: h.calificacion_promedio,
-            horarios: h.horarios, costo_estimado: h.precio_noche || 0,
-            incluido: j === 0,
-          })),
-        },
-      };
-    }));
-  }, [loadingItems, lugares, restaurantes, hoteles, numDias]);
+    setDiasConfig(
+      Array.from({ length: numDias }, (_, diaIdx) => {
+        // Distribuir lugares por día
+        const totalLugares = lugaresDB.length;
+        const porDia = Math.ceil(totalLugares / numDias);
+        const lugaresBase = lugaresDB.slice(diaIdx * porDia, (diaIdx + 1) * porDia);
+
+        // Atracciones y actividades (no restaurantes)
+        const atracciones = lugaresBase.filter(l =>
+          l.tipo === "atraccion" || l.tipo === "actividad"
+        );
+
+        return {
+          dia_num: diaIdx + 1,
+          fecha: null,
+          bloques: {
+            desayuno: restaurantes.slice(0, 5).map((r, j) => ({
+              item_id: `${r.id}_des_${diaIdx}`,
+              nombre: r.nombre,
+              tipo: "GASTRONOMÍA",
+              subtipo: r.subtipo,
+              foto_url: r.foto_url,
+              calificacion: r.calificacion_promedio || 0,
+              horarios: r.horarios,
+              costo_estimado: r.precio_promedio || 0,
+              incluido: j === (diaIdx % Math.max(restaurantes.length, 1)),
+            })),
+
+            manana: atracciones.slice(0, 4).map((l, j) => ({
+              item_id: `${l.id}_man_${diaIdx}`,
+              nombre: l.nombre,
+              tipo: l.tipo,
+              subtipo: l.subtipo,
+              foto_portada: l.foto_portada,
+              fotos: l.fotos,
+              calificacion: l.calificacion || 0,
+              horarios: l.horarios,
+              costo_estimado: l.costo_min || 0,
+              incluido: j === 0,
+            })),
+
+            comida: restaurantes.slice(0, 5).map((r, j) => ({
+              item_id: `${r.id}_com_${diaIdx}`,
+              nombre: r.nombre,
+              tipo: "GASTRONOMÍA",
+              subtipo: r.subtipo,
+              foto_url: r.foto_url,
+              calificacion: r.calificacion_promedio || 0,
+              horarios: r.horarios,
+              costo_estimado: r.precio_promedio || 0,
+              incluido: j === ((diaIdx + 1) % Math.max(restaurantes.length, 1)),
+            })),
+
+            tarde: atracciones.slice(1, 5).map((l, j) => ({
+              item_id: `${l.id}_tar_${diaIdx}`,
+              nombre: l.nombre,
+              tipo: l.tipo,
+              subtipo: l.subtipo,
+              foto_portada: l.foto_portada,
+              fotos: l.fotos,
+              calificacion: l.calificacion || 0,
+              horarios: l.horarios,
+              costo_estimado: l.costo_min || 0,
+              incluido: j === 0,
+            })),
+
+            cena: restaurantes.slice(0, 5).map((r, j) => ({
+              item_id: `${r.id}_cen_${diaIdx}`,
+              nombre: r.nombre,
+              tipo: "GASTRONOMÍA",
+              subtipo: r.subtipo,
+              foto_url: r.foto_url,
+              calificacion: r.calificacion_promedio || 0,
+              horarios: r.horarios,
+              costo_estimado: r.precio_promedio || 0,
+              incluido: j === ((diaIdx + 2) % Math.max(restaurantes.length, 1)),
+            })),
+
+            hospedaje: hoteles.slice(0, 4).map((h, j) => ({
+              item_id: `${h.id}_hos_${diaIdx}`,
+              nombre: h.nombre,
+              tipo: "HOSPEDAJE",
+              subtipo: h.subtipo,
+              foto_url: h.foto_url,
+              calificacion: h.calificacion_promedio || 0,
+              horarios: h.horarios,
+              costo_estimado: h.precio_noche || 0,
+              incluido: j === 0,
+            })),
+          },
+        };
+      })
+    );
+  }, [loadingItems, lugaresDB, restaurantes, hoteles, numDias]);
 
   const [servicios, setServicios] = useState(
-    SERVICIOS_DISPONIBLES.map(s => ({ tipo: s.tipo, nombre: s.nombre, precio_estimado: s.precio_base, categoria: null, incluido: false }))
+    SERVICIOS_DISPONIBLES.map(s => ({
+      tipo: s.tipo,
+      nombre: s.nombre,
+      precio_estimado: s.precio_base,
+      categoria: null,
+      incluido: false,
+    }))
   );
 
   const costoTotal = useMemo(() => {
     const costoItems = diasConfig.reduce((acc, dia) =>
       acc + BLOQUES_DIA.reduce((a, b) =>
-        a + (dia.bloques?.[b.id] || []).filter(i => i.incluido).reduce((s, i) => s + (i.costo_estimado || 0), 0)
+        a + (dia.bloques?.[b.id] || [])
+          .filter(i => i.incluido)
+          .reduce((s, i) => s + (i.costo_estimado || 0), 0)
       , 0)
     , 0);
     const costoServicios = servicios.filter(s => s.incluido).reduce((a, s) => a + s.precio_estimado, 0);
@@ -520,7 +628,6 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
     }
     setSaving(true);
     try {
-      // Convertir bloques a formato de días para la API
       const diasParaAPI = diasConfig.map((dia, i) => ({
         dia_num: dia.dia_num,
         fecha: datos.fecha_inicio ? addDays(datos.fecha_inicio, i) : null,
@@ -571,8 +678,26 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
     { label: "Resumen",   icon: Check },
   ];
 
+  // Banner de resumen de lugares cargados
+  const totalLugares = lugaresDB.length;
+  const totalRestaurantes = restaurantes.length;
+  const totalHoteles = hoteles.length;
+
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Banner info de datos cargados */}
+      {!loadingItems && (totalLugares > 0 || totalRestaurantes > 0) && (
+        <div
+          className="flex flex-wrap items-center gap-3 mb-6 px-4 py-3 rounded-2xl text-sm font-medium"
+          style={{ backgroundColor: `${color}10`, border: `1px solid ${color}22` }}
+        >
+          <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color }} />
+          <span className="text-gray-700">
+            {totalLugares} atracciones · {totalRestaurantes} restaurantes · {totalHoteles} hoteles disponibles
+          </span>
+        </div>
+      )}
+
       {/* Stepper */}
       <div className="flex items-center gap-0 mb-8">
         {PASOS.map((p, i) => {
@@ -581,11 +706,16 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
           const active = i === paso;
           return (
             <div key={i} className="flex items-center flex-1">
-              <button onClick={() => i < paso && setPaso(i)}
-                className={`flex flex-col items-center gap-1 flex-shrink-0 ${i < paso ? "cursor-pointer" : "cursor-default"}`}>
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  !done && !active ? "bg-gray-100 text-gray-400" : "text-white"
-                }`} style={(done || active) ? { backgroundColor: color } : {}}>
+              <button
+                onClick={() => i < paso && setPaso(i)}
+                className={`flex flex-col items-center gap-1 flex-shrink-0 ${i < paso ? "cursor-pointer" : "cursor-default"}`}
+              >
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                    !done && !active ? "bg-gray-100 text-gray-400" : "text-white"
+                  }`}
+                  style={(done || active) ? { backgroundColor: color } : {}}
+                >
                   {done ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                 </div>
                 <span className={`text-[11px] font-medium hidden sm:block ${active ? "text-gray-900" : "text-gray-400"}`}>
@@ -593,8 +723,10 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
                 </span>
               </button>
               {i < PASOS.length - 1 && (
-                <div className="flex-1 h-0.5 mx-1 transition-colors"
-                  style={{ backgroundColor: i < paso ? color : "#E5E7EB" }} />
+                <div
+                  className="flex-1 h-0.5 mx-1 transition-colors"
+                  style={{ backgroundColor: i < paso ? color : "#E5E7EB" }}
+                />
               )}
             </div>
           );
@@ -609,7 +741,13 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
 
       {/* Contenido */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        {paso === 0 && <PasoFechas datos={datos} onChange={c => setDatos(d => ({ ...d, ...c }))} />}
+        {paso === 0 && (
+          <PasoFechas
+            datos={datos}
+            onChange={c => setDatos(d => ({ ...d, ...c }))}
+            color={color}
+          />
+        )}
         {paso === 1 && (
           <PasoLugares
             diasConfig={diasConfig}
@@ -646,15 +784,19 @@ const ConstructorPaquete = ({ lugares, rutaData, region, color }) => {
       {/* Navegación */}
       <div className="flex gap-3 mt-5">
         {paso > 0 && (
-          <button onClick={() => setPaso(p => p - 1)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50">
+          <button
+            onClick={() => setPaso(p => p - 1)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50"
+          >
             <ChevronLeft className="w-4 h-4" /> Anterior
           </button>
         )}
         {paso < PASOS.length - 1 && (
-          <button onClick={() => setPaso(p => p + 1)}
+          <button
+            onClick={() => setPaso(p => p + 1)}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm hover:opacity-90 transition-all"
-            style={{ backgroundColor: color }}>
+            style={{ backgroundColor: color }}
+          >
             Siguiente <ChevronRight className="w-4 h-4" />
           </button>
         )}
