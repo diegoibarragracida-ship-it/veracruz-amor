@@ -1682,6 +1682,12 @@ async def update_municipio(slug: str, data: MunicipioUpdate, request: Request):
     
     return await db.municipios.find_one({"slug": slug}, {"_id": 0})
 
+@api_router.get("/seed-orizaba")
+async def seed_orizaba():
+     from seed_orizaba_prestadores import main
+     await main()
+     return {"status": "ok"}
+
 # ============== PRESTADORES ENDPOINTS ==============
 
 @api_router.get("/prestadores")
