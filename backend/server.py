@@ -1727,10 +1727,10 @@ async def create_prestador(data: PrestadorCreate, request: Request):
         **data.model_dump(),
         "calificacion_promedio": 0.0,
         "total_resenas": 0,
-        "verificado": user["rol"] == "superadmin",
+        "verificado": user["rol"] in ["superadmin", "encargado"],  # encargado auto-verifica
         "activo": True,
         "propuesto_por_id": user["user_id"] if user["rol"] == "encargado" else None,
-        "aprobado_por_id": user["user_id"] if user["rol"] == "superadmin" else None,
+        "aprobado_por_id": user["user_id"] if user["rol"] in ["superadmin", "encargado"] else None,
         "user_id": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -1755,7 +1755,7 @@ async def update_prestador(prestador_id: str, request: Request):
         raise HTTPException(status_code=403, detail="No tienes permiso")
     
     allowed_fields = ["nombre", "descripcion", "foto_url", "telefono", "whatsapp", "horarios", "direccion"]
-    if user["rol"] == "superadmin":
+    if user["rol"] in ["superadmin", "encargado"]:
         allowed_fields.extend(["verificado", "activo", "tipo", "subtipo"])
     
     update_data = {k: v for k, v in body.items() if k in allowed_fields}
@@ -1767,14 +1767,36 @@ async def update_prestador(prestador_id: str, request: Request):
 @api_router.post("/prestadores/{prestador_id}/verificar")
 async def verificar_prestador(prestador_id: str, request: Request):
     user = await get_current_user(request)
-    if user["rol"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Solo el Super Admin puede verificar")
+    if user["rol"] not in ["superadmin", "encargado"]:
+        raise HTTPException(status_code=403, detail="Solo el Admin o Encargado puede verificar")
     
     await db.prestadores.update_one(
         {"id": prestador_id},
         {"$set": {"verificado": True, "aprobado_por_id": user["user_id"]}}
     )
     return {"message": "Prestador verificado"}
+
+@api_router.post("/prestadores/{prestador_id}/desverificar")
+async def desverificar_prestador(prestador_id: str, request: Request):
+    user = await get_current_user(request)
+    if user["rol"] not in ["superadmin", "encargado"]:
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    await db.prestadores.update_one(
+        {"id": prestador_id},
+        {"$set": {"verificado": False, "aprobado_por_id": None}}
+    )
+    return {"message": "Prestador desverificado"}
+
+@api_router.delete("/prestadores/{prestador_id}")
+async def delete_prestador(prestador_id: str, request: Request):
+    user = await get_current_user(request)
+    if user["rol"] not in ["superadmin", "encargado"]:
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    prestador = await db.prestadores.find_one({"id": prestador_id}, {"_id": 0})
+    if not prestador:
+        raise HTTPException(status_code=404, detail="Prestador no encontrado")
+    await db.prestadores.delete_one({"id": prestador_id})
+    return {"message": "Prestador eliminado"}
 
 # ============== EVENTOS ENDPOINTS ==============
 

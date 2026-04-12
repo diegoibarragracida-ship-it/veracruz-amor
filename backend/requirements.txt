@@ -14,3 +14,5 @@ cloudinary
 google-auth
 google-auth-oauthlib
 groq
+motor
+python-dotenv
