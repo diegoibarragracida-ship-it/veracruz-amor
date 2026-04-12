@@ -650,9 +650,21 @@ MUNICIPIOS_VERACRUZ = [
 ]
 
 async def seed_orizaba_completo():
-    """Agrega/actualiza las atracciones completas de Orizaba."""
+    """
+    Vincula las 10 atracciones reales de Orizaba al municipio real en la BD.
+    Busca el ID del municipio Orizaba y lo agrega a cada lugar.
+    """
+    # Buscar el municipio real de Orizaba en la BD
+    mun = await db.municipios.find_one({"nombre": "Orizaba"}, {"_id": 0, "id": 1, "nombre": 1})
+    if not mun:
+        logger.warning("Municipio Orizaba no encontrado en BD, saltando seed_orizaba_completo")
+        return
+
+    municipio_id = mun["id"]
+
     ORIZABA_LUGARES = [
-        {"nombre": "Palacio de Hierro de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
+        {"nombre": "Palacio de Hierro de Orizaba", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
          "descripcion": "Joya art nouveau construida en Bélgica (1894). Diseñada por el taller de Gustave Eiffel. Hoy es el Museo de Arte del Estado.",
          "descripcion_larga": "El Palacio de Hierro fue fabricado en Bélgica y ensamblado en Orizaba en 1894. Su fachada de hierro verde y azul es el símbolo de la ciudad. Alberga exposiciones temporales y permanentes de arte mexicano e internacional.",
          "horarios": "Mar–Dom 10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
@@ -660,69 +672,79 @@ async def seed_orizaba_completo():
          "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"],
          "tags": ["arquitectura","museo","arte","historia","fotografia"], "calificacion": 4.8, "destacado": True,
          "direccion": "Av. Colón s/n, Centro, Orizaba, Ver."},
-        {"nombre": "Teleférico de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "actividad",
-         "descripcion": "Uno de los teleféricos más largos de México. Conecta el centro con el Cerro del Borrego con vistas al Pico de Orizaba.",
-         "descripcion_larga": "El Teleférico recorre 1.2 km sobre la ciudad. Desde las cabinas ves el Pico de Orizaba (Citlaltépetl) a 5,636m. El trayecto dura 8 minutos.",
+        {"nombre": "Teleférico de Orizaba", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "actividad",
+         "descripcion": "Uno de los teleféricos más largos de México. Vistas al Pico de Orizaba (Citlaltépetl, 5,636m).",
          "horarios": "Mar–Dom 10:00–19:00", "costo": "$50 MXN ida y vuelta", "costo_min": 50, "costo_max": 50,
          "lat": 18.8480, "lng": -97.1050, "fotos": [],
          "tags": ["aventura","vistas","naturaleza","teleférico"], "calificacion": 4.6, "destacado": True,
          "direccion": "Cerro del Borrego s/n, Orizaba, Ver."},
-        {"nombre": "Cerro del Borrego", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "Mirador natural con vistas panorámicas de Orizaba y el Pico de Orizaba. Accesible por teleférico o a pie.",
-         "horarios": "Todos los días amanecer–anochecer", "costo": "Libre (teleférico $50 MXN)", "costo_min": 0, "costo_max": 50,
+        {"nombre": "Cerro del Borrego", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Mirador natural con vistas panorámicas de la ciudad y el Pico de Orizaba. Accesible por teleférico o a pie.",
+         "horarios": "Amanecer–anochecer", "costo": "Libre (teleférico $50 MXN)", "costo_min": 0, "costo_max": 50,
          "lat": 18.8465, "lng": -97.1063, "fotos": [],
          "tags": ["naturaleza","mirador","senderismo","vistas"], "calificacion": 4.7, "destacado": True},
-        {"nombre": "Cascada de Elefante", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "Cascada de 40 metros en las afueras de Orizaba. Nombre por una roca con forma de elefante.",
-         "horarios": "Todos los días 8:00–17:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
+        {"nombre": "Cascada de Elefante", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Cascada de 40 metros. Su nombre viene de una roca con forma de elefante. Ideal para senderismo.",
+         "horarios": "8:00–17:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
          "lat": 18.8600, "lng": -97.0800, "fotos": [],
          "tags": ["naturaleza","cascada","senderismo","aventura"], "calificacion": 4.5, "destacado": False},
-        {"nombre": "Parque Castillo", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "El parque más emblemático de Orizaba. Jardines, fuentes, quiosco histórico y corazón de la vida social.",
-         "horarios": "Todos los días 6:00–22:00", "costo": "Entrada libre", "costo_min": 0, "costo_max": 0,
+        {"nombre": "Parque Castillo", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Parque emblemático de Orizaba con jardines, fuentes y quiosco histórico. Corazón de la vida social.",
+         "horarios": "6:00–22:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8527, "lng": -97.1003, "fotos": [],
-         "tags": ["parque","historia","familia","descanso"], "calificacion": 4.5, "destacado": False,
+         "tags": ["parque","historia","familia"], "calificacion": 4.5, "destacado": False,
          "direccion": "Centro Histórico, Orizaba, Ver."},
-        {"nombre": "Paseo del Río Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
+        {"nombre": "Paseo del Río Orizaba", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
          "descripcion": "Hermoso paseo a orillas del Río Orizaba con jardines, esculturas y puentes históricos.",
-         "horarios": "Todos los días", "costo": "Entrada libre", "costo_min": 0, "costo_max": 0,
+         "horarios": "Todos los días", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8510, "lng": -97.1020, "fotos": [],
-         "tags": ["parque","río","familia","fotografía","caminata"], "calificacion": 4.6, "destacado": True},
-        {"nombre": "Catedral de San Miguel Arcángel", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "Imponente catedral barroca del siglo XVIII en el corazón de Orizaba.",
-         "horarios": "Lun–Dom 7:00–20:00", "costo": "Entrada libre", "costo_min": 0, "costo_max": 0,
+         "tags": ["parque","río","familia","fotografía"], "calificacion": 4.6, "destacado": True},
+        {"nombre": "Catedral de San Miguel Arcángel", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Imponente catedral barroca del siglo XVIII. Una de las más hermosas del estado.",
+         "horarios": "7:00–20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8530, "lng": -97.1005, "fotos": [],
          "tags": ["iglesia","arquitectura","historia","barroco"], "calificacion": 4.7, "destacado": True,
          "direccion": "Colón y Madero, Centro, Orizaba, Ver."},
-        {"nombre": "Museo del Diorama", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "Museo único con dioramas que recrean la historia de Orizaba desde época prehispánica hasta el siglo XX.",
+        {"nombre": "Museo del Diorama", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Museo único con dioramas que recrean la historia de Orizaba desde época prehispánica.",
          "horarios": "Mar–Dom 10:00–18:00", "costo": "$20 MXN", "costo_min": 20, "costo_max": 20,
          "lat": 18.8525, "lng": -97.1010, "fotos": [],
-         "tags": ["museo","historia","cultura","educativo"], "calificacion": 4.3, "destacado": False},
-        {"nombre": "Ex-Fábrica de San Lorenzo", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-         "descripcion": "Fábrica textil del siglo XIX, escenario de la huelga de Río Blanco (1907). Patrimonio industrial único.",
-         "descripcion_larga": "La Ex-Fábrica de San Lorenzo fue escenario de la huelga de Río Blanco en 1907, uno de los eventos más importantes de la historia obrera de México previo a la Revolución.",
+         "tags": ["museo","historia","cultura"], "calificacion": 4.3, "destacado": False},
+        {"nombre": "Ex-Fábrica de San Lorenzo", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "atraccion",
+         "descripcion": "Fábrica textil del siglo XIX, escenario de la huelga de Río Blanco (1907). Patrimonio industrial.",
+         "descripcion_larga": "Escenario de la huelga de Río Blanco en 1907, uno de los eventos más importantes de la historia obrera de México previo a la Revolución.",
          "horarios": "Visitas con guía", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
          "lat": 18.8490, "lng": -97.0930, "fotos": [],
-         "tags": ["historia","patrimonio","arquitectura","industrial"], "calificacion": 4.4, "destacado": False},
-        {"nombre": "Cerro de San Juan", "region": "orizaba", "municipio": "Orizaba", "tipo": "actividad",
-         "descripcion": "Punto de escalada y senderismo con rutas de todos los niveles y vistas del Pico de Orizaba.",
-         "horarios": "Todos los días amanecer–anochecer", "costo": "Libre", "costo_min": 0, "costo_max": 0,
+         "tags": ["historia","patrimonio","arquitectura"], "calificacion": 4.4, "destacado": False},
+        {"nombre": "Cerro de San Juan", "region": "orizaba", "municipio": "Orizaba",
+         "municipio_id": municipio_id, "tipo": "actividad",
+         "descripcion": "Senderismo y escalada con vistas espectaculares del Pico de Orizaba y el valle.",
+         "horarios": "Amanecer–anochecer", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8700, "lng": -97.0900, "fotos": [],
          "tags": ["senderismo","escalada","naturaleza","aventura"], "calificacion": 4.4, "destacado": False},
     ]
+
     inserted = 0
     updated = 0
     for l in ORIZABA_LUGARES:
         existing = await db.lugares.find_one({"nombre": l["nombre"], "municipio": "Orizaba"})
         if existing:
-            await db.lugares.update_one({"_id": existing["_id"]}, {"$set": l})
+            await db.lugares.update_one({"_id": existing["_id"]}, {"$set": {**l, "municipio_id": municipio_id}})
             updated += 1
         else:
             doc = {**l, "id": str(uuid.uuid4()), "slug": slugify(l["nombre"])}
             await db.lugares.insert_one(doc)
             inserted += 1
-    logger.info(f"Orizaba lugares: {inserted} insertados, {updated} actualizados")
+
+    logger.info(f"Orizaba lugares: {inserted} insertados, {updated} actualizados, municipio_id={municipio_id}")
 
 
 
@@ -2971,12 +2993,20 @@ async def get_ruta_by_region(region_slug: str):
 
 
 @api_router.get("/lugares")
-async def get_lugares(region: Optional[str] = None, municipio: Optional[str] = None,
-                      tipo: Optional[str] = None, destacado: Optional[bool] = None, limit: int = 20):
+async def get_lugares(
+    region: Optional[str] = None,
+    municipio: Optional[str] = None,
+    municipio_id: Optional[str] = None,
+    tipo: Optional[str] = None,
+    destacado: Optional[bool] = None,
+    limit: int = 20,
+):
     query: Dict[str, Any] = {}
     if region:
         query["region"] = region.lower()
-    if municipio:
+    if municipio_id:
+        query["municipio_id"] = municipio_id
+    elif municipio:
         query["municipio"] = {"$regex": municipio, "$options": "i"}
     if tipo:
         query["tipo"] = tipo

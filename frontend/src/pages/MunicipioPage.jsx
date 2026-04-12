@@ -44,7 +44,7 @@ const MunicipioPage = () => {
           const [prestRes, eventosRes, atracRes] = await Promise.all([
             axios.get(`${API}/prestadores`, { params: { municipio_id: munRes.data.id, verificado: true } }),
             axios.get(`${API}/eventos`, { params: { municipio_id: munRes.data.id, publicado: true } }),
-            axios.get(`${API}/lugares`, { params: { municipio: munRes.data.nombre, limit: 20 } }).catch(() => ({ data: { lugares: [] } })),
+            axios.get(`${API}/lugares`, { params: { municipio_id: munRes.data.id, limit: 20 } }).catch(() => ({ data: { lugares: [] } })),
           ]);
           setPrestadores(prestRes.data.prestadores || []);
           setEventos(eventosRes.data.eventos || []);
@@ -431,7 +431,7 @@ const MunicipioPage = () => {
                             <img src={lugar.foto_portada || lugar.fotos[0]} alt={lugar.nombre}
                               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-green-50 to-green-100">
+                            <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-green-50 to-emerald-100">
                               {lugar.tipo === "atraccion" ? "🏛️" : lugar.tipo === "actividad" ? "🎯" : "📍"}
                             </div>
                           )}
@@ -445,18 +445,18 @@ const MunicipioPage = () => {
                           )}
                         </div>
                         <div className="p-5">
-                          <h3 className="font-bold text-gray-900 mb-1 text-base" style={{ fontFamily: "Playfair Display, serif" }}>
+                          <h3 className="font-bold text-gray-900 mb-1" style={{ fontFamily: "Playfair Display, serif" }}>
                             {lugar.nombre}
                           </h3>
                           <p className="text-gray-500 text-sm mb-3 line-clamp-2">{lugar.descripcion}</p>
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-3 text-gray-500">
                               {lugar.costo_min !== undefined && (
                                 <span className="font-medium text-gray-700">
                                   {lugar.costo_min === 0 ? "✅ Gratis" : `💲 $${lugar.costo_min}`}
                                 </span>
                               )}
-                              {lugar.horarios && <span>🕐 {lugar.horarios}</span>}
+                              {lugar.horarios && <span className="truncate max-w-[120px]">🕐 {lugar.horarios}</span>}
                             </div>
                             {lugar.calificacion && (
                               <span className="flex items-center gap-1 text-amber-600 font-semibold">
@@ -467,7 +467,7 @@ const MunicipioPage = () => {
                           {lugar.lat && lugar.lng && (
                             <a href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
                               target="_blank" rel="noopener noreferrer"
-                              className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-[#1B5E20] hover:underline">
+                              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#1B5E20] hover:underline">
                               <Navigation className="w-3.5 h-3.5" /> Cómo llegar
                             </a>
                           )}
@@ -478,8 +478,8 @@ const MunicipioPage = () => {
                 ) : (
                   <div className="bg-white rounded-2xl p-12 text-center">
                     <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-500 text-lg font-medium">Sin atracciones registradas aún</p>
-                    <p className="text-sm text-gray-400 mt-2">El encargado del municipio puede agregar lugares desde su panel.</p>
+                    <p className="text-gray-500 text-lg font-medium mb-2">Sin atracciones registradas</p>
+                    <p className="text-sm text-gray-400">El encargado del municipio puede agregar lugares desde su panel.</p>
                   </div>
                 )}
               </TabsContent>
