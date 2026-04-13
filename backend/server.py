@@ -521,6 +521,7 @@ def init_cloudinary():
     cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
     api_key = os.environ.get("CLOUDINARY_API_KEY", "")
     api_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
+    logger.info(f"Cloudinary init: cloud_name='{cloud_name}' key='{api_key[:6] if api_key else ''}'")
     if not cloud_name:
         logger.warning("Cloudinary not configured")
         return False
