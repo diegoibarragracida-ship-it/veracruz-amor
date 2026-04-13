@@ -231,7 +231,6 @@ const PrestadoresAdmin = () => {
         axios.get(`${API}/admin/registros-prestadores`, { params: { estado: "pendiente" } }),
         axios.get(`${API}/prestadores`, { params: { limit: 100 } }),
       ]);
-      // El endpoint devuelve array directo
       setRegistros(Array.isArray(regRes.data) ? regRes.data : regRes.data.registros || []);
       setPrestadores(prestRes.data.prestadores || []);
     } catch (error) {
@@ -366,9 +365,9 @@ const PrestadoresAdmin = () => {
         </div>
       )}
 
-      {/* Detail Dialog */}
+      {/* ✅ CORREGIDO: aria-describedby={undefined} para suprimir warning de accesibilidad */}
       <Dialog open={!!selectedRegistro} onOpenChange={() => setSelectedRegistro(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Solicitud: {selectedRegistro?.nombre_negocio || selectedRegistro?.nombre}</DialogTitle>
           </DialogHeader>
@@ -503,8 +502,10 @@ const AlertasAdmin = () => {
           </Table>
         )}
       </div>
+
+      {/* ✅ CORREGIDO: aria-describedby={undefined} para suprimir warning de accesibilidad */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Nueva Alerta</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Título</Label><Input value={newAlerta.titulo} onChange={(e) => setNewAlerta({ ...newAlerta, titulo: e.target.value })} placeholder="Título de la alerta" /></div>
@@ -635,8 +636,10 @@ const UsuariosAdmin = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* ✅ CORREGIDO: aria-describedby={undefined} para suprimir warning de accesibilidad */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Nombre completo</Label><Input value={newUser.nombre} onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })} placeholder="Nombre del usuario" /></div>
