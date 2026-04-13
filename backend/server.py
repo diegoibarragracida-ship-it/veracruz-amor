@@ -2301,7 +2301,7 @@ async def get_solicitudes(estado: Optional[str] = None, request: Request = None)
     if estado:
         query["estado"] = estado
     
-    solicitudes = await db.solicitudes_prestadores.find(query, {"_id": 0}).to_list(100)
+    solicitudes = await db.solicitudes_prestador.find(query, {"_id": 0}).to_list(100)
     return solicitudes
 
 @api_router.post("/solicitudes-prestadores")
@@ -2323,7 +2323,7 @@ async def create_solicitud(request: Request):
         "fecha_resolucion": None
     }
     
-    await db.solicitudes_prestadores.insert_one(solicitud)
+    await db.solicitudes_prestador.insert_one(solicitud)
     solicitud.pop("_id", None)
     return solicitud
 
@@ -2340,11 +2340,11 @@ async def update_solicitud(solicitud_id: str, request: Request):
     if estado not in ["aprobado", "rechazado"]:
         raise HTTPException(status_code=400, detail="Estado inválido")
     
-    solicitud = await db.solicitudes_prestadores.find_one({"id": solicitud_id}, {"_id": 0})
+    solicitud = await db.solicitudes_prestador.find_one({"id": solicitud_id}, {"_id": 0})
     if not solicitud:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     
-    await db.solicitudes_prestadores.update_one(
+    await db.solicitudes_prestador.update_one(
         {"id": solicitud_id},
         {"$set": {
             "estado": estado,
