@@ -323,7 +323,7 @@ class ServicioPrestadorCreate(BaseModel):
     descripcion: Optional[str] = None
     precio: float
     precio_promocional: Optional[float] = None
-    duracion: Optional[str] = None          # "2h", "1 d├¡a"
+    duracion: Optional[str] = None          # "2h", "1 día"
     capacidad: Optional[int] = None
     fotos: List[str] = []
     disponible: bool = True
@@ -475,7 +475,7 @@ async def get_current_user(request: Request) -> dict:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         if payload.get("type") != "access":
-            raise HTTPException(status_code=401, detail="Tipo de token inv├ílido")
+            raise HTTPException(status_code=401, detail="Tipo de token inválido")
         user = await db.usuarios.find_one({"user_id": payload["sub"]}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="Usuario no encontrado")
@@ -484,7 +484,7 @@ async def get_current_user(request: Request) -> dict:
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Token inv├ílido")
+        raise HTTPException(status_code=401, detail="Token inválido")
 
 async def get_optional_user(request: Request) -> Optional[dict]:
     try:
@@ -496,18 +496,18 @@ def require_role(*roles):
     async def role_checker(request: Request):
         user = await get_current_user(request)
         if user["rol"] not in roles:
-            raise HTTPException(status_code=403, detail="No tienes permiso para esta acci├│n")
+            raise HTTPException(status_code=403, detail="No tienes permiso para esta acción")
         return user
     return role_checker
 
 def slugify(text: str) -> str:
     text = text.lower().strip()
-    text = re.sub(r'[├í├á├ñ├ó]', 'a', text)
-    text = re.sub(r'[├®├¿├½├¬]', 'e', text)
-    text = re.sub(r'[├¡├¼├»├«]', 'i', text)
-    text = re.sub(r'[├│├▓├Â├┤]', 'o', text)
-    text = re.sub(r'[├║├╣├╝├╗]', 'u', text)
-    text = re.sub(r'[├▒]', 'n', text)
+    text = re.sub(r'[áàäâ]', 'a', text)
+    text = re.sub(r'[éèëê]', 'e', text)
+    text = re.sub(r'[íìïî]', 'i', text)
+    text = re.sub(r'[óòöô]', 'o', text)
+    text = re.sub(r'[úùüû]', 'u', text)
+    text = re.sub(r'[ñ]', 'n', text)
     text = re.sub(r'[^a-z0-9\s-]', '', text)
     text = re.sub(r'[\s_]+', '-', text)
     text = re.sub(r'-+', '-', text)
@@ -567,8 +567,8 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Papantla", "region": "Norte", "lat": 20.4547, "lng": -97.3222, "pueblo_magico": True},
     {"nombre": "Tlacotalpan", "region": "Sur", "lat": 18.6167, "lng": -95.6667, "pueblo_magico": True},
     {"nombre": "Orizaba", "region": "Centro", "lat": 18.8500, "lng": -97.1000, "pueblo_magico": True},
-    {"nombre": "C├│rdoba", "region": "Centro", "lat": 18.8833, "lng": -96.9333, "pueblo_magico": False},
-    {"nombre": "Boca del R├¡o", "region": "Centro", "lat": 19.1000, "lng": -96.1167, "pueblo_magico": False},
+    {"nombre": "Córdoba", "region": "Centro", "lat": 18.8833, "lng": -96.9333, "pueblo_magico": False},
+    {"nombre": "Boca del Río", "region": "Centro", "lat": 19.1000, "lng": -96.1167, "pueblo_magico": False},
     {"nombre": "Poza Rica", "region": "Norte", "lat": 20.5333, "lng": -97.4500, "pueblo_magico": False},
     {"nombre": "Tuxpan", "region": "Norte", "lat": 20.9500, "lng": -97.4000, "pueblo_magico": False},
     {"nombre": "Coscomatepec", "region": "Centro", "lat": 19.0667, "lng": -97.0500, "pueblo_magico": True},
@@ -576,34 +576,34 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Zozocolco de Hidalgo", "region": "Norte", "lat": 20.1333, "lng": -97.5833, "pueblo_magico": True},
     {"nombre": "Los Tuxtlas", "region": "Sur", "lat": 18.4833, "lng": -95.1167, "pueblo_magico": True},
     {"nombre": "Coatzacoalcos", "region": "Sur", "lat": 18.1333, "lng": -94.4500, "pueblo_magico": False},
-    {"nombre": "Minatitl├ín", "region": "Sur", "lat": 17.9833, "lng": -94.5500, "pueblo_magico": False},
-    {"nombre": "San Andr├®s Tuxtla", "region": "Sur", "lat": 18.4500, "lng": -95.2167, "pueblo_magico": False},
+    {"nombre": "Minatitlán", "region": "Sur", "lat": 17.9833, "lng": -94.5500, "pueblo_magico": False},
+    {"nombre": "San Andrés Tuxtla", "region": "Sur", "lat": 18.4500, "lng": -95.2167, "pueblo_magico": False},
     {"nombre": "Catemaco", "region": "Sur", "lat": 18.4167, "lng": -95.1167, "pueblo_magico": False},
-    {"nombre": "Fort├¡n de las Flores", "region": "Centro", "lat": 18.9000, "lng": -97.0000, "pueblo_magico": False},
+    {"nombre": "Fortín de las Flores", "region": "Centro", "lat": 18.9000, "lng": -97.0000, "pueblo_magico": False},
     {"nombre": "Alvarado", "region": "Centro", "lat": 18.7667, "lng": -95.7667, "pueblo_magico": False},
     {"nombre": "Misantla", "region": "Norte", "lat": 19.9333, "lng": -96.8500, "pueblo_magico": False},
-    {"nombre": "Mart├¡nez de la Torre", "region": "Norte", "lat": 20.0667, "lng": -97.0500, "pueblo_magico": False},
+    {"nombre": "Martínez de la Torre", "region": "Norte", "lat": 20.0667, "lng": -97.0500, "pueblo_magico": False},
     {"nombre": "Perote", "region": "Centro", "lat": 19.5667, "lng": -97.2500, "pueblo_magico": False},
     {"nombre": "Huatusco", "region": "Centro", "lat": 19.1500, "lng": -96.9667, "pueblo_magico": False},
     {"nombre": "Acayucan", "region": "Sur", "lat": 17.9500, "lng": -94.9167, "pueblo_magico": False},
     {"nombre": "Tierra Blanca", "region": "Centro", "lat": 18.4500, "lng": -96.3500, "pueblo_magico": False},
     {"nombre": "Tantoyuca", "region": "Norte", "lat": 21.3500, "lng": -98.2333, "pueblo_magico": False},
-    {"nombre": "├ülamo Temapache", "region": "Norte", "lat": 20.9167, "lng": -97.6833, "pueblo_magico": False},
-    {"nombre": "Naranjos Amatl├ín", "region": "Norte", "lat": 21.3500, "lng": -97.6833, "pueblo_magico": False},
-    {"nombre": "P├ínuco", "region": "Norte", "lat": 22.0500, "lng": -98.1833, "pueblo_magico": False},
+    {"nombre": "Álamo Temapache", "region": "Norte", "lat": 20.9167, "lng": -97.6833, "pueblo_magico": False},
+    {"nombre": "Naranjos Amatlán", "region": "Norte", "lat": 21.3500, "lng": -97.6833, "pueblo_magico": False},
+    {"nombre": "Pánuco", "region": "Norte", "lat": 22.0500, "lng": -98.1833, "pueblo_magico": False},
     {"nombre": "Tecolutla", "region": "Norte", "lat": 20.4833, "lng": -97.0167, "pueblo_magico": False},
     {"nombre": "Nautla", "region": "Norte", "lat": 20.2167, "lng": -96.7833, "pueblo_magico": False},
     {"nombre": "Vega de Alatorre", "region": "Norte", "lat": 20.0333, "lng": -96.6500, "pueblo_magico": False},
     {"nombre": "Cazones de Herrera", "region": "Norte", "lat": 20.7000, "lng": -97.3000, "pueblo_magico": False},
-    {"nombre": "Guti├®rrez Zamora", "region": "Norte", "lat": 20.4500, "lng": -97.0833, "pueblo_magico": False},
+    {"nombre": "Gutiérrez Zamora", "region": "Norte", "lat": 20.4500, "lng": -97.0833, "pueblo_magico": False},
     {"nombre": "Espinal", "region": "Norte", "lat": 20.2667, "lng": -97.4000, "pueblo_magico": False},
     {"nombre": "Coyutla", "region": "Norte", "lat": 20.2500, "lng": -97.6500, "pueblo_magico": False},
     {"nombre": "Filomeno Mata", "region": "Norte", "lat": 20.2000, "lng": -97.7000, "pueblo_magico": False},
-    {"nombre": "Mecatl├ín", "region": "Norte", "lat": 20.2167, "lng": -97.6667, "pueblo_magico": False},
-    {"nombre": "Coahuitl├ín", "region": "Norte", "lat": 20.2833, "lng": -97.7167, "pueblo_magico": False},
-    {"nombre": "Chumatl├ín", "region": "Norte", "lat": 20.1500, "lng": -97.6833, "pueblo_magico": False},
+    {"nombre": "Mecatlán", "region": "Norte", "lat": 20.2167, "lng": -97.6667, "pueblo_magico": False},
+    {"nombre": "Coahuitlán", "region": "Norte", "lat": 20.2833, "lng": -97.7167, "pueblo_magico": False},
+    {"nombre": "Chumatlán", "region": "Norte", "lat": 20.1500, "lng": -97.6833, "pueblo_magico": False},
     {"nombre": "Coatzintla", "region": "Norte", "lat": 20.4833, "lng": -97.4667, "pueblo_magico": False},
-    {"nombre": "Tihuatl├ín", "region": "Norte", "lat": 20.7167, "lng": -97.5333, "pueblo_magico": False},
+    {"nombre": "Tihuatlán", "region": "Norte", "lat": 20.7167, "lng": -97.5333, "pueblo_magico": False},
     {"nombre": "Castillo de Teayo", "region": "Norte", "lat": 20.7500, "lng": -97.6333, "pueblo_magico": False},
     {"nombre": "Tepetzintla", "region": "Norte", "lat": 20.8500, "lng": -97.8333, "pueblo_magico": False},
     {"nombre": "Tlapacoyan", "region": "Norte", "lat": 19.9667, "lng": -97.2167, "pueblo_magico": False},
@@ -612,18 +612,18 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Las Minas", "region": "Centro", "lat": 19.6833, "lng": -97.1333, "pueblo_magico": False},
     {"nombre": "Villa Aldama", "region": "Centro", "lat": 19.6500, "lng": -97.2333, "pueblo_magico": False},
     {"nombre": "Atzalan", "region": "Norte", "lat": 19.8000, "lng": -97.2500, "pueblo_magico": False},
-    {"nombre": "Tenochtitl├ín", "region": "Norte", "lat": 20.2333, "lng": -97.3333, "pueblo_magico": False},
+    {"nombre": "Tenochtitlán", "region": "Norte", "lat": 20.2333, "lng": -97.3333, "pueblo_magico": False},
     {"nombre": "Juchique de Ferrer", "region": "Norte", "lat": 19.8333, "lng": -96.7000, "pueblo_magico": False},
     {"nombre": "Yecuatla", "region": "Norte", "lat": 19.8667, "lng": -96.7833, "pueblo_magico": False},
     {"nombre": "Colipa", "region": "Norte", "lat": 19.9167, "lng": -96.7333, "pueblo_magico": False},
     {"nombre": "Chiconquiaco", "region": "Centro", "lat": 19.7500, "lng": -96.8167, "pueblo_magico": False},
-    {"nombre": "Miahuatl├ín", "region": "Centro", "lat": 19.7000, "lng": -96.8667, "pueblo_magico": False},
+    {"nombre": "Miahuatlán", "region": "Centro", "lat": 19.7000, "lng": -96.8667, "pueblo_magico": False},
     {"nombre": "Landero y Coss", "region": "Centro", "lat": 19.7167, "lng": -96.9333, "pueblo_magico": False},
-    {"nombre": "Acatl├ín", "region": "Centro", "lat": 19.6833, "lng": -96.8500, "pueblo_magico": False},
-    {"nombre": "Tonay├ín", "region": "Centro", "lat": 19.7167, "lng": -96.7667, "pueblo_magico": False},
-    {"nombre": "Alto Lucero de Guti├®rrez Barrios", "region": "Centro", "lat": 19.6167, "lng": -96.7333, "pueblo_magico": False},
+    {"nombre": "Acatlán", "region": "Centro", "lat": 19.6833, "lng": -96.8500, "pueblo_magico": False},
+    {"nombre": "Tonayán", "region": "Centro", "lat": 19.7167, "lng": -96.7667, "pueblo_magico": False},
+    {"nombre": "Alto Lucero de Gutiérrez Barrios", "region": "Centro", "lat": 19.6167, "lng": -96.7333, "pueblo_magico": False},
     {"nombre": "Actopan", "region": "Centro", "lat": 19.5000, "lng": -96.6167, "pueblo_magico": False},
-    {"nombre": "├Ürsulo Galv├ín", "region": "Centro", "lat": 19.4167, "lng": -96.3667, "pueblo_magico": False},
+    {"nombre": "Úrsulo Galván", "region": "Centro", "lat": 19.4167, "lng": -96.3667, "pueblo_magico": False},
     {"nombre": "La Antigua", "region": "Centro", "lat": 19.3333, "lng": -96.3333, "pueblo_magico": False},
     {"nombre": "Puente Nacional", "region": "Centro", "lat": 19.3333, "lng": -96.4833, "pueblo_magico": False},
     {"nombre": "Emiliano Zapata", "region": "Centro", "lat": 19.4500, "lng": -96.7667, "pueblo_magico": False},
@@ -631,28 +631,28 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Jalcomulco", "region": "Centro", "lat": 19.3333, "lng": -96.7667, "pueblo_magico": False},
     {"nombre": "Tlaltetela", "region": "Centro", "lat": 19.3167, "lng": -96.9000, "pueblo_magico": False},
     {"nombre": "Teocelo", "region": "Centro", "lat": 19.3833, "lng": -96.9667, "pueblo_magico": False},
-    {"nombre": "Cosautl├ín de Carvajal", "region": "Centro", "lat": 19.3500, "lng": -96.9833, "pueblo_magico": False},
-    {"nombre": "Ixhuac├ín de los Reyes", "region": "Centro", "lat": 19.3500, "lng": -97.1333, "pueblo_magico": False},
+    {"nombre": "Cosautlán de Carvajal", "region": "Centro", "lat": 19.3500, "lng": -96.9833, "pueblo_magico": False},
+    {"nombre": "Ixhuacán de los Reyes", "region": "Centro", "lat": 19.3500, "lng": -97.1333, "pueblo_magico": False},
     {"nombre": "Ayahualulco", "region": "Centro", "lat": 19.3333, "lng": -97.1333, "pueblo_magico": False},
     {"nombre": "Calcahualco", "region": "Centro", "lat": 19.1333, "lng": -97.1333, "pueblo_magico": False},
-    {"nombre": "Alpatl├íhuac", "region": "Centro", "lat": 19.0833, "lng": -97.1500, "pueblo_magico": False},
+    {"nombre": "Alpatláhuac", "region": "Centro", "lat": 19.0833, "lng": -97.1500, "pueblo_magico": False},
     {"nombre": "La Perla", "region": "Centro", "lat": 18.9500, "lng": -97.1833, "pueblo_magico": False},
     {"nombre": "Mariano Escobedo", "region": "Centro", "lat": 18.9167, "lng": -97.1500, "pueblo_magico": False},
     {"nombre": "Ixhuatlancillo", "region": "Centro", "lat": 18.9000, "lng": -97.1500, "pueblo_magico": False},
     {"nombre": "Rafael Delgado", "region": "Centro", "lat": 18.8167, "lng": -97.0667, "pueblo_magico": False},
     {"nombre": "Tlilapan", "region": "Centro", "lat": 18.8000, "lng": -97.0833, "pueblo_magico": False},
-    {"nombre": "San Andr├®s Tenejapan", "region": "Centro", "lat": 18.7833, "lng": -97.1000, "pueblo_magico": False},
+    {"nombre": "San Andrés Tenejapan", "region": "Centro", "lat": 18.7833, "lng": -97.1000, "pueblo_magico": False},
     {"nombre": "Magdalena", "region": "Centro", "lat": 18.8333, "lng": -97.1167, "pueblo_magico": False},
     {"nombre": "Nogales", "region": "Centro", "lat": 18.8167, "lng": -97.1667, "pueblo_magico": False},
-    {"nombre": "R├¡o Blanco", "region": "Centro", "lat": 18.8333, "lng": -97.1500, "pueblo_magico": False},
+    {"nombre": "Río Blanco", "region": "Centro", "lat": 18.8333, "lng": -97.1500, "pueblo_magico": False},
     {"nombre": "Camerino Z. Mendoza", "region": "Centro", "lat": 18.8167, "lng": -97.1333, "pueblo_magico": False},
-    {"nombre": "Huiloapan de Cuauht├®moc", "region": "Centro", "lat": 18.8000, "lng": -97.1833, "pueblo_magico": False},
+    {"nombre": "Huiloapan de Cuauhtémoc", "region": "Centro", "lat": 18.8000, "lng": -97.1833, "pueblo_magico": False},
     {"nombre": "Aquila", "region": "Centro", "lat": 18.7833, "lng": -97.2333, "pueblo_magico": False},
     {"nombre": "Maltrata", "region": "Centro", "lat": 18.8167, "lng": -97.2667, "pueblo_magico": False},
     {"nombre": "Acultzingo", "region": "Centro", "lat": 18.7167, "lng": -97.3167, "pueblo_magico": False},
     {"nombre": "Soledad Atzompa", "region": "Centro", "lat": 18.7500, "lng": -97.1500, "pueblo_magico": False},
     {"nombre": "Atlahuilco", "region": "Centro", "lat": 18.7500, "lng": -97.1000, "pueblo_magico": False},
-    {"nombre": "Texhuac├ín", "region": "Centro", "lat": 18.6333, "lng": -97.0500, "pueblo_magico": False},
+    {"nombre": "Texhuacán", "region": "Centro", "lat": 18.6333, "lng": -97.0500, "pueblo_magico": False},
     {"nombre": "Reyes", "region": "Centro", "lat": 18.6500, "lng": -97.0000, "pueblo_magico": False},
     {"nombre": "Xoxocotla", "region": "Centro", "lat": 18.7000, "lng": -97.0833, "pueblo_magico": False},
     {"nombre": "Astacinga", "region": "Centro", "lat": 18.6333, "lng": -97.0833, "pueblo_magico": False},
@@ -664,18 +664,18 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Omealca", "region": "Centro", "lat": 18.7667, "lng": -96.7667, "pueblo_magico": False},
     {"nombre": "Cuichapa", "region": "Centro", "lat": 18.7833, "lng": -96.8500, "pueblo_magico": False},
     {"nombre": "Yanga", "region": "Centro", "lat": 18.8333, "lng": -96.8000, "pueblo_magico": False},
-    {"nombre": "Cuitl├íhuac", "region": "Centro", "lat": 18.7833, "lng": -96.7000, "pueblo_magico": False},
+    {"nombre": "Cuitláhuac", "region": "Centro", "lat": 18.7833, "lng": -96.7000, "pueblo_magico": False},
     {"nombre": "Carrillo Puerto", "region": "Centro", "lat": 18.8667, "lng": -96.8000, "pueblo_magico": False},
-    {"nombre": "Amatl├ín de los Reyes", "region": "Centro", "lat": 18.8333, "lng": -96.9167, "pueblo_magico": False},
+    {"nombre": "Amatlán de los Reyes", "region": "Centro", "lat": 18.8333, "lng": -96.9167, "pueblo_magico": False},
     {"nombre": "Atoyac", "region": "Centro", "lat": 18.9167, "lng": -96.7833, "pueblo_magico": False},
     {"nombre": "Paso del Macho", "region": "Centro", "lat": 18.9667, "lng": -96.7167, "pueblo_magico": False},
-    {"nombre": "Camar├│n de Tejeda", "region": "Centro", "lat": 18.9333, "lng": -96.5500, "pueblo_magico": False},
+    {"nombre": "Camarón de Tejeda", "region": "Centro", "lat": 18.9333, "lng": -96.5500, "pueblo_magico": False},
     {"nombre": "Manlio Fabio Altamirano", "region": "Centro", "lat": 19.0333, "lng": -96.3333, "pueblo_magico": False},
     {"nombre": "Cotaxtla", "region": "Centro", "lat": 18.8500, "lng": -96.3833, "pueblo_magico": False},
-    {"nombre": "Medell├¡n de Bravo", "region": "Centro", "lat": 19.0500, "lng": -96.1500, "pueblo_magico": False},
+    {"nombre": "Medellín de Bravo", "region": "Centro", "lat": 19.0500, "lng": -96.1500, "pueblo_magico": False},
     {"nombre": "Jamapa", "region": "Centro", "lat": 19.0333, "lng": -96.2333, "pueblo_magico": False},
     {"nombre": "Soledad de Doblado", "region": "Centro", "lat": 19.0500, "lng": -96.4167, "pueblo_magico": False},
-    {"nombre": "Tepetl├ín", "region": "Centro", "lat": 19.2500, "lng": -96.8500, "pueblo_magico": False},
+    {"nombre": "Tepetlán", "region": "Centro", "lat": 19.2500, "lng": -96.8500, "pueblo_magico": False},
     {"nombre": "Tlacolulan", "region": "Centro", "lat": 19.6667, "lng": -97.0000, "pueblo_magico": False},
     {"nombre": "Rafael Lucio", "region": "Centro", "lat": 19.5833, "lng": -97.0167, "pueblo_magico": False},
     {"nombre": "Acajete", "region": "Centro", "lat": 19.5833, "lng": -97.0333, "pueblo_magico": False},
@@ -683,63 +683,63 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Jilotepec", "region": "Centro", "lat": 19.6000, "lng": -96.9500, "pueblo_magico": False},
     {"nombre": "Coacoatzintla", "region": "Centro", "lat": 19.6500, "lng": -96.9333, "pueblo_magico": False},
     {"nombre": "Tlalnelhuayocan", "region": "Centro", "lat": 19.5667, "lng": -96.9667, "pueblo_magico": False},
-    {"nombre": "San Andr├®s Tlalnelhuayocan", "region": "Centro", "lat": 19.5667, "lng": -96.9833, "pueblo_magico": False},
-    {"nombre": "Ixhuac├ín de los Reyes", "region": "Centro", "lat": 19.3500, "lng": -97.1333, "pueblo_magico": False},
+    {"nombre": "San Andrés Tlalnelhuayocan", "region": "Centro", "lat": 19.5667, "lng": -96.9833, "pueblo_magico": False},
+    {"nombre": "Ixhuacán de los Reyes", "region": "Centro", "lat": 19.3500, "lng": -97.1333, "pueblo_magico": False},
     {"nombre": "Totutla", "region": "Centro", "lat": 19.2167, "lng": -96.9667, "pueblo_magico": False},
     {"nombre": "Sochiapa", "region": "Centro", "lat": 19.2000, "lng": -96.9500, "pueblo_magico": False},
     {"nombre": "Comapa", "region": "Centro", "lat": 19.1500, "lng": -96.8667, "pueblo_magico": False},
     {"nombre": "Zentla", "region": "Centro", "lat": 19.0833, "lng": -96.7667, "pueblo_magico": False},
-    {"nombre": "Chocam├ín", "region": "Centro", "lat": 19.0167, "lng": -97.0333, "pueblo_magico": False},
-    {"nombre": "Tomatl├ín", "region": "Centro", "lat": 19.0000, "lng": -97.0833, "pueblo_magico": False},
+    {"nombre": "Chocamán", "region": "Centro", "lat": 19.0167, "lng": -97.0333, "pueblo_magico": False},
+    {"nombre": "Tomatlán", "region": "Centro", "lat": 19.0000, "lng": -97.0833, "pueblo_magico": False},
     {"nombre": "Tenampa", "region": "Centro", "lat": 19.1333, "lng": -96.8833, "pueblo_magico": False},
     {"nombre": "Tlalixcoyan", "region": "Centro", "lat": 18.9000, "lng": -96.0833, "pueblo_magico": False},
     {"nombre": "Ignacio de la Llave", "region": "Centro", "lat": 18.8167, "lng": -96.0000, "pueblo_magico": False},
     {"nombre": "Acula", "region": "Centro", "lat": 18.7833, "lng": -95.8833, "pueblo_magico": False},
     {"nombre": "Tlacojalpan", "region": "Sur", "lat": 18.6500, "lng": -95.7000, "pueblo_magico": False},
     {"nombre": "Ixmatlahuacan", "region": "Sur", "lat": 18.5833, "lng": -95.8167, "pueblo_magico": False},
-    {"nombre": "Jos├® Azueta", "region": "Sur", "lat": 18.5667, "lng": -95.9833, "pueblo_magico": False},
+    {"nombre": "José Azueta", "region": "Sur", "lat": 18.5667, "lng": -95.9833, "pueblo_magico": False},
     {"nombre": "Lerdo de Tejada", "region": "Sur", "lat": 18.6333, "lng": -95.5167, "pueblo_magico": False},
     {"nombre": "Saltabarranca", "region": "Sur", "lat": 18.6000, "lng": -95.6000, "pueblo_magico": False},
-    {"nombre": "├üngel R. Cabada", "region": "Sur", "lat": 18.6000, "lng": -95.4500, "pueblo_magico": False},
+    {"nombre": "Ángel R. Cabada", "region": "Sur", "lat": 18.6000, "lng": -95.4500, "pueblo_magico": False},
     {"nombre": "Santiago Tuxtla", "region": "Sur", "lat": 18.4667, "lng": -95.3000, "pueblo_magico": False},
     {"nombre": "Hueyapan de Ocampo", "region": "Sur", "lat": 18.1667, "lng": -95.1500, "pueblo_magico": False},
     {"nombre": "Mecayapan", "region": "Sur", "lat": 18.2167, "lng": -94.8333, "pueblo_magico": False},
     {"nombre": "Soteapan", "region": "Sur", "lat": 18.2333, "lng": -94.8667, "pueblo_magico": False},
     {"nombre": "Pajapan", "region": "Sur", "lat": 18.2667, "lng": -94.7000, "pueblo_magico": False},
-    {"nombre": "Tatahuicapan de Ju├írez", "region": "Sur", "lat": 18.2667, "lng": -94.7667, "pueblo_magico": False},
+    {"nombre": "Tatahuicapan de Juárez", "region": "Sur", "lat": 18.2667, "lng": -94.7667, "pueblo_magico": False},
     {"nombre": "Chinameca", "region": "Sur", "lat": 17.9833, "lng": -94.6667, "pueblo_magico": False},
-    {"nombre": "J├íltipan", "region": "Sur", "lat": 17.9667, "lng": -94.7167, "pueblo_magico": False},
+    {"nombre": "Jáltipan", "region": "Sur", "lat": 17.9667, "lng": -94.7167, "pueblo_magico": False},
     {"nombre": "Oteapan", "region": "Sur", "lat": 17.9833, "lng": -94.6833, "pueblo_magico": False},
     {"nombre": "Zaragoza", "region": "Sur", "lat": 17.9500, "lng": -94.7833, "pueblo_magico": False},
     {"nombre": "Cosoleacaque", "region": "Sur", "lat": 18.0000, "lng": -94.6167, "pueblo_magico": False},
-    {"nombre": "Nanchital de L├ízaro C├írdenas del R├¡o", "region": "Sur", "lat": 18.0667, "lng": -94.4167, "pueblo_magico": False},
-    {"nombre": "Ixhuatl├ín del Sureste", "region": "Sur", "lat": 18.0167, "lng": -94.3833, "pueblo_magico": False},
-    {"nombre": "Moloac├ín", "region": "Sur", "lat": 17.9833, "lng": -94.3500, "pueblo_magico": False},
+    {"nombre": "Nanchital de Lázaro Cárdenas del Río", "region": "Sur", "lat": 18.0667, "lng": -94.4167, "pueblo_magico": False},
+    {"nombre": "Ixhuatlán del Sureste", "region": "Sur", "lat": 18.0167, "lng": -94.3833, "pueblo_magico": False},
+    {"nombre": "Moloacán", "region": "Sur", "lat": 17.9833, "lng": -94.3500, "pueblo_magico": False},
     {"nombre": "Agua Dulce", "region": "Sur", "lat": 18.1500, "lng": -94.1333, "pueblo_magico": False},
     {"nombre": "Las Choapas", "region": "Sur", "lat": 17.9167, "lng": -94.1000, "pueblo_magico": False},
     {"nombre": "Uxpanapa", "region": "Sur", "lat": 17.2167, "lng": -94.2167, "pueblo_magico": False},
-    {"nombre": "Jes├║s Carranza", "region": "Sur", "lat": 17.4333, "lng": -95.0333, "pueblo_magico": False},
+    {"nombre": "Jesús Carranza", "region": "Sur", "lat": 17.4333, "lng": -95.0333, "pueblo_magico": False},
     {"nombre": "Playa Vicente", "region": "Sur", "lat": 17.8333, "lng": -95.8167, "pueblo_magico": False},
-    {"nombre": "Juan Rodr├¡guez Clara", "region": "Sur", "lat": 18.0000, "lng": -95.4000, "pueblo_magico": False},
+    {"nombre": "Juan Rodríguez Clara", "region": "Sur", "lat": 18.0000, "lng": -95.4000, "pueblo_magico": False},
     {"nombre": "Isla", "region": "Sur", "lat": 18.0333, "lng": -95.5333, "pueblo_magico": False},
     {"nombre": "Santiago Sochiapan", "region": "Sur", "lat": 17.9500, "lng": -95.6833, "pueblo_magico": False},
     {"nombre": "San Juan Evangelista", "region": "Sur", "lat": 17.8833, "lng": -95.1333, "pueblo_magico": False},
-    {"nombre": "Sayula de Alem├ín", "region": "Sur", "lat": 17.8833, "lng": -94.9500, "pueblo_magico": False},
+    {"nombre": "Sayula de Alemán", "region": "Sur", "lat": 17.8833, "lng": -94.9500, "pueblo_magico": False},
     {"nombre": "Oluta", "region": "Sur", "lat": 17.9333, "lng": -94.8833, "pueblo_magico": False},
     {"nombre": "Texistepec", "region": "Sur", "lat": 17.9000, "lng": -94.8167, "pueblo_magico": False},
     {"nombre": "Soconusco", "region": "Sur", "lat": 17.9667, "lng": -94.8500, "pueblo_magico": False},
-    {"nombre": "Hidalgotitl├ín", "region": "Sur", "lat": 17.7667, "lng": -94.6500, "pueblo_magico": False},
+    {"nombre": "Hidalgotitlán", "region": "Sur", "lat": 17.7667, "lng": -94.6500, "pueblo_magico": False},
     {"nombre": "Tres Valles", "region": "Centro", "lat": 18.2333, "lng": -96.1333, "pueblo_magico": False},
     {"nombre": "Carlos A. Carrillo", "region": "Centro", "lat": 18.3667, "lng": -96.0000, "pueblo_magico": False},
     {"nombre": "Cosamaloapan de Carpio", "region": "Sur", "lat": 18.3667, "lng": -95.8000, "pueblo_magico": False},
     {"nombre": "Chacaltianguis", "region": "Sur", "lat": 18.3333, "lng": -95.8500, "pueblo_magico": False},
     {"nombre": "Tuxtilla", "region": "Sur", "lat": 18.3000, "lng": -95.8833, "pueblo_magico": False},
-    {"nombre": "Amatitl├ín", "region": "Sur", "lat": 18.3833, "lng": -95.5000, "pueblo_magico": False},
-    {"nombre": "Otatitl├ín", "region": "Sur", "lat": 18.1833, "lng": -96.0333, "pueblo_magico": False},
+    {"nombre": "Amatitlán", "region": "Sur", "lat": 18.3833, "lng": -95.5000, "pueblo_magico": False},
+    {"nombre": "Otatitlán", "region": "Sur", "lat": 18.1833, "lng": -96.0333, "pueblo_magico": False},
     {"nombre": "Tlacotalpan", "region": "Sur", "lat": 18.6167, "lng": -95.6667, "pueblo_magico": True},
     {"nombre": "Tezonapa", "region": "Centro", "lat": 18.6167, "lng": -96.6833, "pueblo_magico": False},
     {"nombre": "Zongolica", "region": "Centro", "lat": 18.6667, "lng": -97.0000, "pueblo_magico": False},
-    {"nombre": "Ixtaczoquitl├ín", "region": "Centro", "lat": 18.8500, "lng": -97.0667, "pueblo_magico": False},
+    {"nombre": "Ixtaczoquitlán", "region": "Centro", "lat": 18.8500, "lng": -97.0667, "pueblo_magico": False},
     {"nombre": "Orizaba", "region": "Centro", "lat": 18.8500, "lng": -97.1000, "pueblo_magico": True},
     {"nombre": "Atzacan", "region": "Centro", "lat": 18.9500, "lng": -97.0667, "pueblo_magico": False},
     {"nombre": "Chichimilac", "region": "Centro", "lat": 18.9667, "lng": -97.1000, "pueblo_magico": False},
@@ -747,8 +747,8 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Huatusco", "region": "Centro", "lat": 19.1500, "lng": -96.9667, "pueblo_magico": False},
     {"nombre": "Sochiapa", "region": "Centro", "lat": 19.2000, "lng": -96.9500, "pueblo_magico": False},
     {"nombre": "Coscomatepec", "region": "Centro", "lat": 19.0667, "lng": -97.0500, "pueblo_magico": True},
-    {"nombre": "Alpatl├íhuac", "region": "Centro", "lat": 19.0833, "lng": -97.1500, "pueblo_magico": False},
-    {"nombre": "Ixhuatl├ín del Caf├®", "region": "Centro", "lat": 19.0667, "lng": -97.0000, "pueblo_magico": False},
+    {"nombre": "Alpatláhuac", "region": "Centro", "lat": 19.0833, "lng": -97.1500, "pueblo_magico": False},
+    {"nombre": "Ixhuatlán del Café", "region": "Centro", "lat": 19.0667, "lng": -97.0000, "pueblo_magico": False},
     {"nombre": "Tepatlaxco", "region": "Centro", "lat": 19.0500, "lng": -97.0167, "pueblo_magico": False},
     {"nombre": "Teocelo", "region": "Centro", "lat": 19.3833, "lng": -96.9667, "pueblo_magico": False},
     {"nombre": "Xico", "region": "Centro", "lat": 19.4180, "lng": -97.0080, "pueblo_magico": True},
@@ -756,24 +756,24 @@ MUNICIPIOS_VERACRUZ = [
     {"nombre": "Xalapa", "region": "Centro", "lat": 19.5438, "lng": -96.9102, "pueblo_magico": False},
     {"nombre": "Juchique de Ferrer", "region": "Norte", "lat": 19.8333, "lng": -96.7000, "pueblo_magico": False},
     {"nombre": "Misantla", "region": "Norte", "lat": 19.9333, "lng": -96.8500, "pueblo_magico": False},
-    {"nombre": "Tenochtitl├ín", "region": "Norte", "lat": 20.2333, "lng": -97.3333, "pueblo_magico": False},
+    {"nombre": "Tenochtitlán", "region": "Norte", "lat": 20.2333, "lng": -97.3333, "pueblo_magico": False},
     {"nombre": "Papantla", "region": "Norte", "lat": 20.4547, "lng": -97.3222, "pueblo_magico": True},
     {"nombre": "Poza Rica de Hidalgo", "region": "Norte", "lat": 20.5333, "lng": -97.4500, "pueblo_magico": False},
-    {"nombre": "Tuxpan de Rodr├¡guez Cano", "region": "Norte", "lat": 20.9500, "lng": -97.4000, "pueblo_magico": False},
+    {"nombre": "Tuxpan de Rodríguez Cano", "region": "Norte", "lat": 20.9500, "lng": -97.4000, "pueblo_magico": False},
     {"nombre": "Tamiahua", "region": "Norte", "lat": 21.2833, "lng": -97.4500, "pueblo_magico": False},
-    {"nombre": "Ozuluama de Mascare├▒as", "region": "Norte", "lat": 21.6667, "lng": -97.8500, "pueblo_magico": False},
-    {"nombre": "P├ínuco", "region": "Norte", "lat": 22.0500, "lng": -98.1833, "pueblo_magico": False},
+    {"nombre": "Ozuluama de Mascareñas", "region": "Norte", "lat": 21.6667, "lng": -97.8500, "pueblo_magico": False},
+    {"nombre": "Pánuco", "region": "Norte", "lat": 22.0500, "lng": -98.1833, "pueblo_magico": False},
     {"nombre": "El Higo", "region": "Norte", "lat": 21.7667, "lng": -98.3833, "pueblo_magico": False},
     {"nombre": "Tempoal", "region": "Norte", "lat": 21.5167, "lng": -98.3833, "pueblo_magico": False},
-    {"nombre": "Plat├│n S├ínchez", "region": "Norte", "lat": 21.2833, "lng": -98.3667, "pueblo_magico": False},
+    {"nombre": "Platón Sánchez", "region": "Norte", "lat": 21.2833, "lng": -98.3667, "pueblo_magico": False},
     {"nombre": "Chalma", "region": "Norte", "lat": 21.2167, "lng": -98.3000, "pueblo_magico": False},
     {"nombre": "Chicontepec", "region": "Norte", "lat": 21.0000, "lng": -98.1667, "pueblo_magico": False},
-    {"nombre": "Ixhuatl├ín de Madero", "region": "Norte", "lat": 20.6833, "lng": -98.0167, "pueblo_magico": False},
-    {"nombre": "Benito Ju├írez", "region": "Norte", "lat": 20.8167, "lng": -98.0833, "pueblo_magico": False},
-    {"nombre": "Zontecomatl├ín de L├│pez y Fuentes", "region": "Norte", "lat": 20.7333, "lng": -98.3500, "pueblo_magico": False},
+    {"nombre": "Ixhuatlán de Madero", "region": "Norte", "lat": 20.6833, "lng": -98.0167, "pueblo_magico": False},
+    {"nombre": "Benito Juárez", "region": "Norte", "lat": 20.8167, "lng": -98.0833, "pueblo_magico": False},
+    {"nombre": "Zontecomatlán de López y Fuentes", "region": "Norte", "lat": 20.7333, "lng": -98.3500, "pueblo_magico": False},
     {"nombre": "Tlachichilco", "region": "Norte", "lat": 20.6333, "lng": -98.1833, "pueblo_magico": False},
     {"nombre": "Texcatepec", "region": "Norte", "lat": 20.5833, "lng": -98.3500, "pueblo_magico": False},
-    {"nombre": "Ilamatl├ín", "region": "Norte", "lat": 20.7833, "lng": -98.4500, "pueblo_magico": False},
+    {"nombre": "Ilamatlán", "region": "Norte", "lat": 20.7833, "lng": -98.4500, "pueblo_magico": False},
     {"nombre": "Huayacocotla", "region": "Norte", "lat": 20.5333, "lng": -98.4833, "pueblo_magico": False},
     {"nombre": "Zacualpan", "region": "Norte", "lat": 20.4333, "lng": -98.3500, "pueblo_magico": False},
     {"nombre": "Naolinco", "region": "Centro", "lat": 19.6500, "lng": -96.8667, "pueblo_magico": True},
@@ -797,69 +797,69 @@ async def seed_orizaba_completo():
     ORIZABA_LUGARES = [
         {"nombre": "Palacio de Hierro de Orizaba", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Joya art nouveau construida en B├®lgica (1894). Dise├▒ada por el taller de Gustave Eiffel. Hoy es el Museo de Arte del Estado.",
-         "descripcion_larga": "El Palacio de Hierro fue fabricado en B├®lgica y ensamblado en Orizaba en 1894. Su fachada de hierro verde y azul es el s├¡mbolo de la ciudad. Alberga exposiciones temporales y permanentes de arte mexicano e internacional.",
-         "horarios": "MarÔÇôDom 10:00ÔÇô18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
+         "descripcion": "Joya art nouveau construida en Bélgica (1894). Diseñada por el taller de Gustave Eiffel. Hoy es el Museo de Arte del Estado.",
+         "descripcion_larga": "El Palacio de Hierro fue fabricado en Bélgica y ensamblado en Orizaba en 1894. Su fachada de hierro verde y azul es el símbolo de la ciudad. Alberga exposiciones temporales y permanentes de arte mexicano e internacional.",
+         "horarios": "Mar–Dom 10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
          "lat": 18.8534, "lng": -97.1014,
          "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"],
          "tags": ["arquitectura","museo","arte","historia","fotografia"], "calificacion": 4.8, "destacado": True,
-         "direccion": "Av. Col├│n s/n, Centro, Orizaba, Ver."},
-        {"nombre": "Telef├®rico de Orizaba", "region": "orizaba", "municipio": "Orizaba",
+         "direccion": "Av. Colón s/n, Centro, Orizaba, Ver."},
+        {"nombre": "Teleférico de Orizaba", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "actividad",
-         "descripcion": "Uno de los telef├®ricos m├ís largos de M├®xico. Vistas al Pico de Orizaba (Citlalt├®petl, 5,636m).",
-         "horarios": "MarÔÇôDom 10:00ÔÇô19:00", "costo": "$50 MXN ida y vuelta", "costo_min": 50, "costo_max": 50,
+         "descripcion": "Uno de los teleféricos más largos de México. Vistas al Pico de Orizaba (Citlaltépetl, 5,636m).",
+         "horarios": "Mar–Dom 10:00–19:00", "costo": "$50 MXN ida y vuelta", "costo_min": 50, "costo_max": 50,
          "lat": 18.8480, "lng": -97.1050, "fotos": [],
-         "tags": ["aventura","vistas","naturaleza","telef├®rico"], "calificacion": 4.6, "destacado": True,
+         "tags": ["aventura","vistas","naturaleza","teleférico"], "calificacion": 4.6, "destacado": True,
          "direccion": "Cerro del Borrego s/n, Orizaba, Ver."},
         {"nombre": "Cerro del Borrego", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Mirador natural con vistas panor├ímicas de la ciudad y el Pico de Orizaba. Accesible por telef├®rico o a pie.",
-         "horarios": "AmanecerÔÇôanochecer", "costo": "Libre (telef├®rico $50 MXN)", "costo_min": 0, "costo_max": 50,
+         "descripcion": "Mirador natural con vistas panorámicas de la ciudad y el Pico de Orizaba. Accesible por teleférico o a pie.",
+         "horarios": "Amanecer–anochecer", "costo": "Libre (teleférico $50 MXN)", "costo_min": 0, "costo_max": 50,
          "lat": 18.8465, "lng": -97.1063, "fotos": [],
          "tags": ["naturaleza","mirador","senderismo","vistas"], "calificacion": 4.7, "destacado": True},
         {"nombre": "Cascada de Elefante", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
          "descripcion": "Cascada de 40 metros. Su nombre viene de una roca con forma de elefante. Ideal para senderismo.",
-         "horarios": "8:00ÔÇô17:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
+         "horarios": "8:00–17:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
          "lat": 18.8600, "lng": -97.0800, "fotos": [],
          "tags": ["naturaleza","cascada","senderismo","aventura"], "calificacion": 4.5, "destacado": False},
         {"nombre": "Parque Castillo", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Parque emblem├ítico de Orizaba con jardines, fuentes y quiosco hist├│rico. Coraz├│n de la vida social.",
-         "horarios": "6:00ÔÇô22:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
+         "descripcion": "Parque emblemático de Orizaba con jardines, fuentes y quiosco histórico. Corazón de la vida social.",
+         "horarios": "6:00–22:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8527, "lng": -97.1003, "fotos": [],
          "tags": ["parque","historia","familia"], "calificacion": 4.5, "destacado": False,
-         "direccion": "Centro Hist├│rico, Orizaba, Ver."},
-        {"nombre": "Paseo del R├¡o Orizaba", "region": "orizaba", "municipio": "Orizaba",
+         "direccion": "Centro Histórico, Orizaba, Ver."},
+        {"nombre": "Paseo del Río Orizaba", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Hermoso paseo a orillas del R├¡o Orizaba con jardines, esculturas y puentes hist├│ricos.",
-         "horarios": "Todos los d├¡as", "costo": "Libre", "costo_min": 0, "costo_max": 0,
+         "descripcion": "Hermoso paseo a orillas del Río Orizaba con jardines, esculturas y puentes históricos.",
+         "horarios": "Todos los días", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8510, "lng": -97.1020, "fotos": [],
-         "tags": ["parque","r├¡o","familia","fotograf├¡a"], "calificacion": 4.6, "destacado": True},
-        {"nombre": "Catedral de San Miguel Arc├íngel", "region": "orizaba", "municipio": "Orizaba",
+         "tags": ["parque","río","familia","fotografía"], "calificacion": 4.6, "destacado": True},
+        {"nombre": "Catedral de San Miguel Arcángel", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Imponente catedral barroca del siglo XVIII. Una de las m├ís hermosas del estado.",
-         "horarios": "7:00ÔÇô20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
+         "descripcion": "Imponente catedral barroca del siglo XVIII. Una de las más hermosas del estado.",
+         "horarios": "7:00–20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8530, "lng": -97.1005, "fotos": [],
          "tags": ["iglesia","arquitectura","historia","barroco"], "calificacion": 4.7, "destacado": True,
-         "direccion": "Col├│n y Madero, Centro, Orizaba, Ver."},
+         "direccion": "Colón y Madero, Centro, Orizaba, Ver."},
         {"nombre": "Museo del Diorama", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "Museo ├║nico con dioramas que recrean la historia de Orizaba desde ├®poca prehisp├ínica.",
-         "horarios": "MarÔÇôDom 10:00ÔÇô18:00", "costo": "$20 MXN", "costo_min": 20, "costo_max": 20,
+         "descripcion": "Museo único con dioramas que recrean la historia de Orizaba desde época prehispánica.",
+         "horarios": "Mar–Dom 10:00–18:00", "costo": "$20 MXN", "costo_min": 20, "costo_max": 20,
          "lat": 18.8525, "lng": -97.1010, "fotos": [],
          "tags": ["museo","historia","cultura"], "calificacion": 4.3, "destacado": False},
-        {"nombre": "Ex-F├íbrica de San Lorenzo", "region": "orizaba", "municipio": "Orizaba",
+        {"nombre": "Ex-Fábrica de San Lorenzo", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "atraccion",
-         "descripcion": "F├íbrica textil del siglo XIX, escenario de la huelga de R├¡o Blanco (1907). Patrimonio industrial.",
-         "descripcion_larga": "Escenario de la huelga de R├¡o Blanco en 1907, uno de los eventos m├ís importantes de la historia obrera de M├®xico previo a la Revoluci├│n.",
-         "horarios": "Visitas con gu├¡a", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
+         "descripcion": "Fábrica textil del siglo XIX, escenario de la huelga de Río Blanco (1907). Patrimonio industrial.",
+         "descripcion_larga": "Escenario de la huelga de Río Blanco en 1907, uno de los eventos más importantes de la historia obrera de México previo a la Revolución.",
+         "horarios": "Visitas con guía", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
          "lat": 18.8490, "lng": -97.0930, "fotos": [],
          "tags": ["historia","patrimonio","arquitectura"], "calificacion": 4.4, "destacado": False},
         {"nombre": "Cerro de San Juan", "region": "orizaba", "municipio": "Orizaba",
          "municipio_id": municipio_id, "tipo": "actividad",
          "descripcion": "Senderismo y escalada con vistas espectaculares del Pico de Orizaba y el valle.",
-         "horarios": "AmanecerÔÇôanochecer", "costo": "Libre", "costo_min": 0, "costo_max": 0,
+         "horarios": "Amanecer–anochecer", "costo": "Libre", "costo_min": 0, "costo_max": 0,
          "lat": 18.8700, "lng": -97.0900, "fotos": [],
          "tags": ["senderismo","escalada","naturaleza","aventura"], "calificacion": 4.4, "destacado": False},
     ]
@@ -908,7 +908,7 @@ async def seed_municipios():
             "como_llegar": None,
             "clima": None,
             "altitud": None,
-            "tags": ["Pueblo M├ígico"] if m.get("pueblo_magico") else [],
+            "tags": ["Pueblo Mágico"] if m.get("pueblo_magico") else [],
             "foto_portada_url": None,
             "fotos": [],
             "videos": [],
@@ -978,10 +978,10 @@ async def seed_sample_events():
             "municipio_id": veracruz["id"] if veracruz else "",
             "fecha_inicio": "2026-02-14",
             "fecha_fin": "2026-02-22",
-            "descripcion": "El carnaval m├ís alegre del mundo. Desfiles, comparsas, m├║sica y alegr├¡a durante 9 d├¡as.",
+            "descripcion": "El carnaval más alegre del mundo. Desfiles, comparsas, música y alegría durante 9 días.",
             "foto_url": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800",
             "tipo": "Cultural",
-            "lugar": "Malec├│n y Centro Hist├│rico",
+            "lugar": "Malecón y Centro Histórico",
             "link_externo": None,
             "publicado": True,
             "created_by": None,
@@ -989,11 +989,11 @@ async def seed_sample_events():
         },
         {
             "id": str(uuid.uuid4()),
-            "nombre": "Cumbre Taj├¡n 2026",
+            "nombre": "Cumbre Tajín 2026",
             "municipio_id": papantla["id"] if papantla else "",
             "fecha_inicio": "2026-03-15",
             "fecha_fin": "2026-03-22",
-            "descripcion": "Festival de identidad que celebra la cultura totonaca con m├║sica, arte y ceremonias ancestrales.",
+            "descripcion": "Festival de identidad que celebra la cultura totonaca con música, arte y ceremonias ancestrales.",
             "foto_url": "https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800",
             "tipo": "Cultural",
             "lugar": "Parque Takilhsukut",
@@ -1008,7 +1008,7 @@ async def seed_sample_events():
             "municipio_id": xalapa["id"] if xalapa else "",
             "fecha_inicio": "2026-10-10",
             "fecha_fin": "2026-10-15",
-            "descripcion": "El encuentro jazz├¡stico m├ís importante de M├®xico con artistas nacionales e internacionales.",
+            "descripcion": "El encuentro jazzístico más importante de México con artistas nacionales e internacionales.",
             "foto_url": "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800",
             "tipo": "Musical",
             "lugar": "Teatro del Estado y diversos foros",
@@ -1023,10 +1023,10 @@ async def seed_sample_events():
             "municipio_id": tlacotalpan["id"] if tlacotalpan else "",
             "fecha_inicio": "2026-01-31",
             "fecha_fin": "2026-02-09",
-            "descripcion": "Fiesta tradicional con el emblem├ítico paseo de la Virgen por el r├¡o Papaloapan.",
+            "descripcion": "Fiesta tradicional con el emblemático paseo de la Virgen por el río Papaloapan.",
             "foto_url": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=800",
             "tipo": "Religioso",
-            "lugar": "Centro Hist├│rico",
+            "lugar": "Centro Histórico",
             "link_externo": None,
             "publicado": True,
             "created_by": None,
@@ -1034,13 +1034,13 @@ async def seed_sample_events():
         },
         {
             "id": str(uuid.uuid4()),
-            "nombre": "Festival del Caf├®",
+            "nombre": "Festival del Café",
             "municipio_id": coatepec["id"] if coatepec else "",
             "fecha_inicio": "2026-11-01",
             "fecha_fin": "2026-11-15",
-            "descripcion": "Celebraci├│n del arom├ítico caf├® veracruzano con catas, tours a fincas y gastronom├¡a local.",
+            "descripcion": "Celebración del aromático café veracruzano con catas, tours a fincas y gastronomía local.",
             "foto_url": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800",
-            "tipo": "Gastron├│mico",
+            "tipo": "Gastronómico",
             "lugar": "Fincas cafetaleras y centro",
             "link_externo": None,
             "publicado": True,
@@ -1068,7 +1068,7 @@ async def seed_sample_prestadores():
             "tipo": "HOSPEDAJE",
             "subtipo": "Hotel",
             "municipio_id": veracruz["id"] if veracruz else "",
-            "descripcion": "Hotel hist├│rico de 5 estrellas frente al malec├│n con vistas espectaculares al Golfo de M├®xico.",
+            "descripcion": "Hotel histórico de 5 estrellas frente al malecón con vistas espectaculares al Golfo de México.",
             "foto_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
             "telefono": "229-931-2233",
             "whatsapp": "522299312233",
@@ -1085,15 +1085,15 @@ async def seed_sample_prestadores():
         {
             "id": str(uuid.uuid4()),
             "nombre": "La Parroquia de Veracruz",
-            "tipo": "GASTRONOM├ìA",
+            "tipo": "GASTRONOMÍA",
             "subtipo": "Restaurante",
             "municipio_id": veracruz["id"] if veracruz else "",
-            "descripcion": "El caf├® m├ís emblem├ítico de Veracruz. Tradici├│n desde 1808 con el famoso caf├® lechero.",
+            "descripcion": "El café más emblemático de Veracruz. Tradición desde 1808 con el famoso café lechero.",
             "foto_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
             "telefono": "229-932-2584",
             "whatsapp": "522299322584",
             "horarios": "7:00 AM - 12:00 AM",
-            "direccion": "G├│mez Far├¡as 34, Centro",
+            "direccion": "Gómez Farías 34, Centro",
             "calificacion_promedio": 4.9,
             "total_resenas": 342,
             "verificado": True,
@@ -1108,12 +1108,12 @@ async def seed_sample_prestadores():
             "tipo": "TURISMO",
             "subtipo": "Tour operador",
             "municipio_id": veracruz["id"] if veracruz else "",
-            "descripcion": "Tours a zonas arqueol├│gicas, ecoturismo y experiencias culturales aut├®nticas.",
+            "descripcion": "Tours a zonas arqueológicas, ecoturismo y experiencias culturales auténticas.",
             "foto_url": "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800",
             "telefono": "229-123-4567",
             "whatsapp": "522291234567",
             "horarios": "8:00 AM - 6:00 PM",
-            "direccion": "Malec├│n s/n",
+            "direccion": "Malecón s/n",
             "calificacion_promedio": 4.7,
             "total_resenas": 89,
             "verificado": True,
@@ -1124,11 +1124,11 @@ async def seed_sample_prestadores():
         },
         {
             "id": str(uuid.uuid4()),
-            "nombre": "Caf├® Col├│n",
-            "tipo": "GASTRONOM├ìA",
-            "subtipo": "Cafeter├¡a",
+            "nombre": "Café Colón",
+            "tipo": "GASTRONOMÍA",
+            "subtipo": "Cafetería",
             "municipio_id": xalapa["id"] if xalapa else "",
-            "descripcion": "El mejor caf├® de altura de Xalapa. Granos org├ínicos de la regi├│n.",
+            "descripcion": "El mejor café de altura de Xalapa. Granos orgánicos de la región.",
             "foto_url": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800",
             "telefono": "228-817-8390",
             "whatsapp": "522288178390",
@@ -1150,106 +1150,106 @@ async def seed_sample_prestadores():
 async def seed_municipio_photos_and_content():
     """Add photos and content to main municipalities"""
     
-    # Photos for Pueblos M├ígicos and main municipalities
+    # Photos for Pueblos Mágicos and main municipalities
     municipio_data = {
         "Orizaba": {
             "foto_portada_url": "https://images.unsplash.com/photo-1772551481564-78b4e46c5964?w=1200&q=85",
-            "descripcion": """Orizaba, conocida como la "Ciudad de las Aguas Alegres", es uno de los destinos m├ís encantadores del estado de Veracruz. Ubicada en las faldas del majestuoso Pico de Orizaba (Citlalt├®petl), la monta├▒a m├ís alta de M├®xico con 5,636 metros de altura, esta ciudad ofrece un clima templado ideal durante todo el a├▒o.
+            "descripcion": """Orizaba, conocida como la "Ciudad de las Aguas Alegres", es uno de los destinos más encantadores del estado de Veracruz. Ubicada en las faldas del majestuoso Pico de Orizaba (Citlaltépetl), la montaña más alta de México con 5,636 metros de altura, esta ciudad ofrece un clima templado ideal durante todo el año.
 
-Su centro hist├│rico alberga joyas arquitect├│nicas como el Palacio de Hierro, dise├▒ado por Gustave Eiffel, y la majestuosa Catedral de San Miguel Arc├íngel. El Paseo del R├¡o Orizaba es perfecto para caminar entre jardines, fuentes y monumentos mientras disfrutas del paisaje monta├▒oso.
+Su centro histórico alberga joyas arquitectónicas como el Palacio de Hierro, diseñado por Gustave Eiffel, y la majestuosa Catedral de San Miguel Arcángel. El Paseo del Río Orizaba es perfecto para caminar entre jardines, fuentes y monumentos mientras disfrutas del paisaje montañoso.
 
-La ciudad es famosa por su telef├®rico que conecta el centro con el Cerro del Borrego, ofreciendo vistas panor├ímicas espectaculares. Su gastronom├¡a incluye el famoso pan de Orizaba, los tamales de masa colada y el caf├® de la regi├│n.""",
-            "historia": """Orizaba tiene una rica historia que se remonta a la ├®poca prehisp├ínica, cuando era conocida como Ahauializapan, que significa "lugar de aguas alegres" en n├íhuatl. Fue un importante centro comercial durante la Colonia y jug├│ un papel crucial durante la Independencia y la Revoluci├│n Mexicana.
+La ciudad es famosa por su teleférico que conecta el centro con el Cerro del Borrego, ofreciendo vistas panorámicas espectaculares. Su gastronomía incluye el famoso pan de Orizaba, los tamales de masa colada y el café de la región.""",
+            "historia": """Orizaba tiene una rica historia que se remonta a la época prehispánica, cuando era conocida como Ahauializapan, que significa "lugar de aguas alegres" en náhuatl. Fue un importante centro comercial durante la Colonia y jugó un papel crucial durante la Independencia y la Revolución Mexicana.
 
-El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado para B├®lgica pero adquirido por M├®xico en 1891. Durante el Porfiriato, Orizaba fue una de las ciudades m├ís industrializadas del pa├¡s, especialmente en la industria textil y cervecera.""",
+El Palacio de Hierro, símbolo de la ciudad, fue originalmente diseñado para Bélgica pero adquirido por México en 1891. Durante el Porfiriato, Orizaba fue una de las ciudades más industrializadas del país, especialmente en la industria textil y cervecera.""",
             "que_hacer": [
-                "Subir al telef├®rico y disfrutar vistas del Pico de Orizaba",
+                "Subir al teleférico y disfrutar vistas del Pico de Orizaba",
                 "Visitar el Palacio de Hierro y su museo",
-                "Recorrer el Paseo del R├¡o Orizaba",
+                "Recorrer el Paseo del Río Orizaba",
                 "Explorar el Museo de Arte del Estado",
-                "Caminar por el centro hist├│rico colonial",
+                "Caminar por el centro histórico colonial",
                 "Probar el famoso pan de Orizaba",
                 "Visitar la Cascada de Elefante",
-                "Hacer senderismo en las monta├▒as cercanas",
-                "Conocer la Ex-F├íbrica de San Lorenzo"
+                "Hacer senderismo en las montañas cercanas",
+                "Conocer la Ex-Fábrica de San Lorenzo"
             ],
-            "como_llegar": "Desde la Ciudad de M├®xico: 4 horas por la autopista M├®xico-Puebla-Orizaba. Desde Veracruz puerto: 2 horas por la autopista Veracruz-C├│rdoba. Tambi├®n hay servicio de autobuses ADO desde las principales ciudades.",
-            "clima": "Templado h├║medo con lluvias en verano. Temperatura promedio: 18┬░C",
+            "como_llegar": "Desde la Ciudad de México: 4 horas por la autopista México-Puebla-Orizaba. Desde Veracruz puerto: 2 horas por la autopista Veracruz-Córdoba. También hay servicio de autobuses ADO desde las principales ciudades.",
+            "clima": "Templado húmedo con lluvias en verano. Temperatura promedio: 18°C",
             "altitud": "1,236 metros sobre el nivel del mar",
-            "tags": ["Pueblo M├ígico", "Monta├▒a", "Cultura", "Naturaleza", "Aventura", "Gastronom├¡a"],
+            "tags": ["Pueblo Mágico", "Montaña", "Cultura", "Naturaleza", "Aventura", "Gastronomía"],
             "fotos": [
-                {"url": "https://images.unsplash.com/photo-1772551481564-78b4e46c5964?w=800", "etiqueta": "Telef├®rico"},
+                {"url": "https://images.unsplash.com/photo-1772551481564-78b4e46c5964?w=800", "etiqueta": "Teleférico"},
                 {"url": "https://images.unsplash.com/photo-1759350414036-6e51a526d405?w=800", "etiqueta": "Pico de Orizaba"},
-                {"url": "https://images.unsplash.com/photo-1626024367563-c6357a1754f5?w=800", "etiqueta": "Monta├▒as"},
+                {"url": "https://images.unsplash.com/photo-1626024367563-c6357a1754f5?w=800", "etiqueta": "Montañas"},
                 {"url": "https://images.unsplash.com/photo-1728932828842-7839cdf57ced?w=800", "etiqueta": "Cascada"},
-                {"url": "https://images.unsplash.com/photo-1762850424391-542c52f0c64b?w=800", "etiqueta": "Vista panor├ímica"}
+                {"url": "https://images.unsplash.com/photo-1762850424391-542c52f0c64b?w=800", "etiqueta": "Vista panorámica"}
             ],
             "videos": ["https://www.youtube.com/watch?v=orizaba_turismo"],
             "estado": "publicado"
         },
         "Coatepec": {
             "foto_portada_url": "https://images.unsplash.com/photo-1652015496419-58606c1b5d1c?w=1200&q=85",
-            "descripcion": "Capital del caf├® en M├®xico, Coatepec es un encantador Pueblo M├ígico rodeado de fincas cafetaleras, cascadas y bosque de niebla. Sus calles empedradas, casas coloridas y el aroma a caf├® tostado crean una experiencia ├║nica.",
-            "que_hacer": ["Tour a fincas cafetaleras", "Visitar cascadas", "Recorrer el centro hist├│rico", "Degustar caf├® de altura"],
-            "clima": "Templado h├║medo, ideal para el caf├®",
+            "descripcion": "Capital del café en México, Coatepec es un encantador Pueblo Mágico rodeado de fincas cafetaleras, cascadas y bosque de niebla. Sus calles empedradas, casas coloridas y el aroma a café tostado crean una experiencia única.",
+            "que_hacer": ["Tour a fincas cafetaleras", "Visitar cascadas", "Recorrer el centro histórico", "Degustar café de altura"],
+            "clima": "Templado húmedo, ideal para el café",
             "altitud": "1,200 msnm",
-            "tags": ["Pueblo M├ígico", "Caf├®", "Naturaleza", "Gastronom├¡a"],
+            "tags": ["Pueblo Mágico", "Café", "Naturaleza", "Gastronomía"],
             "estado": "publicado"
         },
         "Papantla": {
             "foto_portada_url": "https://images.unsplash.com/photo-1666808982367-b9180dac5948?w=1200&q=85",
-            "descripcion": "Cuna de la vainilla y de los famosos Voladores de Papantla, Patrimonio Cultural de la Humanidad. Hogar de la zona arqueol├│gica de El Taj├¡n, una de las m├ís importantes de Mesoam├®rica.",
-            "que_hacer": ["Visitar El Taj├¡n", "Ver la Danza de los Voladores", "Tour de vainilla", "Conocer la cultura totonaca"],
-            "clima": "C├ílido h├║medo",
-            "tags": ["Pueblo M├ígico", "Arqueolog├¡a", "Cultura", "Tradiciones"],
+            "descripcion": "Cuna de la vainilla y de los famosos Voladores de Papantla, Patrimonio Cultural de la Humanidad. Hogar de la zona arqueológica de El Tajín, una de las más importantes de Mesoamérica.",
+            "que_hacer": ["Visitar El Tajín", "Ver la Danza de los Voladores", "Tour de vainilla", "Conocer la cultura totonaca"],
+            "clima": "Cálido húmedo",
+            "tags": ["Pueblo Mágico", "Arqueología", "Cultura", "Tradiciones"],
             "estado": "publicado"
         },
         "Tlacotalpan": {
             "foto_portada_url": "https://images.unsplash.com/photo-1759054716857-881c10aa4941?w=1200&q=85",
-            "descripcion": "Patrimonio de la Humanidad por la UNESCO. Ciudad colonial a orillas del r├¡o Papaloapan con casas de colores vibrantes, portales y arquitectura ├║nica. Cuna del son jarocho.",
-            "que_hacer": ["Paseo en lancha por el r├¡o", "Recorrer el centro hist├│rico", "Escuchar son jarocho", "Visitar la Feria de la Candelaria"],
-            "clima": "C├ílido",
-            "tags": ["Pueblo M├ígico", "UNESCO", "R├¡o", "M├║sica", "Cultura"],
+            "descripcion": "Patrimonio de la Humanidad por la UNESCO. Ciudad colonial a orillas del río Papaloapan con casas de colores vibrantes, portales y arquitectura única. Cuna del son jarocho.",
+            "que_hacer": ["Paseo en lancha por el río", "Recorrer el centro histórico", "Escuchar son jarocho", "Visitar la Feria de la Candelaria"],
+            "clima": "Cálido",
+            "tags": ["Pueblo Mágico", "UNESCO", "Río", "Música", "Cultura"],
             "estado": "publicado"
         },
         "Xico": {
             "foto_portada_url": "https://images.unsplash.com/photo-1728932827634-361dfdcd925e?w=1200&q=85",
-            "descripcion": "Pueblo M├ígico famoso por sus cascadas, el mole xique├▒o y sus fiestas patronales de Santa Mar├¡a Magdalena donde adornan las calles con tapetes de aserr├¡n.",
-            "que_hacer": ["Visitar la Cascada de Texolo", "Probar el mole xique├▒o", "Ver los tapetes de aserr├¡n", "Senderismo"],
+            "descripcion": "Pueblo Mágico famoso por sus cascadas, el mole xiqueño y sus fiestas patronales de Santa María Magdalena donde adornan las calles con tapetes de aserrín.",
+            "que_hacer": ["Visitar la Cascada de Texolo", "Probar el mole xiqueño", "Ver los tapetes de aserrín", "Senderismo"],
             "clima": "Templado con neblina frecuente",
-            "tags": ["Pueblo M├ígico", "Cascadas", "Gastronom├¡a", "Naturaleza"],
+            "tags": ["Pueblo Mágico", "Cascadas", "Gastronomía", "Naturaleza"],
             "estado": "publicado"
         },
         "Veracruz": {
             "foto_portada_url": "https://images.unsplash.com/photo-1639222188528-3498adec4f40?w=1200&q=85",
-            "descripcion": "El puerto m├ís importante de M├®xico, ciudad de historia, m├║sica y el carnaval m├ís alegre del mundo. Su malec├│n, el acuario y el centro hist├│rico son imperdibles.",
-            "que_hacer": ["Caminar por el malec├│n", "Visitar San Juan de Ul├║a", "Ver el Carnaval", "Probar mariscos frescos"],
-            "clima": "Tropical c├ílido",
-            "tags": ["Playa", "Puerto", "Carnaval", "Gastronom├¡a", "Historia"],
+            "descripcion": "El puerto más importante de México, ciudad de historia, música y el carnaval más alegre del mundo. Su malecón, el acuario y el centro histórico son imperdibles.",
+            "que_hacer": ["Caminar por el malecón", "Visitar San Juan de Ulúa", "Ver el Carnaval", "Probar mariscos frescos"],
+            "clima": "Tropical cálido",
+            "tags": ["Playa", "Puerto", "Carnaval", "Gastronomía", "Historia"],
             "estado": "publicado"
         },
         "Xalapa": {
             "foto_portada_url": "https://images.unsplash.com/photo-1652015496419-58606c1b5d1c?w=1200&q=85",
-            "descripcion": "Capital del estado, conocida como la 'Atenas Veracruzana' por su rica vida cultural. Ciudad universitaria con el Museo de Antropolog├¡a m├ís importante despu├®s del de la CDMX.",
-            "que_hacer": ["Visitar el Museo de Antropolog├¡a", "Recorrer los Lagos del Dique", "Disfrutar caf├®s locales", "Asistir a eventos culturales"],
-            "clima": "Templado h├║medo con niebla frecuente",
-            "tags": ["Ciudad", "Cultura", "Caf├®", "Museos"],
+            "descripcion": "Capital del estado, conocida como la 'Atenas Veracruzana' por su rica vida cultural. Ciudad universitaria con el Museo de Antropología más importante después del de la CDMX.",
+            "que_hacer": ["Visitar el Museo de Antropología", "Recorrer los Lagos del Dique", "Disfrutar cafés locales", "Asistir a eventos culturales"],
+            "clima": "Templado húmedo con niebla frecuente",
+            "tags": ["Ciudad", "Cultura", "Café", "Museos"],
             "estado": "publicado"
         },
         "Catemaco": {
             "foto_portada_url": "https://images.unsplash.com/photo-1629221198624-825cee95962a?w=1200&q=85",
             "descripcion": "Famoso por su laguna, la magia y los brujos. Rodeado de selva tropical, cascadas y la Reserva de la Biosfera de Los Tuxtlas.",
             "que_hacer": ["Paseo en lancha por la laguna", "Visitar Nanciyaga", "Conocer a los brujos", "Explorar la selva"],
-            "clima": "Tropical h├║medo",
-            "tags": ["Laguna", "Naturaleza", "M├¡stica", "Ecoturismo"],
+            "clima": "Tropical húmedo",
+            "tags": ["Laguna", "Naturaleza", "Mística", "Ecoturismo"],
             "estado": "publicado"
         },
         "Los Tuxtlas": {
             "foto_portada_url": "https://images.unsplash.com/photo-1648485716909-2636f8abb2cd?w=1200&q=85",
-            "descripcion": "Reserva de la Biosfera con selva tropical, volcanes, cascadas y playas. Uno de los ├║ltimos reductos de selva alta en M├®xico.",
-            "que_hacer": ["Senderismo en la reserva", "Visitar el volc├ín San Mart├¡n", "Conocer Sontecomapan", "Observar aves"],
-            "clima": "Tropical muy h├║medo",
-            "tags": ["Pueblo M├ígico", "Naturaleza", "Ecoturismo", "Selva", "Aventura"],
+            "descripcion": "Reserva de la Biosfera con selva tropical, volcanes, cascadas y playas. Uno de los últimos reductos de selva alta en México.",
+            "que_hacer": ["Senderismo en la reserva", "Visitar el volcán San Martín", "Conocer Sontecomapan", "Observar aves"],
+            "clima": "Tropical muy húmedo",
+            "tags": ["Pueblo Mágico", "Naturaleza", "Ecoturismo", "Selva", "Aventura"],
             "estado": "publicado"
         }
     }
@@ -1272,7 +1272,7 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                 "user_id": encargado_id,
                 "email": "encargado.orizaba@veracruzcontigo.gob.mx",
                 "password_hash": hash_password("Orizaba2024!"),
-                "nombre": "Mar├¡a Gonz├ílez Hern├índez",
+                "nombre": "María González Hernández",
                 "foto_url": None,
                 "rol": "encargado",
                 "municipio_id": orizaba["id"],
@@ -1310,11 +1310,11 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                 },
                 {
                     "id": str(uuid.uuid4()),
-                    "nombre": "Panader├¡a La Fama de Orizaba",
-                    "tipo": "GASTRONOM├ìA",
-                    "subtipo": "Panader├¡a",
+                    "nombre": "Panadería La Fama de Orizaba",
+                    "tipo": "GASTRONOMÍA",
+                    "subtipo": "Panadería",
                     "municipio_id": orizaba["id"],
-                    "descripcion": "La panader├¡a m├ís tradicional de Orizaba. Famosa por su pan de yema, conchas y el tradicional pan de muerto.",
+                    "descripcion": "La panadería más tradicional de Orizaba. Famosa por su pan de yema, conchas y el tradicional pan de muerto.",
                     "foto_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800",
                     "telefono": "272-725-1234",
                     "whatsapp": "522727251234",
@@ -1330,16 +1330,16 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                 },
                 {
                     "id": str(uuid.uuid4()),
-                    "nombre": "Telef├®rico de Orizaba Tours",
+                    "nombre": "Teleférico de Orizaba Tours",
                     "tipo": "TURISMO",
                     "subtipo": "Tour operador",
                     "municipio_id": orizaba["id"],
-                    "descripcion": "Tours guiados al telef├®rico, Cerro del Borrego y expediciones al Pico de Orizaba.",
+                    "descripcion": "Tours guiados al teleférico, Cerro del Borrego y expediciones al Pico de Orizaba.",
                     "foto_url": "https://images.unsplash.com/photo-1772551481564-78b4e46c5964?w=800",
                     "telefono": "272-726-7890",
                     "whatsapp": "522727267890",
                     "horarios": "8:00 AM - 6:00 PM",
-                    "direccion": "Estaci├│n del Telef├®rico",
+                    "direccion": "Estación del Teleférico",
                     "calificacion_promedio": 4.8,
                     "total_resenas": 156,
                     "verificado": True,
@@ -1350,11 +1350,11 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                 },
                 {
                     "id": str(uuid.uuid4()),
-                    "nombre": "Restaurante Gran Caf├® de la Parroquia",
-                    "tipo": "GASTRONOM├ìA",
+                    "nombre": "Restaurante Gran Café de la Parroquia",
+                    "tipo": "GASTRONOMÍA",
                     "subtipo": "Restaurante",
                     "municipio_id": orizaba["id"],
-                    "descripcion": "Caf├® tradicional estilo veracruzano. Especialidad en desayunos y el famoso caf├® lechero.",
+                    "descripcion": "Café tradicional estilo veracruzano. Especialidad en desayunos y el famoso café lechero.",
                     "foto_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800",
                     "telefono": "272-725-5678",
                     "whatsapp": "522727255678",
@@ -1382,10 +1382,10 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                     "municipio_id": orizaba["id"],
                     "fecha_inicio": "2026-03-21",
                     "fecha_fin": "2026-03-30",
-                    "descripcion": "Celebraci├│n de la primavera con desfiles florales, m├║sica en vivo, exposiciones de arte y gastronom├¡a local.",
+                    "descripcion": "Celebración de la primavera con desfiles florales, música en vivo, exposiciones de arte y gastronomía local.",
                     "foto_url": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800",
                     "tipo": "Cultural",
-                    "lugar": "Centro Hist├│rico y Parque Castillo",
+                    "lugar": "Centro Histórico y Parque Castillo",
                     "publicado": True,
                     "created_at": datetime.now(timezone.utc).isoformat()
                 },
@@ -1395,9 +1395,9 @@ El Palacio de Hierro, s├¡mbolo de la ciudad, fue originalmente dise├▒ado 
                     "municipio_id": orizaba["id"],
                     "fecha_inicio": "2026-08-15",
                     "fecha_fin": "2026-08-20",
-                    "descripcion": "Celebraci├│n del famoso pan orizabe├▒o con concursos, degustaciones y talleres de panader├¡a tradicional.",
+                    "descripcion": "Celebración del famoso pan orizabeño con concursos, degustaciones y talleres de panadería tradicional.",
                     "foto_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800",
-                    "tipo": "Gastron├│mico",
+                    "tipo": "Gastronómico",
                     "lugar": "Plaza del Palacio de Hierro",
                     "publicado": True,
                     "created_at": datetime.now(timezone.utc).isoformat()
@@ -1480,7 +1480,7 @@ async def check_interest_spikes():
                     "user_id": municipio["encargado_id"],
                     "municipio_id": spike["municipio_id"],
                     "tipo": "spike",
-                    "titulo": f"┬í{municipio['nombre']} est├í en tendencia!",
+                    "titulo": f"¡{municipio['nombre']} está en tendencia!",
                     "mensaje": f"Tu municipio tuvo {spike['today_views']} visitas hoy, un aumento del {spike['increase_pct']:.0f}% respecto a ayer.",
                     "leida": False,
                     "fecha": datetime.now(timezone.utc).isoformat()
@@ -1531,7 +1531,7 @@ async def register(user_data: UserCreate, response: Response):
     email = user_data.email.lower().strip()
     existing = await db.usuarios.find_one({"email": email})
     if existing:
-        raise HTTPException(status_code=400, detail="El email ya est├í registrado")
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
     
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     user = {
@@ -1564,7 +1564,7 @@ async def login(credentials: UserLogin, response: Response):
     user = await db.usuarios.find_one({"email": email}, {"_id": 0})
     
     if not user or not verify_password(credentials.password, user.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="Credenciales inv├ílidas")
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
     
     if not user.get("activo", True):
         raise HTTPException(status_code=403, detail="Cuenta desactivada")
@@ -1649,7 +1649,7 @@ async def google_callback(request: Request, response: Response):
                 {"$set": {"ultimo_acceso": datetime.now(timezone.utc).isoformat()}}
             )
         
-        # Generar JWT y cookie de sesi├│n
+        # Generar JWT y cookie de sesión
         access_token = create_access_token(user["user_id"], email, user.get("rol", "turista"))
         refresh_token = create_refresh_token(user["user_id"])
         
@@ -1667,13 +1667,13 @@ async def google_callback(request: Request, response: Response):
         
     except Exception as e:
         logger.error(f"Google callback error: {e}")
-        raise HTTPException(status_code=401, detail="Error en autenticaci├│n con Google")
+        raise HTTPException(status_code=401, detail="Error en autenticación con Google")
 
 @api_router.post("/auth/logout")
 async def logout(response: Response):
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
-    return {"message": "Sesi├│n cerrada"}
+    return {"message": "Sesión cerrada"}
 
 @api_router.get("/auth/me")
 async def get_me(request: Request):
@@ -1706,7 +1706,7 @@ async def process_session(request: Request, response: Response):
         }
     except Exception as e:
         logger.error(f"Google token verification failed: {e}")
-        raise HTTPException(status_code=401, detail="Token de Google inv├ílido")
+        raise HTTPException(status_code=401, detail="Token de Google inválido")
     
     email = oauth_data.get("email", "").lower()
     name = oauth_data.get("name", "Turista")
@@ -1805,7 +1805,7 @@ async def update_municipio(slug: str, data: MunicipioUpdate, request: Request):
     if user["rol"] == "encargado" and municipio.get("encargado_id") != user["user_id"]:
         raise HTTPException(status_code=403, detail="No tienes permiso para editar este municipio")
     elif user["rol"] not in ["superadmin", "encargado"]:
-        raise HTTPException(status_code=403, detail="No tienes permiso para esta acci├│n")
+        raise HTTPException(status_code=403, detail="No tienes permiso para esta acción")
     
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -2145,7 +2145,7 @@ async def get_resenas(prestador_id: str):
 async def create_resena(data: ResenaCreate, request: Request):
     user = await get_current_user(request)
     if user["rol"] != "turista":
-        raise HTTPException(status_code=403, detail="Solo turistas pueden rese├▒ar")
+        raise HTTPException(status_code=403, detail="Solo turistas pueden reseñar")
     
     # Check if already reviewed
     existing = await db.resenas.find_one({
@@ -2153,7 +2153,7 @@ async def create_resena(data: ResenaCreate, request: Request):
         "prestador_id": data.prestador_id
     })
     if existing:
-        raise HTTPException(status_code=400, detail="Ya has rese├▒ado este prestador")
+        raise HTTPException(status_code=400, detail="Ya has reseñado este prestador")
     
     resena = {
         "id": str(uuid.uuid4()),
@@ -2195,7 +2195,7 @@ async def add_favorito(request: Request):
     referencia_id = body.get("referencia_id")
     
     if tipo not in ["municipio", "evento", "prestador"]:
-        raise HTTPException(status_code=400, detail="Tipo inv├ílido")
+        raise HTTPException(status_code=400, detail="Tipo inválido")
     
     existing = await db.favoritos.find_one({
         "user_id": user["user_id"],
@@ -2203,7 +2203,7 @@ async def add_favorito(request: Request):
         "referencia_id": referencia_id
     })
     if existing:
-        raise HTTPException(status_code=400, detail="Ya est├í en favoritos")
+        raise HTTPException(status_code=400, detail="Ya está en favoritos")
     
     favorito = {
         "id": str(uuid.uuid4()),
@@ -2275,7 +2275,7 @@ async def update_solicitud(solicitud_id: str, request: Request):
     comentario = body.get("comentario", "")
     
     if estado not in ["aprobado", "rechazado"]:
-        raise HTTPException(status_code=400, detail="Estado inv├ílido")
+        raise HTTPException(status_code=400, detail="Estado inválido")
     
     solicitud = await db.solicitudes_prestadores.find_one({"id": solicitud_id}, {"_id": 0})
     if not solicitud:
@@ -2371,7 +2371,7 @@ async def create_usuario(request: Request):
     password = body.get("password", f"Veracruz{uuid.uuid4().hex[:8]}!")
     
     if rol not in ["encargado", "prestador"]:
-        raise HTTPException(status_code=400, detail="Rol inv├ílido")
+        raise HTTPException(status_code=400, detail="Rol inválido")
     
     existing = await db.usuarios.find_one({"email": email})
     if existing:
@@ -2401,7 +2401,7 @@ async def create_usuario(request: Request):
         )
     
     # Log email notification (MOCKED)
-    logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contrase├▒a: {password}")
+    logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contraseña: {password}")
     
     return {
         "user_id": user_id,
@@ -2433,11 +2433,11 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
     
     # Validate file
     if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Solo se permiten im├ígenes")
+        raise HTTPException(status_code=400, detail="Solo se permiten imágenes")
     
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="Archivo muy grande (m├íx 5MB)")
+        raise HTTPException(status_code=400, detail="Archivo muy grande (máx 5MB)")
     
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     path = f"{APP_NAME}/uploads/{user['user_id']}/{uuid.uuid4()}.{ext}"
@@ -2798,12 +2798,12 @@ async def get_platform_context():
         context = "DATOS REALES DE LA PLATAFORMA:\n\n"
         context += "MUNICIPIOS DESTACADOS:\n"
         for m in municipios:
-            pm = " (Pueblo M├ígico)" if m.get("pueblo_magico") else ""
+            pm = " (Pueblo Mágico)" if m.get("pueblo_magico") else ""
             desc = (m.get("descripcion") or "")[:150]
             que = ", ".join(m.get("que_hacer", [])[:3]) if m.get("que_hacer") else ""
-            context += f"- {m['nombre']}{pm} | Regi├│n: {m.get('region','')} | Clima: {m.get('clima','')} | Altitud: {m.get('altitud','')} | {desc} | Qu├® hacer: {que}\n"
+            context += f"- {m['nombre']}{pm} | Región: {m.get('region','')} | Clima: {m.get('clima','')} | Altitud: {m.get('altitud','')} | {desc} | Qué hacer: {que}\n"
 
-        context += "\nEVENTOS PR├ôXIMOS:\n"
+        context += "\nEVENTOS PRÓXIMOS:\n"
         for e in eventos:
             context += f"- {e['nombre']} en {e.get('municipio_nombre','')} | Tipo: {e.get('tipo','')} | Fecha: {e.get('fecha_inicio','')}\n"
 
@@ -2817,17 +2817,17 @@ async def get_platform_context():
         return ""
 
 SYSTEM_MESSAGES = {
-    "es": """Eres el asistente tur├¡stico oficial de "Veracruz Contigo", la plataforma de turismo del Gobierno del Estado de Veracruz, M├®xico. Tu nombre es VeraCruz AI.
+    "es": """Eres el asistente turístico oficial de "Veracruz Contigo", la plataforma de turismo del Gobierno del Estado de Veracruz, México. Tu nombre es VeraCruz AI.
 
 REGLAS:
-- Responde SIEMPRE en espa├▒ol
-- S├® amable, entusiasta y conocedor de Veracruz
+- Responde SIEMPRE en español
+- Sé amable, entusiasta y conocedor de Veracruz
 - Usa los datos reales de la plataforma que se te proporcionan como contexto
-- Recomienda rutas de viaje: Escapada Express (3 d├¡as: XalapaÔåÆCoatepecÔåÆXico), Ruta M├ígica (5 d├¡as por Pueblos M├ígicos), Aventura Completa (7 d├¡as), Ruta Cultural (4 d├¡as)
-- Si preguntan sobre emergencias, menciona el bot├│n de p├ínico con GPS disponible en la app
-- Respuestas cortas y ├║tiles (m├íximo 3 p├írrafos)
-- No inventes informaci├│n que no est├® en el contexto
-- Si no sabes algo, sugiere visitar la secci├│n correspondiente de la plataforma""",
+- Recomienda rutas de viaje: Escapada Express (3 días: Xalapa→Coatepec→Xico), Ruta Mágica (5 días por Pueblos Mágicos), Aventura Completa (7 días), Ruta Cultural (4 días)
+- Si preguntan sobre emergencias, menciona el botón de pánico con GPS disponible en la app
+- Respuestas cortas y útiles (máximo 3 párrafos)
+- No inventes información que no esté en el contexto
+- Si no sabes algo, sugiere visitar la sección correspondiente de la plataforma""",
 
     "en": """You are the official tourism assistant of "Veracruz Contigo", the tourism platform of the Government of the State of Veracruz, Mexico. Your name is VeraCruz AI.
 
@@ -2835,23 +2835,23 @@ RULES:
 - ALWAYS respond in English
 - Be friendly, enthusiastic and knowledgeable about Veracruz
 - Use the real platform data provided as context
-- Recommend travel routes: Express Getaway (3 days: XalapaÔåÆCoatepecÔåÆXico), Magic Route (5 days through Pueblos M├ígicos), Complete Adventure (7 days), Cultural Route (4 days)
+- Recommend travel routes: Express Getaway (3 days: Xalapa→Coatepec→Xico), Magic Route (5 days through Pueblos Mágicos), Complete Adventure (7 days), Cultural Route (4 days)
 - If asked about emergencies, mention the GPS panic button available in the app
 - Short and useful responses (maximum 3 paragraphs)
 - Don't invent information not in the context
 - If unsure, suggest visiting the corresponding section of the platform""",
 
-    "fr": """Vous ├¬tes l'assistant touristique officiel de "Veracruz Contigo", la plateforme touristique du Gouvernement de l'├ëtat de Veracruz, Mexique. Votre nom est VeraCruz AI.
+    "fr": """Vous êtes l'assistant touristique officiel de "Veracruz Contigo", la plateforme touristique du Gouvernement de l'État de Veracruz, Mexique. Votre nom est VeraCruz AI.
 
-R├êGLES:
-- R├®pondez TOUJOURS en fran├ºais
+RÈGLES:
+- Répondez TOUJOURS en français
 - Soyez aimable, enthousiaste et connaisseur de Veracruz
-- Utilisez les donn├®es r├®elles de la plateforme fournies comme contexte
-- Recommandez des itin├®raires: Escapade Express (3 jours: XalapaÔåÆCoatepecÔåÆXico), Route Magique (5 jours), Aventure Compl├¿te (7 jours), Route Culturelle (4 jours)
+- Utilisez les données réelles de la plateforme fournies comme contexte
+- Recommandez des itinéraires: Escapade Express (3 jours: Xalapa→Coatepec→Xico), Route Magique (5 jours), Aventure Complète (7 jours), Route Culturelle (4 jours)
 - Si on vous demande les urgences, mentionnez le bouton de panique GPS disponible dans l'app
-- R├®ponses courtes et utiles (maximum 3 paragraphes)
+- Réponses courtes et utiles (maximum 3 paragraphes)
 - N'inventez pas d'informations absentes du contexte
-- En cas de doute, sugg├®rez de visiter la section correspondante de la plateforme"""
+- En cas de doute, suggérez de visiter la section correspondante de la plateforme"""
 }
 
 @api_router.post("/chat")
@@ -2942,177 +2942,177 @@ async def get_chat_history(session_id: str):
     messages = await cursor.to_list(50)
     return {"messages": messages}
 
-# ============== SEED DATA ÔÇö RUTAS, LUGARES Y PAQUETES ==============
+# ============== SEED DATA — RUTAS, LUGARES Y PAQUETES ==============
 
 LUGARES_DATA = [
     {"nombre": "Palacio de Hierro de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-     "descripcion": "Joya arquitect├│nica art nouveau construida en B├®lgica y ensamblada en M├®xico. Alberga el Museo de Arte del Estado.",
-     "descripcion_larga": "El Palacio de Hierro fue fabricado en B├®lgica y ensamblado en Orizaba en 1894. Su fachada de hierro pintada de verde y azul es ic├│nica. Hoy funciona como Museo de Arte con exposiciones temporales y permanentes.",
-     "horarios": "MarÔÇôDom 10:00ÔÇô18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
+     "descripcion": "Joya arquitectónica art nouveau construida en Bélgica y ensamblada en México. Alberga el Museo de Arte del Estado.",
+     "descripcion_larga": "El Palacio de Hierro fue fabricado en Bélgica y ensamblado en Orizaba en 1894. Su fachada de hierro pintada de verde y azul es icónica. Hoy funciona como Museo de Arte con exposiciones temporales y permanentes.",
+     "horarios": "Mar–Dom 10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
      "lat": 18.8534, "lng": -97.1014,
      "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"],
      "tags": ["arquitectura","museo","arte","historia"], "calificacion": 4.8, "destacado": True,
-     "direccion": "Av. Col├│n s/n, Centro, Orizaba, Ver."},
-    {"nombre": "Telef├®rico de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "actividad",
-     "descripcion": "Uno de los telef├®ricos m├ís largos de M├®xico. Vistas panor├ímicas del Pico de Orizaba.",
-     "horarios": "MarÔÇôDom 10:00ÔÇô19:00", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
+     "direccion": "Av. Colón s/n, Centro, Orizaba, Ver."},
+    {"nombre": "Teleférico de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "actividad",
+     "descripcion": "Uno de los teleféricos más largos de México. Vistas panorámicas del Pico de Orizaba.",
+     "horarios": "Mar–Dom 10:00–19:00", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
      "lat": 18.8480, "lng": -97.1050, "fotos": [], "tags": ["aventura","vistas","naturaleza"], "calificacion": 4.6, "destacado": True,
      "direccion": "Cerro del Borrego, Orizaba, Ver."},
-    {"nombre": "Fort├¡n de las Flores", "region": "orizaba", "municipio": "Fort├¡n de las Flores", "tipo": "atraccion",
-     "descripcion": "Ciudad de las Flores, famosa por magnolias y gardenias. Parque Bot├ínico y cafetales imperdibles.",
-     "horarios": "Parque Bot├ínico: 9:00ÔÇô17:00", "costo": "Entrada libre", "costo_min": 0, "costo_max": 100,
-     "lat": 18.9078, "lng": -96.9942, "fotos": [], "tags": ["flores","naturaleza","caf├®"], "calificacion": 4.7, "destacado": True},
-    {"nombre": "Xico ÔÇö Pueblo M├ígico", "region": "orizaba", "municipio": "Xico", "tipo": "atraccion",
-     "descripcion": "Pueblo M├ígico famoso por la Cascada de Texolo, sarapes y la Feria de Mar├¡a Magdalena.",
-     "horarios": "Todo el a├▒o", "costo": "Libre ┬À Cascada $30 MXN", "costo_min": 0, "costo_max": 200,
+    {"nombre": "Fortín de las Flores", "region": "orizaba", "municipio": "Fortín de las Flores", "tipo": "atraccion",
+     "descripcion": "Ciudad de las Flores, famosa por magnolias y gardenias. Parque Botánico y cafetales imperdibles.",
+     "horarios": "Parque Botánico: 9:00–17:00", "costo": "Entrada libre", "costo_min": 0, "costo_max": 100,
+     "lat": 18.9078, "lng": -96.9942, "fotos": [], "tags": ["flores","naturaleza","café"], "calificacion": 4.7, "destacado": True},
+    {"nombre": "Xico — Pueblo Mágico", "region": "orizaba", "municipio": "Xico", "tipo": "atraccion",
+     "descripcion": "Pueblo Mágico famoso por la Cascada de Texolo, sarapes y la Feria de María Magdalena.",
+     "horarios": "Todo el año", "costo": "Libre · Cascada $30 MXN", "costo_min": 0, "costo_max": 200,
      "lat": 19.4180, "lng": -97.0080, "fotos": [], "tags": ["pueblo magico","cascada","artesanias"], "calificacion": 4.9, "destacado": True},
     {"nombre": "Cascada de Elefante", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-     "descripcion": "Cascada de 40 metros ideal para senderismo.", "horarios": "8:00ÔÇô17:00", "costo": "$30 MXN",
+     "descripcion": "Cascada de 40 metros ideal para senderismo.", "horarios": "8:00–17:00", "costo": "$30 MXN",
      "costo_min": 30, "costo_max": 30, "lat": 18.8600, "lng": -97.0800, "fotos": [],
      "tags": ["naturaleza","cascada","senderismo"], "calificacion": 4.5, "destacado": False},
-    {"nombre": "Museo de Antropolog├¡a de Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
-     "descripcion": "Segundo museo de antropolog├¡a m├ís importante de M├®xico. Mayor colecci├│n de cabezas olmecas del mundo.",
-     "horarios": "MarÔÇôDom 9:00ÔÇô17:00", "costo": "$80 MXN", "costo_min": 0, "costo_max": 80,
+    {"nombre": "Museo de Antropología de Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
+     "descripcion": "Segundo museo de antropología más importante de México. Mayor colección de cabezas olmecas del mundo.",
+     "horarios": "Mar–Dom 9:00–17:00", "costo": "$80 MXN", "costo_min": 0, "costo_max": 80,
      "lat": 19.5347, "lng": -96.9266, "fotos": [], "tags": ["cultura","museo","arqueologia","olmecas"],
      "calificacion": 4.9, "destacado": True, "direccion": "Av. Xalapa s/n, Xalapa, Ver.", "telefono": "228 815 4952"},
-    {"nombre": "Coatepec ÔÇö Ciudad del Caf├®", "region": "xalapa", "municipio": "Coatepec", "tipo": "atraccion",
-     "descripcion": "Pueblo M├ígico y capital mundial del caf├® de altura. Calles coloniales y aroma a caf├®.",
-     "horarios": "Todo el a├▒o", "costo": "Libre ┬À Tours $150ÔÇô300 MXN", "costo_min": 0, "costo_max": 300,
+    {"nombre": "Coatepec — Ciudad del Café", "region": "xalapa", "municipio": "Coatepec", "tipo": "atraccion",
+     "descripcion": "Pueblo Mágico y capital mundial del café de altura. Calles coloniales y aroma a café.",
+     "horarios": "Todo el año", "costo": "Libre · Tours $150–300 MXN", "costo_min": 0, "costo_max": 300,
      "lat": 19.4524, "lng": -96.9614, "fotos": [], "tags": ["cafe","pueblo magico","gastronomia"], "calificacion": 4.8, "destacado": True},
-    {"nombre": "Naolinco ÔÇö Pueblo M├ígico", "region": "xalapa", "municipio": "Naolinco", "tipo": "atraccion",
-     "descripcion": "Pueblo M├ígico famoso por zapatos artesanales, cascadas y puente colgante.",
-     "horarios": "Todo el a├▒o", "costo": "Libre", "costo_min": 0, "costo_max": 200,
+    {"nombre": "Naolinco — Pueblo Mágico", "region": "xalapa", "municipio": "Naolinco", "tipo": "atraccion",
+     "descripcion": "Pueblo Mágico famoso por zapatos artesanales, cascadas y puente colgante.",
+     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 200,
      "lat": 19.6500, "lng": -96.8667, "fotos": [], "tags": ["pueblo magico","artesanias","calzado"], "calificacion": 4.6, "destacado": True},
-    {"nombre": "Lagos del Dique ÔÇö Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
-     "descripcion": "Parque lacustre en el coraz├│n de Xalapa para paseos en lancha y ciclismo.",
-     "horarios": "6:00ÔÇô21:00", "costo": "Libre", "costo_min": 0, "costo_max": 100,
+    {"nombre": "Lagos del Dique — Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
+     "descripcion": "Parque lacustre en el corazón de Xalapa para paseos en lancha y ciclismo.",
+     "horarios": "6:00–21:00", "costo": "Libre", "costo_min": 0, "costo_max": 100,
      "lat": 19.5250, "lng": -96.9300, "fotos": [], "tags": ["naturaleza","parque","familia"], "calificacion": 4.4, "destacado": False},
     {"nombre": "Laguna de Catemaco", "region": "tuxtlas", "municipio": "Catemaco", "tipo": "atraccion",
-     "descripcion": "Laguna m├ís grande de Veracruz. Famosa por brujos, monos y selva tropical.",
-     "horarios": "Lanchas 8:00ÔÇô18:00", "costo": "$200ÔÇô350 MXN por lancha", "costo_min": 200, "costo_max": 350,
+     "descripcion": "Laguna más grande de Veracruz. Famosa por brujos, monos y selva tropical.",
+     "horarios": "Lanchas 8:00–18:00", "costo": "$200–350 MXN por lancha", "costo_min": 200, "costo_max": 350,
      "lat": 18.4220, "lng": -95.1140, "fotos": [], "tags": ["laguna","naturaleza","ecoturismo","brujos"], "calificacion": 4.7, "destacado": True},
     {"nombre": "Reserva Nanciyaga", "region": "tuxtlas", "municipio": "Catemaco", "tipo": "actividad",
-     "descripcion": "Reserva ecol├│gica con temazcal, lodazales y senderos en selva primaria.",
-     "horarios": "8:00ÔÇô17:00", "costo": "$150 MXN ┬À Temazcal $300", "costo_min": 150, "costo_max": 500,
+     "descripcion": "Reserva ecológica con temazcal, lodazales y senderos en selva primaria.",
+     "horarios": "8:00–17:00", "costo": "$150 MXN · Temazcal $300", "costo_min": 150, "costo_max": 500,
      "lat": 18.3800, "lng": -95.0900, "fotos": [], "tags": ["ecoturismo","temazcal","selva"],
      "calificacion": 4.8, "destacado": True, "web": "https://nanciyaga.com"},
-    {"nombre": "San Andr├®s Tuxtla", "region": "tuxtlas", "municipio": "San Andr├®s Tuxtla", "tipo": "atraccion",
+    {"nombre": "San Andrés Tuxtla", "region": "tuxtlas", "municipio": "San Andrés Tuxtla", "tipo": "atraccion",
      "descripcion": "Capital regional con puros artesanales. Puerta de entrada a Los Tuxtlas.",
-     "horarios": "Todo el a├▒o", "costo": "Libre", "costo_min": 0, "costo_max": 200,
+     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 200,
      "lat": 18.4500, "lng": -95.2150, "fotos": [], "tags": ["puros","artesanias","gastronomia"], "calificacion": 4.3, "destacado": False},
-    {"nombre": "Zona Arqueol├│gica El Taj├¡n", "region": "norte", "municipio": "Papantla", "tipo": "atraccion",
-     "descripcion": "Patrimonio UNESCO. Ciudad totonaca con la Pir├ímide de los Nichos.",
-     "horarios": "9:00ÔÇô17:00", "costo": "$85 MXN", "costo_min": 0, "costo_max": 85,
+    {"nombre": "Zona Arqueológica El Tajín", "region": "norte", "municipio": "Papantla", "tipo": "atraccion",
+     "descripcion": "Patrimonio UNESCO. Ciudad totonaca con la Pirámide de los Nichos.",
+     "horarios": "9:00–17:00", "costo": "$85 MXN", "costo_min": 0, "costo_max": 85,
      "lat": 20.4472, "lng": -97.3778, "fotos": [],
      "tags": ["arqueologia","UNESCO","totonaca","historia"], "calificacion": 4.9, "destacado": True,
-     "direccion": "Zona Arqueol├│gica El Taj├¡n, Papantla, Ver."},
+     "direccion": "Zona Arqueológica El Tajín, Papantla, Ver."},
     {"nombre": "Voladores de Papantla", "region": "norte", "municipio": "Papantla", "tipo": "atraccion",
      "descripcion": "Ritual Patrimonio Cultural Inmaterial UNESCO. Cinco hombres giran desde 30 metros de altura.",
-     "horarios": "Diario en El Taj├¡n 11:00, 13:00, 15:00", "costo": "Donativo $50ÔÇô100 MXN", "costo_min": 50, "costo_max": 100,
+     "horarios": "Diario en El Tajín 11:00, 13:00, 15:00", "costo": "Donativo $50–100 MXN", "costo_min": 50, "costo_max": 100,
      "lat": 20.4547, "lng": -97.3222, "fotos": [], "tags": ["cultura","UNESCO","totonaca","ritual"], "calificacion": 4.9, "destacado": True},
-    {"nombre": "Playas de Tuxpan", "region": "norte", "municipio": "Tuxpan de Rodr├¡guez Cano", "tipo": "atraccion",
-     "descripcion": "Las playas m├ís cercanas a la CDMX. Arena fina y malec├│n animado.",
-     "horarios": "Todo el a├▒o", "costo": "Libre", "costo_min": 0, "costo_max": 300,
+    {"nombre": "Playas de Tuxpan", "region": "norte", "municipio": "Tuxpan de Rodríguez Cano", "tipo": "atraccion",
+     "descripcion": "Las playas más cercanas a la CDMX. Arena fina y malecón animado.",
+     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 300,
      "lat": 20.9500, "lng": -97.4000, "fotos": [], "tags": ["playa","mar","familia"], "calificacion": 4.3, "destacado": False},
-    {"nombre": "San Juan de Ul├║a", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
-     "descripcion": "Fortaleza colonial del siglo XVI, primer edificio colonial de Am├®rica.",
-     "horarios": "MarÔÇôDom 9:00ÔÇô16:30", "costo": "$75 MXN", "costo_min": 0, "costo_max": 75,
+    {"nombre": "San Juan de Ulúa", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
+     "descripcion": "Fortaleza colonial del siglo XVI, primer edificio colonial de América.",
+     "horarios": "Mar–Dom 9:00–16:30", "costo": "$75 MXN", "costo_min": 0, "costo_max": 75,
      "lat": 19.2030, "lng": -96.1350, "fotos": [], "tags": ["historia","colonial","fortaleza"],
-     "calificacion": 4.7, "destacado": True, "direccion": "Isla de San Juan de Ul├║a, Veracruz"},
-    {"nombre": "Malec├│n de Veracruz", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
-     "descripcion": "El malec├│n m├ís famoso de M├®xico con Acuario, Baluarte y restaurantes de mariscos.",
-     "horarios": "Todo el a├▒o ┬À Acuario 10:00ÔÇô18:00", "costo": "Libre ┬À Acuario $150 MXN", "costo_min": 0, "costo_max": 150,
+     "calificacion": 4.7, "destacado": True, "direccion": "Isla de San Juan de Ulúa, Veracruz"},
+    {"nombre": "Malecón de Veracruz", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
+     "descripcion": "El malecón más famoso de México con Acuario, Baluarte y restaurantes de mariscos.",
+     "horarios": "Todo el año · Acuario 10:00–18:00", "costo": "Libre · Acuario $150 MXN", "costo_min": 0, "costo_max": 150,
      "lat": 19.1934, "lng": -96.1370, "fotos": [], "tags": ["malecon","acuario","gastronomia","carnaval"], "calificacion": 4.6, "destacado": True},
-    {"nombre": "Boca del R├¡o", "region": "costa", "municipio": "Boca del R├¡o", "tipo": "atraccion",
-     "descripcion": "Zona gastron├│mica top de Veracruz. Mariscos frescos y restaurantes de playa.",
-     "horarios": "Todo el a├▒o", "costo": "Libre ┬À Comida $150ÔÇô500/persona", "costo_min": 0, "costo_max": 500,
+    {"nombre": "Boca del Río", "region": "costa", "municipio": "Boca del Río", "tipo": "atraccion",
+     "descripcion": "Zona gastronómica top de Veracruz. Mariscos frescos y restaurantes de playa.",
+     "horarios": "Todo el año", "costo": "Libre · Comida $150–500/persona", "costo_min": 0, "costo_max": 500,
      "lat": 19.1070, "lng": -96.1150, "fotos": [], "tags": ["gastronomia","mariscos","playa"], "calificacion": 4.7, "destacado": True},
-    {"nombre": "Alvarado ÔÇö Puerto Pesquero", "region": "costa", "municipio": "Alvarado", "tipo": "atraccion",
-     "descripcion": "Puerto pesquero aut├®ntico con mariscos ultra frescos y laguna de Camaronera.",
-     "horarios": "Todo el a├▒o", "costo": "Libre ┬À Lanchas $150/persona", "costo_min": 0, "costo_max": 200,
+    {"nombre": "Alvarado — Puerto Pesquero", "region": "costa", "municipio": "Alvarado", "tipo": "atraccion",
+     "descripcion": "Puerto pesquero auténtico con mariscos ultra frescos y laguna de Camaronera.",
+     "horarios": "Todo el año", "costo": "Libre · Lanchas $150/persona", "costo_min": 0, "costo_max": 200,
      "lat": 18.7700, "lng": -95.7630, "fotos": [], "tags": ["pesca","mariscos","laguna"], "calificacion": 4.5, "destacado": False},
 ]
 
 RUTAS_DATA = [
-    {"nombre": "Ruta Orizaba ÔÇö Entre Cumbres y Flores", "slug": "orizaba", "region": "orizaba",
-     "descripcion": "Del Pico de Orizaba a los cafetales de Xico: arquitectura ├║nica y naturaleza exuberante.",
-     "descripcion_larga": "La regi├│n de Orizaba combina lo mejor de Veracruz. A 2,000 metros, el clima es fresco. El Palacio de Hierro, el Telef├®rico, Fort├¡n de las Flores y Xico te esperan.",
+    {"nombre": "Ruta Orizaba — Entre Cumbres y Flores", "slug": "orizaba", "region": "orizaba",
+     "descripcion": "Del Pico de Orizaba a los cafetales de Xico: arquitectura única y naturaleza exuberante.",
+     "descripcion_larga": "La región de Orizaba combina lo mejor de Veracruz. A 2,000 metros, el clima es fresco. El Palacio de Hierro, el Teleférico, Fortín de las Flores y Xico te esperan.",
      "dias_recomendados": 3, "distancia_km": 45, "dificultad": "facil",
      "costo_estimado_min": 1200, "costo_estimado_max": 3500,
-     "mejor_epoca": "Todo el a├▒o ┬À Mejor: octubre a mayo",
-     "como_llegar": "Desde CDMX: 4h por autopista M├®xico-Orizaba. Desde Xalapa: 2h.",
+     "mejor_epoca": "Todo el año · Mejor: octubre a mayo",
+     "como_llegar": "Desde CDMX: 4h por autopista México-Orizaba. Desde Xalapa: 2h.",
      "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg",
      "tags": ["cafe","naturaleza","arquitectura","familia"]},
-    {"nombre": "Ruta Xalapa ÔÇö La Capital de la Cultura", "slug": "xalapa", "region": "xalapa",
-     "descripcion": "La ciudad de las flores, el caf├® y la niebla. Museos de clase mundial y Pueblos M├ígicos.",
-     "descripcion_larga": "Xalapa a 1,400m: el MAX, Coatepec capital del caf├® y Naolinco con sus zapatos artesanales.",
+    {"nombre": "Ruta Xalapa — La Capital de la Cultura", "slug": "xalapa", "region": "xalapa",
+     "descripcion": "La ciudad de las flores, el café y la niebla. Museos de clase mundial y Pueblos Mágicos.",
+     "descripcion_larga": "Xalapa a 1,400m: el MAX, Coatepec capital del café y Naolinco con sus zapatos artesanales.",
      "dias_recomendados": 3, "distancia_km": 60, "dificultad": "facil",
      "costo_estimado_min": 1500, "costo_estimado_max": 4000,
-     "mejor_epoca": "Todo el a├▒o ┬À Mejor: noviembre a abril",
+     "mejor_epoca": "Todo el año · Mejor: noviembre a abril",
      "como_llegar": "Desde CDMX: 4.5h en autopista.", "foto_portada": "",
      "tags": ["cultura","museos","cafe","gastronomia"]},
-    {"nombre": "Ruta Los Tuxtlas ÔÇö Selva, Magia y Laguna", "slug": "tuxtlas", "region": "tuxtlas",
-     "descripcion": "La regi├│n m├ís biodiversa de M├®xico. Selva tropical, laguna m├ígica y brujos.",
-     "descripcion_larga": "La ├║ltima gran selva de M├®xico. Catemaco, Nanciyaga y San Andr├®s Tuxtla te esperan.",
+    {"nombre": "Ruta Los Tuxtlas — Selva, Magia y Laguna", "slug": "tuxtlas", "region": "tuxtlas",
+     "descripcion": "La región más biodiversa de México. Selva tropical, laguna mágica y brujos.",
+     "descripcion_larga": "La última gran selva de México. Catemaco, Nanciyaga y San Andrés Tuxtla te esperan.",
      "dias_recomendados": 4, "distancia_km": 80, "dificultad": "moderada",
      "costo_estimado_min": 2000, "costo_estimado_max": 5000,
      "mejor_epoca": "Noviembre a mayo",
      "como_llegar": "Desde Veracruz: 2.5h. Desde CDMX: 7h.", "foto_portada": "",
      "tags": ["ecoturismo","selva","laguna","aventura"]},
-    {"nombre": "Ruta Norte ÔÇö El Taj├¡n y los Totonacas", "slug": "norte", "region": "norte",
-     "descripcion": "Patrimonio UNESCO y cultura viva. El Taj├¡n, Voladores de Papantla y playas de Tuxpan.",
-     "descripcion_larga": "El Taj├¡n Patrimonio UNESCO, Papantla con su vainilla y Tuxpan con sus playas.",
+    {"nombre": "Ruta Norte — El Tajín y los Totonacas", "slug": "norte", "region": "norte",
+     "descripcion": "Patrimonio UNESCO y cultura viva. El Tajín, Voladores de Papantla y playas de Tuxpan.",
+     "descripcion_larga": "El Tajín Patrimonio UNESCO, Papantla con su vainilla y Tuxpan con sus playas.",
      "dias_recomendados": 3, "distancia_km": 100, "dificultad": "facil",
      "costo_estimado_min": 1500, "costo_estimado_max": 4500,
-     "mejor_epoca": "Todo el a├▒o ┬À Cumbre Taj├¡n: marzo",
+     "mejor_epoca": "Todo el año · Cumbre Tajín: marzo",
      "como_llegar": "Desde CDMX: 4h a Poza Rica, 30min a Papantla.", "foto_portada": "",
      "tags": ["arqueologia","UNESCO","cultura","playa"]},
-    {"nombre": "Ruta Costa ÔÇö Veracruz Puerto", "slug": "costa", "region": "costa",
-     "descripcion": "El puerto m├ís antiguo de Am├®rica. Fortalezas coloniales, carnaval y mariscos frescos.",
-     "descripcion_larga": "San Juan de Ul├║a, el Malec├│n, Boca del R├¡o y Alvarado forman el circuito costero.",
+    {"nombre": "Ruta Costa — Veracruz Puerto", "slug": "costa", "region": "costa",
+     "descripcion": "El puerto más antiguo de América. Fortalezas coloniales, carnaval y mariscos frescos.",
+     "descripcion_larga": "San Juan de Ulúa, el Malecón, Boca del Río y Alvarado forman el circuito costero.",
      "dias_recomendados": 3, "distancia_km": 120, "dificultad": "facil",
      "costo_estimado_min": 1800, "costo_estimado_max": 5000,
-     "mejor_epoca": "Todo el a├▒o ┬À Carnaval: febrero",
+     "mejor_epoca": "Todo el año · Carnaval: febrero",
      "como_llegar": "Desde CDMX: 5h en autopista o vuelo de 1h.", "foto_portada": "",
      "tags": ["historia","gastronomia","playa","carnaval"]},
 ]
 
 PAQUETES_DATA = [
     {"nombre": "Paquete Orizaba Express", "region": "orizaba",
-     "descripcion": "3 d├¡as entre el Pico de Orizaba, cafetales y flores de Fort├¡n.",
+     "descripcion": "3 días entre el Pico de Orizaba, cafetales y flores de Fortín.",
      "dias": 3, "precio_min": 3500, "precio_max": 7000,
-     "incluye": ["2 noches hospedaje boutique","Desayunos","Tour Palacio de Hierro + Telef├®rico","Tour cafetero Fort├¡n","Visita Xico con gu├¡a"],
+     "incluye": ["2 noches hospedaje boutique","Desayunos","Tour Palacio de Hierro + Teleférico","Tour cafetero Fortín","Visita Xico con guía"],
      "no_incluye": ["Transporte de origen","Comidas y cenas","Gastos personales"],
-     "hoteles": [{"nombre": "Hotel Fiesta Inn Orizaba","estrellas": 4,"precio_noche": 1200,"descripcion": "C├®ntrico con alberca"},
-                 {"nombre": "Gran Hotel de Orizaba","estrellas": 3,"precio_noche": 750,"descripcion": "Hotel hist├│rico en el centro"}],
+     "hoteles": [{"nombre": "Hotel Fiesta Inn Orizaba","estrellas": 4,"precio_noche": 1200,"descripcion": "Céntrico con alberca"},
+                 {"nombre": "Gran Hotel de Orizaba","estrellas": 3,"precio_noche": 750,"descripcion": "Hotel histórico en el centro"}],
      "restaurantes": [{"nombre": "La Casona de las Flores","especialidad": "Cocina veracruzana","precio_promedio": 250},
-                      {"nombre": "Caf├® de Altura La Esquina","especialidad": "Caf├® de especialidad","precio_promedio": 80}],
-     "actividades": ["Telef├®rico","Cascada de Elefante","Tour caf├® Fort├¡n","Cascada Texolo Xico"]},
+                      {"nombre": "Café de Altura La Esquina","especialidad": "Café de especialidad","precio_promedio": 80}],
+     "actividades": ["Teleférico","Cascada de Elefante","Tour café Fortín","Cascada Texolo Xico"]},
     {"nombre": "Paquete Xalapa Cultural", "region": "xalapa",
-     "descripcion": "Museos, caf├® de especialidad y Pueblos M├ígicos en 3 d├¡as.",
+     "descripcion": "Museos, café de especialidad y Pueblos Mágicos en 3 días.",
      "dias": 3, "precio_min": 3800, "precio_max": 7500,
-     "incluye": ["2 noches hotel boutique Xalapa","Desayunos","Entrada MAX","Tour cafetero Coatepec","Gu├¡a Naolinco"],
+     "incluye": ["2 noches hotel boutique Xalapa","Desayunos","Entrada MAX","Tour cafetero Coatepec","Guía Naolinco"],
      "no_incluye": ["Transporte de origen","Comidas","Compras"],
-     "hoteles": [{"nombre": "Mes├│n del Alf├®rez","estrellas": 4,"precio_noche": 1400,"descripcion": "Boutique colonial"},
-                 {"nombre": "Hotel Xalapa","estrellas": 4,"precio_noche": 1100,"descripcion": "Cl├ísico con jardines"}],
+     "hoteles": [{"nombre": "Mesón del Alférez","estrellas": 4,"precio_noche": 1400,"descripcion": "Boutique colonial"},
+                 {"nombre": "Hotel Xalapa","estrellas": 4,"precio_noche": 1100,"descripcion": "Clásico con jardines"}],
      "restaurantes": [{"nombre": "La Sopa","especialidad": "Cocina veracruzana","precio_promedio": 180},
-                      {"nombre": "Caf├® Tierra Luna","especialidad": "Caf├® Coatepec","precio_promedio": 100}],
-     "actividades": ["Museo Antropolog├¡a","Lagos del Dique","Tour caf├® Coatepec","Naolinco"]},
+                      {"nombre": "Café Tierra Luna","especialidad": "Café Coatepec","precio_promedio": 100}],
+     "actividades": ["Museo Antropología","Lagos del Dique","Tour café Coatepec","Naolinco"]},
     {"nombre": "Paquete Veracruz Puerto & Costa", "region": "costa",
-     "descripcion": "Historia colonial, mariscos y playas del Golfo en 3 d├¡as.",
+     "descripcion": "Historia colonial, mariscos y playas del Golfo en 3 días.",
      "dias": 3, "precio_min": 4200, "precio_max": 8500,
-     "incluye": ["2 noches hotel frente al mar","Desayunos buffet","Tour San Juan de Ul├║a","Recorrido Centro Hist├│rico","Acuario"],
+     "incluye": ["2 noches hotel frente al mar","Desayunos buffet","Tour San Juan de Ulúa","Recorrido Centro Histórico","Acuario"],
      "no_incluye": ["Transporte de origen","Comidas","Actividades extra"],
-     "hoteles": [{"nombre": "Hotel Emporio Veracruz","estrellas": 5,"precio_noche": 2200,"descripcion": "Lujo frente al malec├│n"},
-                 {"nombre": "Holiday Inn Veracruz Centro","estrellas": 4,"precio_noche": 1400,"descripcion": "C├│modo cerca del Z├│calo"}],
+     "hoteles": [{"nombre": "Hotel Emporio Veracruz","estrellas": 5,"precio_noche": 2200,"descripcion": "Lujo frente al malecón"},
+                 {"nombre": "Holiday Inn Veracruz Centro","estrellas": 4,"precio_noche": 1400,"descripcion": "Cómodo cerca del Zócalo"}],
      "restaurantes": [{"nombre": "Mariscos Villa Rica","especialidad": "Mariscos frescos","precio_promedio": 300},
                       {"nombre": "Los Portales del Parque","especialidad": "Antojitos jarochos","precio_promedio": 120}],
-     "actividades": ["San Juan de Ul├║a","Malec├│n y Acuario","Gastronom├¡a Boca del R├¡o","Lanchas Alvarado"]},
+     "actividades": ["San Juan de Ulúa","Malecón y Acuario","Gastronomía Boca del Río","Lanchas Alvarado"]},
 ]
 
 
 async def seed_rutas_y_lugares():
-    """Puebla la BD con rutas tur├¡sticas, lugares y paquetes si no existen."""
+    """Puebla la BD con rutas turísticas, lugares y paquetes si no existen."""
     existing_lugares = await db.lugares.count_documents({})
     if existing_lugares == 0:
         lugares_to_insert = []
@@ -3148,7 +3148,7 @@ async def seed_rutas_y_lugares():
             logger.info(f"Seeded {len(paquetes_to_insert)} paquetes")
 
 
-# ÔöÇÔöÇÔöÇ ENDPOINTS RUTAS, LUGARES, PAQUETES E ITINERARIO ÔöÇÔöÇÔöÇ
+# ─── ENDPOINTS RUTAS, LUGARES, PAQUETES E ITINERARIO ───
 
 @api_router.get("/rutas")
 async def get_rutas(region: Optional[str] = None):
@@ -3250,35 +3250,35 @@ async def generar_itinerario(req: ItinerarioRequest):
     ).to_list(20)
     paquete = await db.paquetes.find_one({"region": req.region}, {"_id": 0})
 
-    presupuesto_texto = {"bajo": "menos de $1,500 MXN por d├¡a", "medio": "$1,500ÔÇô3,000 MXN por d├¡a",
-                         "alto": "m├ís de $3,000 MXN por d├¡a"}.get(req.presupuesto, "moderado")
+    presupuesto_texto = {"bajo": "menos de $1,500 MXN por día", "medio": "$1,500–3,000 MXN por día",
+                         "alto": "más de $3,000 MXN por día"}.get(req.presupuesto, "moderado")
     intereses_texto = ", ".join(req.intereses) if req.intereses else "general"
     lugares_texto = "\n".join([
-        f"- {l['nombre']} ({l['tipo']}) ┬À ${l.get('costo_min',0)}ÔÇô${l.get('costo_max',0)} MXN ┬À Rating: {l.get('calificacion','N/A')}"
+        f"- {l['nombre']} ({l['tipo']}) · ${l.get('costo_min',0)}–${l.get('costo_max',0)} MXN · Rating: {l.get('calificacion','N/A')}"
         for l in lugares
     ])
 
-    prompt = f"""Crea un itinerario tur├¡stico detallado para la regi├│n de {req.region.upper()} en Veracruz, M├®xico.
+    prompt = f"""Crea un itinerario turístico detallado para la región de {req.region.upper()} en Veracruz, México.
 
-PAR├üMETROS DEL VIAJERO:
-- D├¡as disponibles: {req.dias}
-- N├║mero de personas: {req.num_personas}
+PARÁMETROS DEL VIAJERO:
+- Días disponibles: {req.dias}
+- Número de personas: {req.num_personas}
 - Presupuesto: {presupuesto_texto}
 - Intereses: {intereses_texto}
 
-LUGARES DISPONIBLES EN LA REGI├ôN:
+LUGARES DISPONIBLES EN LA REGIÓN:
 {lugares_texto}
 
 INSTRUCCIONES:
-- Organiza el itinerario d├¡a por d├¡a (D├¡a 1, D├¡a 2, etc.)
-- Para cada d├¡a incluye: ma├▒ana, tarde y noche
+- Organiza el itinerario día por día (Día 1, Día 2, etc.)
+- Para cada día incluye: mañana, tarde y noche
 - Incluye estimados de costo por persona
-- Sugiere d├│nde comer en cada d├¡a con precio aproximado
+- Sugiere dónde comer en cada día con precio aproximado
 - Incluye tips de transporte entre lugares
 - Calcula el costo total aproximado del viaje
-- S├® espec├¡fico con horarios (ej: "9:00 AM: Llegar al Palacio de Hierro")
-- Responde en espa├▒ol, con un tono amigable y entusiasta
-- Formato: usa emojis para hacer m├ís visual el itinerario"""
+- Sé específico con horarios (ej: "9:00 AM: Llegar al Palacio de Hierro")
+- Responde en español, con un tono amigable y entusiasta
+- Formato: usa emojis para hacer más visual el itinerario"""
 
     import asyncio
     from groq import Groq
@@ -3288,7 +3288,7 @@ INSTRUCCIONES:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "Eres un experto gu├¡a tur├¡stico de Veracruz, M├®xico. Creas itinerarios detallados, pr├ícticos y emocionantes."},
+                {"role": "system", "content": "Eres un experto guía turístico de Veracruz, México. Creas itinerarios detallados, prácticos y emocionantes."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=2000,
@@ -3310,7 +3310,7 @@ INSTRUCCIONES:
 
 
 
-# ============== SEED ENDPOINTS (uso ├║nico, borrar despu├®s) ==============
+# ============== SEED ENDPOINTS (uso único, borrar después) ==============
 
 @api_router.post("/admin/seed-orizaba-atracciones")
 async def seed_orizaba_atracciones_endpoint(request: Request):
@@ -3328,33 +3328,33 @@ async def seed_orizaba_atracciones_endpoint(request: Request):
     municipio_id = municipio["id"]
 
     ATRACCIONES = [
-        {"nombre": "Pico de Orizaba (Citlalt├®petl)", "tipo": "atraccion", "subtipo": "Volc├ín / monta├▒ismo", "descripcion": "El volc├ín m├ís alto de M├®xico y tercera monta├▒a m├ís alta de Am├®rica del Norte con 5,636 msnm.", "descripcion_larga": "El Pico de Orizaba, tambi├®n conocido como Citlalt├®petl, es el volc├ín m├ís alto de M├®xico y la tercera monta├▒a m├ís alta de Am├®rica del Norte, con una altitud aproximada de 5,636 metros sobre el nivel del mar. Se trata de un volc├ín inactivo cubierto de nieve en su cima durante gran parte del a├▒o, lo que lo convierte en un destino emblem├ítico para el monta├▒ismo y la exploraci├│n de alta monta├▒a.", "horarios": "Libre acceso", "costo": "Variable", "costo_min": 0, "costo_max": 3000, "lat": 19.0306, "lng": -97.2686, "foto_portada": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85"], "tags": ["volc├ín", "monta├▒ismo", "naturaleza", "aventura"], "calificacion": 4.9, "destacado": True, "direccion": "Parque Nacional Pico de Orizaba"},
-        {"nombre": "Telef├®rico de Orizaba", "tipo": "atraccion", "subtipo": "Transporte tur├¡stico", "descripcion": "Uno de los telef├®ricos urbanos m├ís importantes de M├®xico. Conecta el centro con el Cerro del Borrego en 5 minutos con vistas panor├ímicas.", "descripcion_larga": "El Telef├®rico de Orizaba tiene una longitud aproximada de 917 metros y conecta la zona centro con el Cerro del Borrego. Opera con cabinas cerradas con capacidad para 6 personas mientras se disfruta de vistas panor├ímicas del r├¡o, el centro hist├│rico y el Pico de Orizaba.", "horarios": "10:00ÔÇô18:00", "costo": "$50ÔÇô$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85"], "tags": ["telef├®rico", "vistas", "aventura", "familia"], "calificacion": 4.7, "destacado": True, "direccion": "Sur 4 #50, Centro, Orizaba"},
-        {"nombre": "Cerro del Borrego", "tipo": "atraccion", "subtipo": "Ecoparque / sitio hist├│rico", "descripcion": "Ecoparque hist├│rico a 1,240 msnm, escenario de la batalla contra la intervenci├│n francesa (1862). Senderos, miradores y Atalaya de Cristal.", "descripcion_larga": "El Cerro del Borrego es un espacio natural y sitio hist├│rico emblem├ítico de Orizaba. Fue escenario de una importante batalla durante la intervenci├│n francesa en 1862. Cuenta con senderos, miradores naturales y es accesible a pie o por telef├®rico.", "horarios": "9:00ÔÇô18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8620, "lng": -97.0980, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "historia", "senderismo", "miradores"], "calificacion": 4.7, "destacado": True, "direccion": "Cerro del Borrego, Centro, Orizaba"},
-        {"nombre": "Atalaya de Cristal", "tipo": "actividad", "subtipo": "Mirador", "descripcion": "Mirador con piso de vidrio en la cima del Cerro del Borrego. Vista de 300 metros hacia la ciudad. Experiencia visual ├║nica.", "descripcion_larga": "La Atalaya de Cristal es un mirador contempor├íneo con plataforma de piso de vidrio que permite observar directamente hacia abajo desde m├ís de 300 metros de altura sobre la ciudad. Ideal para fotograf├¡as impactantes.", "horarios": "10:00ÔÇô18:00", "costo": "Bajo costo", "costo_min": 30, "costo_max": 60, "lat": 18.8625, "lng": -97.0978, "foto_portada": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85"], "tags": ["mirador", "adrenalina", "fotograf├¡a", "vistas"], "calificacion": 4.8, "destacado": True, "direccion": "Cima del Cerro del Borrego, Orizaba"},
-        {"nombre": "Tobog├ín de la Monta├▒a", "tipo": "actividad", "subtipo": "Alpine coaster", "descripcion": "Alpine coaster de 650 metros en el Cerro del Borrego. El usuario controla la velocidad. Naturaleza y adrenalina en familia.", "descripcion_larga": "El Tobog├ín de la Monta├▒a es una atracci├│n tipo alpine coaster de 650 metros integrado en el entorno natural del Cerro del Borrego. Cada usuario controla la velocidad mediante un sistema de freno manual.", "horarios": "10:00ÔÇô18:00", "costo": "$50ÔÇô$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8618, "lng": -97.0982, "foto_portada": "https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85"], "tags": ["adrenalina", "familia", "aventura"], "calificacion": 4.6, "destacado": False, "direccion": "Cerro del Borrego, Orizaba"},
-        {"nombre": "Paseo del R├¡o Orizaba", "tipo": "atraccion", "subtipo": "Parque lineal", "descripcion": "Parque lineal de 5 km a orillas del r├¡o con puentes peatonales, zool├│gico, zonas culturales y ├íreas verdes. El mejor proyecto de recuperaci├│n urbana.", "descripcion_larga": "El Paseo del R├¡o Orizaba es un parque lineal de aproximadamente 5 kil├│metros que sigue el curso del r├¡o. Cuenta con ├íreas verdes, puentes peatonales, zonas de descanso, un peque├▒o zool├│gico y espacios culturales.", "horarios": "9:00ÔÇô20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8498, "lng": -97.0991, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["parque", "familia", "naturaleza", "gratuito", "r├¡o"], "calificacion": 4.6, "destacado": True, "direccion": "Paseo del R├¡o, Centro, Orizaba"},
-        {"nombre": "Laguna de Ojo de Agua", "tipo": "atraccion", "subtipo": "Balneario natural", "descripcion": "Nacimiento natural de agua cristalina de manantiales subterr├íneos. Popular para nadar y refrescarse en temporada de calor.", "descripcion_larga": "La Laguna de Ojo de Agua es un nacimiento natural de agua cristalina proveniente de manantiales subterr├íneos. Es muy popular para nadar y convivir, especialmente en temporadas de calor.", "horarios": "8:00ÔÇô18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8456, "lng": -97.0934, "foto_portada": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85"], "tags": ["agua", "naturaleza", "gratuito", "balneario"], "calificacion": 4.4, "destacado": False, "direccion": "Col. Ojo de Agua, Orizaba"},
-        {"nombre": "Parque Nacional Cerro de Escamela", "tipo": "atraccion", "subtipo": "Parque nacional", "descripcion": "Zona natural protegida con bosque h├║medo y cascadas. Senderos naturales para ecoturismo y senderismo aut├®ntico.", "descripcion_larga": "El Parque Nacional Cerro de Escamela es una zona natural protegida con bosque h├║medo y cascadas. Cuenta con senderos naturales poco intervenidos, ideal para ecoturismo y tranquilidad.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8234, "lng": -97.0534, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "senderismo", "cascadas", "ecoturismo", "gratuito"], "calificacion": 4.5, "destacado": False, "direccion": "Escamela, Orizaba, Ver."},
-        {"nombre": "Ca├▒├│n de la Carbonera", "tipo": "actividad", "subtipo": "Aventura / rappel", "descripcion": "Formaci├│n natural en Nogales con paredes rocosas. Rappel y senderismo nivel medio. Paisajes naturales ├║nicos de aventura.", "descripcion_larga": "El Ca├▒├│n de la Carbonera en Nogales tiene paredes rocosas ideales para rappel y senderismo de nivel medio. Se recomienda ir con gu├¡a.", "horarios": "Libre", "costo": "Gratis (gu├¡a opcional)", "costo_min": 0, "costo_max": 500, "lat": 18.8012, "lng": -97.1534, "foto_portada": "https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85"], "tags": ["aventura", "rappel", "senderismo", "naturaleza"], "calificacion": 4.4, "destacado": False, "direccion": "Nogales, Ver."},
-        {"nombre": "Palacio de Hierro de Orizaba", "tipo": "atraccion", "subtipo": "Museo / patrimonio", "descripcion": "Joya art nouveau construida en B├®lgica (1894), atribuida al taller de Gustave Eiffel. Complejo cultural con museos y exposiciones.", "descripcion_larga": "El Palacio de Hierro fue construido en el siglo XIX con estructura de hierro prefabricado de estilo europeo atribuido a Gustave Eiffel. Actualmente es un complejo cultural con museos y espacios de exposici├│n.", "horarios": "10:00ÔÇô18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg", "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"], "tags": ["arquitectura", "museo", "historia", "arte", "gratuito"], "calificacion": 4.8, "destacado": True, "direccion": "Madero s/n, Centro, Orizaba"},
-        {"nombre": "Catedral de San Miguel Arc├íngel", "tipo": "atraccion", "subtipo": "Templo religioso", "descripcion": "Principal templo religioso de Orizaba. Siglo XVIII, estilo neocl├ísico. Centro del recorrido cultural del centro hist├│rico.", "descripcion_larga": "La Catedral de San Miguel Arc├íngel es el principal templo religioso de Orizaba, construida en el siglo XVIII con estilo neocl├ísico. Sede de las principales celebraciones lit├║rgicas.", "horarios": "7:00ÔÇô20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8531, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85"], "tags": ["religi├│n", "historia", "arquitectura", "gratuito"], "calificacion": 4.6, "destacado": False, "direccion": "Centro Hist├│rico, Orizaba"},
-        {"nombre": "Museo de Arte del Estado de Veracruz", "tipo": "atraccion", "subtipo": "Museo", "descripcion": "Antiguo convento convertido en museo. Arte novohispano, exposiciones permanentes y temporales. Uno de los recintos m├ís importantes del estado.", "descripcion_larga": "Ubicado en un antiguo convento, alberga colecci├│n de arte novohispano y exposiciones temporales. Uno de los recintos culturales m├ís importantes del estado.", "horarios": "10:00ÔÇô18:00", "costo": "$20ÔÇô$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8545, "lng": -97.1003, "foto_portada": "https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85"], "tags": ["museo", "arte", "historia", "cultura"], "calificacion": 4.5, "destacado": False, "direccion": "Norte 4 #27, Centro, Orizaba"},
-        {"nombre": "Museo de la Cerveza", "tipo": "atraccion", "subtipo": "Museo interactivo", "descripcion": "Museo interactivo sobre la tradici├│n cervecera de Orizaba. Historia de la industria y procesos de producci├│n de la cerveza veracruzana.", "descripcion_larga": "Museo interactivo que muestra la historia de la industria cervecera en Orizaba. Incluye exhibiciones sobre procesos de producci├│n e historia de la cerveza.", "horarios": "10:00ÔÇô18:00", "costo": "$30ÔÇô$60 MXN", "costo_min": 30, "costo_max": 60, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85"], "tags": ["museo", "cerveza", "historia", "interactivo"], "calificacion": 4.3, "destacado": False, "direccion": "Palacio de Hierro, Orizaba"},
-        {"nombre": "Museo Cri-Cri", "tipo": "atraccion", "subtipo": "Museo tem├ítico", "descripcion": "Museo dedicado a Francisco Gabilondo Soler 'Cri-Cri', nacido en Orizaba. Contenido infantil, m├║sica y experiencias interactivas para familias.", "descripcion_larga": "Museo dedicado a Cri-Cri con enfoque infantil y cultural. Presenta contenido educativo, m├║sica y elementos interactivos para familias.", "horarios": "10:00ÔÇô18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85"], "tags": ["museo", "familia", "ni├▒os", "Cri-Cri"], "calificacion": 4.5, "destacado": False, "direccion": "Alameda, Orizaba"},
-        {"nombre": "Museo Casa de las Leyendas", "tipo": "atraccion", "subtipo": "Museo tem├ítico", "descripcion": "Museo de leyendas y tradiciones orales de la regi├│n. Experiencias narrativas que recrean historias locales misteriosas.", "descripcion_larga": "Museo tem├ítico enfocado en leyendas y tradiciones orales de la regi├│n. Ofrece experiencias narrativas que recrean historias locales.", "horarios": "10:00ÔÇô18:00", "costo": "$40 MXN", "costo_min": 40, "costo_max": 40, "lat": 18.8529, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85"], "tags": ["museo", "leyendas", "misterio", "cultura"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
-        {"nombre": "Poliforum Mier y Pesado", "tipo": "atraccion", "subtipo": "Centro cultural", "descripcion": "Complejo cultural con jardines de estilo europeo. Sede de eventos, exposiciones y conciertos. Arquitectura y jardines ├║nicos en Orizaba.", "descripcion_larga": "El Poliforum Mier y Pesado es un complejo cultural con jardines de estilo europeo usado para eventos culturales, exposiciones y conciertos.", "horarios": "9:00ÔÇô18:00", "costo": "$20ÔÇô$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8528, "lng": -97.1005, "foto_portada": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85"], "tags": ["cultura", "jardines", "eventos", "arquitectura"], "calificacion": 4.4, "destacado": False, "direccion": "Oriente 6 #500, Orizaba"},
-        {"nombre": "Parque Castillo", "tipo": "atraccion", "subtipo": "Plaza hist├│rica", "descripcion": "Plaza central emblem├ítica rodeada de edificios hist├│ricos. Los domingos hay son jarocho. Coraz├│n de la vida p├║blica de Orizaba.", "descripcion_larga": "Plaza central que funciona como punto de reuni├│n social, rodeada de edificios hist├│ricos y actividad comercial. Los domingos se presentan grupos de son jarocho.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8538, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["plaza", "historia", "gratuito", "centro"], "calificacion": 4.5, "destacado": False, "direccion": "Centro Hist├│rico, Orizaba"},
-        {"nombre": "Alameda Francisco Gabilondo Soler", "tipo": "atraccion", "subtipo": "Parque urbano", "descripcion": "Parque urbano emblem├ítico dedicado a Cri-Cri. ├üreas verdes y espacios de convivencia familiar en el centro hist├│rico.", "descripcion_larga": "Parque urbano emblem├ítico de Orizaba, ideal para recreaci├│n familiar. Vinculado culturalmente con la figura de Cri-Cri.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85"], "tags": ["parque", "familia", "gratuito", "Cri-Cri"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
-        {"nombre": "Mercado Melchor Ocampo", "tipo": "atraccion", "subtipo": "Mercado tradicional", "descripcion": "Mercado tradicional m├ís importante de Orizaba. Alimentos frescos, comida t├¡pica y gastronom├¡a local aut├®ntica. Experiencia cotidiana imperdible.", "descripcion_larga": "Mercado tradicional con gran variedad de productos, desde alimentos frescos hasta comida t├¡pica preparada. Un excelente lugar para conocer la gastronom├¡a local.", "horarios": "7:00ÔÇô18:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8521, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["mercado", "gastronom├¡a", "cultura", "tradici├│n"], "calificacion": 4.5, "destacado": False, "direccion": "Poniente 7, Orizaba"},
-        {"nombre": "Mercado de Artesan├¡as de Orizaba", "tipo": "atraccion", "subtipo": "Mercado artesanal", "descripcion": "Espacio dedicado a artesanos locales. Textiles nahuas, souvenirs y productos t├¡picos veracruzanos. Comercio justo directo con artesanos.", "descripcion_larga": "Mercado tur├¡stico con productos elaborados por artesanos locales: textiles, recuerdos, figuras y art├¡culos representativos de la cultura veracruzana.", "horarios": "9:00ÔÇô20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8527, "lng": -97.1009, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["artesan├¡as", "compras", "cultura", "souvenirs"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
-        {"nombre": "Pante├│n Municipal de Orizaba", "tipo": "atraccion", "subtipo": "Patrimonio cultural", "descripcion": "Cementerio hist├│rico con mausoleos y esculturas de distintas ├®pocas. Patrimonio funerario. Muy visitado en D├¡a de Muertos.", "descripcion_larga": "El Pante├│n Municipal alberga tumbas antiguas, mausoleos y esculturas de diferentes ├®pocas. Visitado por interesados en historia local y arquitectura funeraria, especialmente en D├¡a de Muertos.", "horarios": "8:00ÔÇô18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8489, "lng": -97.1023, "foto_portada": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85"], "tags": ["historia", "patrimonio", "D├¡a de Muertos", "gratuito"], "calificacion": 4.1, "destacado": False, "direccion": "Sur 11, Orizaba"},
+        {"nombre": "Pico de Orizaba (Citlaltépetl)", "tipo": "atraccion", "subtipo": "Volcán / montañismo", "descripcion": "El volcán más alto de México y tercera montaña más alta de América del Norte con 5,636 msnm.", "descripcion_larga": "El Pico de Orizaba, también conocido como Citlaltépetl, es el volcán más alto de México y la tercera montaña más alta de América del Norte, con una altitud aproximada de 5,636 metros sobre el nivel del mar. Se trata de un volcán inactivo cubierto de nieve en su cima durante gran parte del año, lo que lo convierte en un destino emblemático para el montañismo y la exploración de alta montaña.", "horarios": "Libre acceso", "costo": "Variable", "costo_min": 0, "costo_max": 3000, "lat": 19.0306, "lng": -97.2686, "foto_portada": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85"], "tags": ["volcán", "montañismo", "naturaleza", "aventura"], "calificacion": 4.9, "destacado": True, "direccion": "Parque Nacional Pico de Orizaba"},
+        {"nombre": "Teleférico de Orizaba", "tipo": "atraccion", "subtipo": "Transporte turístico", "descripcion": "Uno de los teleféricos urbanos más importantes de México. Conecta el centro con el Cerro del Borrego en 5 minutos con vistas panorámicas.", "descripcion_larga": "El Teleférico de Orizaba tiene una longitud aproximada de 917 metros y conecta la zona centro con el Cerro del Borrego. Opera con cabinas cerradas con capacidad para 6 personas mientras se disfruta de vistas panorámicas del río, el centro histórico y el Pico de Orizaba.", "horarios": "10:00–18:00", "costo": "$50–$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=85"], "tags": ["teleférico", "vistas", "aventura", "familia"], "calificacion": 4.7, "destacado": True, "direccion": "Sur 4 #50, Centro, Orizaba"},
+        {"nombre": "Cerro del Borrego", "tipo": "atraccion", "subtipo": "Ecoparque / sitio histórico", "descripcion": "Ecoparque histórico a 1,240 msnm, escenario de la batalla contra la intervención francesa (1862). Senderos, miradores y Atalaya de Cristal.", "descripcion_larga": "El Cerro del Borrego es un espacio natural y sitio histórico emblemático de Orizaba. Fue escenario de una importante batalla durante la intervención francesa en 1862. Cuenta con senderos, miradores naturales y es accesible a pie o por teleférico.", "horarios": "9:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8620, "lng": -97.0980, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "historia", "senderismo", "miradores"], "calificacion": 4.7, "destacado": True, "direccion": "Cerro del Borrego, Centro, Orizaba"},
+        {"nombre": "Atalaya de Cristal", "tipo": "actividad", "subtipo": "Mirador", "descripcion": "Mirador con piso de vidrio en la cima del Cerro del Borrego. Vista de 300 metros hacia la ciudad. Experiencia visual única.", "descripcion_larga": "La Atalaya de Cristal es un mirador contemporáneo con plataforma de piso de vidrio que permite observar directamente hacia abajo desde más de 300 metros de altura sobre la ciudad. Ideal para fotografías impactantes.", "horarios": "10:00–18:00", "costo": "Bajo costo", "costo_min": 30, "costo_max": 60, "lat": 18.8625, "lng": -97.0978, "foto_portada": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=85"], "tags": ["mirador", "adrenalina", "fotografía", "vistas"], "calificacion": 4.8, "destacado": True, "direccion": "Cima del Cerro del Borrego, Orizaba"},
+        {"nombre": "Tobogán de la Montaña", "tipo": "actividad", "subtipo": "Alpine coaster", "descripcion": "Alpine coaster de 650 metros en el Cerro del Borrego. El usuario controla la velocidad. Naturaleza y adrenalina en familia.", "descripcion_larga": "El Tobogán de la Montaña es una atracción tipo alpine coaster de 650 metros integrado en el entorno natural del Cerro del Borrego. Cada usuario controla la velocidad mediante un sistema de freno manual.", "horarios": "10:00–18:00", "costo": "$50–$100 MXN", "costo_min": 50, "costo_max": 100, "lat": 18.8618, "lng": -97.0982, "foto_portada": "https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1200&q=85"], "tags": ["adrenalina", "familia", "aventura"], "calificacion": 4.6, "destacado": False, "direccion": "Cerro del Borrego, Orizaba"},
+        {"nombre": "Paseo del Río Orizaba", "tipo": "atraccion", "subtipo": "Parque lineal", "descripcion": "Parque lineal de 5 km a orillas del río con puentes peatonales, zoológico, zonas culturales y áreas verdes. El mejor proyecto de recuperación urbana.", "descripcion_larga": "El Paseo del Río Orizaba es un parque lineal de aproximadamente 5 kilómetros que sigue el curso del río. Cuenta con áreas verdes, puentes peatonales, zonas de descanso, un pequeño zoológico y espacios culturales.", "horarios": "9:00–20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8498, "lng": -97.0991, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["parque", "familia", "naturaleza", "gratuito", "río"], "calificacion": 4.6, "destacado": True, "direccion": "Paseo del Río, Centro, Orizaba"},
+        {"nombre": "Laguna de Ojo de Agua", "tipo": "atraccion", "subtipo": "Balneario natural", "descripcion": "Nacimiento natural de agua cristalina de manantiales subterráneos. Popular para nadar y refrescarse en temporada de calor.", "descripcion_larga": "La Laguna de Ojo de Agua es un nacimiento natural de agua cristalina proveniente de manantiales subterráneos. Es muy popular para nadar y convivir, especialmente en temporadas de calor.", "horarios": "8:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8456, "lng": -97.0934, "foto_portada": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=85"], "tags": ["agua", "naturaleza", "gratuito", "balneario"], "calificacion": 4.4, "destacado": False, "direccion": "Col. Ojo de Agua, Orizaba"},
+        {"nombre": "Parque Nacional Cerro de Escamela", "tipo": "atraccion", "subtipo": "Parque nacional", "descripcion": "Zona natural protegida con bosque húmedo y cascadas. Senderos naturales para ecoturismo y senderismo auténtico.", "descripcion_larga": "El Parque Nacional Cerro de Escamela es una zona natural protegida con bosque húmedo y cascadas. Cuenta con senderos naturales poco intervenidos, ideal para ecoturismo y tranquilidad.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8234, "lng": -97.0534, "foto_portada": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&q=85"], "tags": ["naturaleza", "senderismo", "cascadas", "ecoturismo", "gratuito"], "calificacion": 4.5, "destacado": False, "direccion": "Escamela, Orizaba, Ver."},
+        {"nombre": "Cañón de la Carbonera", "tipo": "actividad", "subtipo": "Aventura / rappel", "descripcion": "Formación natural en Nogales con paredes rocosas. Rappel y senderismo nivel medio. Paisajes naturales únicos de aventura.", "descripcion_larga": "El Cañón de la Carbonera en Nogales tiene paredes rocosas ideales para rappel y senderismo de nivel medio. Se recomienda ir con guía.", "horarios": "Libre", "costo": "Gratis (guía opcional)", "costo_min": 0, "costo_max": 500, "lat": 18.8012, "lng": -97.1534, "foto_portada": "https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?w=1200&q=85"], "tags": ["aventura", "rappel", "senderismo", "naturaleza"], "calificacion": 4.4, "destacado": False, "direccion": "Nogales, Ver."},
+        {"nombre": "Palacio de Hierro de Orizaba", "tipo": "atraccion", "subtipo": "Museo / patrimonio", "descripcion": "Joya art nouveau construida en Bélgica (1894), atribuida al taller de Gustave Eiffel. Complejo cultural con museos y exposiciones.", "descripcion_larga": "El Palacio de Hierro fue construido en el siglo XIX con estructura de hierro prefabricado de estilo europeo atribuido a Gustave Eiffel. Actualmente es un complejo cultural con museos y espacios de exposición.", "horarios": "10:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg", "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"], "tags": ["arquitectura", "museo", "historia", "arte", "gratuito"], "calificacion": 4.8, "destacado": True, "direccion": "Madero s/n, Centro, Orizaba"},
+        {"nombre": "Catedral de San Miguel Arcángel", "tipo": "atraccion", "subtipo": "Templo religioso", "descripcion": "Principal templo religioso de Orizaba. Siglo XVIII, estilo neoclásico. Centro del recorrido cultural del centro histórico.", "descripcion_larga": "La Catedral de San Miguel Arcángel es el principal templo religioso de Orizaba, construida en el siglo XVIII con estilo neoclásico. Sede de las principales celebraciones litúrgicas.", "horarios": "7:00–20:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8531, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1548013146-72479768bada?w=1200&q=85"], "tags": ["religión", "historia", "arquitectura", "gratuito"], "calificacion": 4.6, "destacado": False, "direccion": "Centro Histórico, Orizaba"},
+        {"nombre": "Museo de Arte del Estado de Veracruz", "tipo": "atraccion", "subtipo": "Museo", "descripcion": "Antiguo convento convertido en museo. Arte novohispano, exposiciones permanentes y temporales. Uno de los recintos más importantes del estado.", "descripcion_larga": "Ubicado en un antiguo convento, alberga colección de arte novohispano y exposiciones temporales. Uno de los recintos culturales más importantes del estado.", "horarios": "10:00–18:00", "costo": "$20–$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8545, "lng": -97.1003, "foto_portada": "https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1578926288207-a90a5e3d682e?w=1200&q=85"], "tags": ["museo", "arte", "historia", "cultura"], "calificacion": 4.5, "destacado": False, "direccion": "Norte 4 #27, Centro, Orizaba"},
+        {"nombre": "Museo de la Cerveza", "tipo": "atraccion", "subtipo": "Museo interactivo", "descripcion": "Museo interactivo sobre la tradición cervecera de Orizaba. Historia de la industria y procesos de producción de la cerveza veracruzana.", "descripcion_larga": "Museo interactivo que muestra la historia de la industria cervecera en Orizaba. Incluye exhibiciones sobre procesos de producción e historia de la cerveza.", "horarios": "10:00–18:00", "costo": "$30–$60 MXN", "costo_min": 30, "costo_max": 60, "lat": 18.8534, "lng": -97.1014, "foto_portada": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85"], "tags": ["museo", "cerveza", "historia", "interactivo"], "calificacion": 4.3, "destacado": False, "direccion": "Palacio de Hierro, Orizaba"},
+        {"nombre": "Museo Cri-Cri", "tipo": "atraccion", "subtipo": "Museo temático", "descripcion": "Museo dedicado a Francisco Gabilondo Soler 'Cri-Cri', nacido en Orizaba. Contenido infantil, música y experiencias interactivas para familias.", "descripcion_larga": "Museo dedicado a Cri-Cri con enfoque infantil y cultural. Presenta contenido educativo, música y elementos interactivos para familias.", "horarios": "10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1200&q=85"], "tags": ["museo", "familia", "niños", "Cri-Cri"], "calificacion": 4.5, "destacado": False, "direccion": "Alameda, Orizaba"},
+        {"nombre": "Museo Casa de las Leyendas", "tipo": "atraccion", "subtipo": "Museo temático", "descripcion": "Museo de leyendas y tradiciones orales de la región. Experiencias narrativas que recrean historias locales misteriosas.", "descripcion_larga": "Museo temático enfocado en leyendas y tradiciones orales de la región. Ofrece experiencias narrativas que recrean historias locales.", "horarios": "10:00–18:00", "costo": "$40 MXN", "costo_min": 40, "costo_max": 40, "lat": 18.8529, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1518818419601-72c8673f5852?w=1200&q=85"], "tags": ["museo", "leyendas", "misterio", "cultura"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Poliforum Mier y Pesado", "tipo": "atraccion", "subtipo": "Centro cultural", "descripcion": "Complejo cultural con jardines de estilo europeo. Sede de eventos, exposiciones y conciertos. Arquitectura y jardines únicos en Orizaba.", "descripcion_larga": "El Poliforum Mier y Pesado es un complejo cultural con jardines de estilo europeo usado para eventos culturales, exposiciones y conciertos.", "horarios": "9:00–18:00", "costo": "$20–$50 MXN", "costo_min": 20, "costo_max": 50, "lat": 18.8528, "lng": -97.1005, "foto_portada": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85"], "tags": ["cultura", "jardines", "eventos", "arquitectura"], "calificacion": 4.4, "destacado": False, "direccion": "Oriente 6 #500, Orizaba"},
+        {"nombre": "Parque Castillo", "tipo": "atraccion", "subtipo": "Plaza histórica", "descripcion": "Plaza central emblemática rodeada de edificios históricos. Los domingos hay son jarocho. Corazón de la vida pública de Orizaba.", "descripcion_larga": "Plaza central que funciona como punto de reunión social, rodeada de edificios históricos y actividad comercial. Los domingos se presentan grupos de son jarocho.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8538, "lng": -97.1010, "foto_portada": "https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1563299796-17596ed6b017?w=1200&q=85"], "tags": ["plaza", "historia", "gratuito", "centro"], "calificacion": 4.5, "destacado": False, "direccion": "Centro Histórico, Orizaba"},
+        {"nombre": "Alameda Francisco Gabilondo Soler", "tipo": "atraccion", "subtipo": "Parque urbano", "descripcion": "Parque urbano emblemático dedicado a Cri-Cri. Áreas verdes y espacios de convivencia familiar en el centro histórico.", "descripcion_larga": "Parque urbano emblemático de Orizaba, ideal para recreación familiar. Vinculado culturalmente con la figura de Cri-Cri.", "horarios": "Libre", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8522, "lng": -97.1008, "foto_portada": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85"], "tags": ["parque", "familia", "gratuito", "Cri-Cri"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Mercado Melchor Ocampo", "tipo": "atraccion", "subtipo": "Mercado tradicional", "descripcion": "Mercado tradicional más importante de Orizaba. Alimentos frescos, comida típica y gastronomía local auténtica. Experiencia cotidiana imperdible.", "descripcion_larga": "Mercado tradicional con gran variedad de productos, desde alimentos frescos hasta comida típica preparada. Un excelente lugar para conocer la gastronomía local.", "horarios": "7:00–18:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8521, "lng": -97.1011, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["mercado", "gastronomía", "cultura", "tradición"], "calificacion": 4.5, "destacado": False, "direccion": "Poniente 7, Orizaba"},
+        {"nombre": "Mercado de Artesanías de Orizaba", "tipo": "atraccion", "subtipo": "Mercado artesanal", "descripcion": "Espacio dedicado a artesanos locales. Textiles nahuas, souvenirs y productos típicos veracruzanos. Comercio justo directo con artesanos.", "descripcion_larga": "Mercado turístico con productos elaborados por artesanos locales: textiles, recuerdos, figuras y artículos representativos de la cultura veracruzana.", "horarios": "9:00–20:00", "costo": "Libre", "costo_min": 0, "costo_max": 0, "lat": 18.8527, "lng": -97.1009, "foto_portada": "https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1555529771-122e5d9f2341?w=1200&q=85"], "tags": ["artesanías", "compras", "cultura", "souvenirs"], "calificacion": 4.4, "destacado": False, "direccion": "Centro, Orizaba"},
+        {"nombre": "Panteón Municipal de Orizaba", "tipo": "atraccion", "subtipo": "Patrimonio cultural", "descripcion": "Cementerio histórico con mausoleos y esculturas de distintas épocas. Patrimonio funerario. Muy visitado en Día de Muertos.", "descripcion_larga": "El Panteón Municipal alberga tumbas antiguas, mausoleos y esculturas de diferentes épocas. Visitado por interesados en historia local y arquitectura funeraria, especialmente en Día de Muertos.", "horarios": "8:00–18:00", "costo": "Gratis", "costo_min": 0, "costo_max": 0, "lat": 18.8489, "lng": -97.1023, "foto_portada": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85", "fotos": ["https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1200&q=85"], "tags": ["historia", "patrimonio", "Día de Muertos", "gratuito"], "calificacion": 4.1, "destacado": False, "direccion": "Sur 11, Orizaba"},
     ]
 
     import re as re_mod
     def slugify_local(text):
         text = text.lower()
-        for a, b in [("├í","a"),("├®","e"),("├¡","i"),("├│","o"),("├║","u"),("├▒","n")]:
+        for a, b in [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"),("ñ","n")]:
             text = text.replace(a, b)
         text = re_mod.sub(r"[^a-z0-9\s-]", "", text)
         text = re_mod.sub(r"[\s]+", "-", text.strip())
@@ -3387,10 +3387,10 @@ async def update_my_perfil(
     return await db.prestadores.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
 
 
-# ============== GALER├ìA DE IM├üGENES ==============
+# ============== GALERÍA DE IMÁGENES ==============
 
 
-# ============== GALER├ìA DE IM├üGENES ==============
+# ============== GALERÍA DE IMÁGENES ==============
 
 @api_router.get("/prestadores/{prestador_id}/imagenes")
 async def get_prestador_imagenes(prestador_id: str):
@@ -3542,7 +3542,7 @@ async def update_reserva_estado(
     body = await request.json()
     estado = body.get("estado")
     if estado not in ["aceptada", "cancelada", "completada", "pendiente"]:
-        raise HTTPException(status_code=400, detail="Estado inv├ílido")
+        raise HTTPException(status_code=400, detail="Estado inválido")
     await db.reservas.update_one(
         {"id": reserva_id},
         {"$set": {"estado": estado, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -3550,7 +3550,7 @@ async def update_reserva_estado(
     return {"message": f"Reserva {estado}"}
 
 
-# ============== MEN├Ü (restaurantes/caf├®s/bares) ==============
+# ============== MENÚ (restaurantes/cafés/bares) ==============
 
 @api_router.get("/prestadores/{prestador_id}/menu")
 async def get_menu(prestador_id: str):
@@ -3615,7 +3615,7 @@ async def delete_menu_item(item_id: str, current_user: dict = Depends(get_curren
 async def delete_categoria(cat_id: str, current_user: dict = Depends(get_current_user)):
     await db.menu_categorias.delete_one({"id": cat_id})
     await db.menu_items.delete_many({"categoria_id": cat_id})
-    return {"message": "Categor├¡a eliminada"}
+    return {"message": "Categoría eliminada"}
 
 
 # ============== HABITACIONES (hoteles) ==============
@@ -3660,7 +3660,7 @@ async def update_habitacion(
 @api_router.delete("/habitaciones/{hab_id}")
 async def delete_habitacion(hab_id: str, current_user: dict = Depends(get_current_user)):
     await db.habitaciones.delete_one({"id": hab_id})
-    return {"message": "Habitaci├│n eliminada"}
+    return {"message": "Habitación eliminada"}
 
 
 # ============== FLOTAS / EQUIPO (transporte/tours) ==============
@@ -3693,7 +3693,7 @@ async def create_vehiculo(
 @api_router.delete("/flota/{vehiculo_id}")
 async def delete_vehiculo(vehiculo_id: str, current_user: dict = Depends(get_current_user)):
     await db.flota.delete_one({"id": vehiculo_id})
-    return {"message": "Veh├¡culo eliminado"}
+    return {"message": "Vehículo eliminado"}
 
 
 # ============== PROMOCIONES ==============
@@ -3726,10 +3726,10 @@ async def create_promocion(
 @api_router.delete("/promociones/{promo_id}")
 async def delete_promocion(promo_id: str, current_user: dict = Depends(get_current_user)):
     await db.promociones.delete_one({"id": promo_id})
-    return {"message": "Promoci├│n eliminada"}
+    return {"message": "Promoción eliminada"}
 
 
-# ============== ANAL├ìTICAS DEL PRESTADOR ==============
+# ============== ANALÍTICAS DEL PRESTADOR ==============
 
 @api_router.get("/prestadores/{prestador_id}/analiticas")
 async def get_analiticas_prestador(
@@ -3908,92 +3908,7 @@ async def subir_foto_diario(
     return {"url": foto_url}
 
 
-# ============== REGISTRO DE PRESTADOR ==============
-
-class PrestadorRegisterCreate(BaseModel):
-    model_config = ConfigDict(extra="allow")
-    nombre_negocio: str                        # frontend usa nombre_negocio
-    tipo: str
-    subtipo: Optional[str] = None
-    municipio_id: str
-    descripcion: Optional[str] = None
-    telefono: Optional[str] = None
-    whatsapp: Optional[str] = None
-    horarios: Optional[str] = None
-    direccion: Optional[str] = None
-    nombre_contacto: Optional[str] = None      # frontend usa nombre_contacto
-    email_contacto: Optional[str] = None       # frontend usa email_contacto
-    documentos: List[Any] = []                 # puede ser lista de strings o de objetos
-
-@api_router.post("/prestadores/register")
-async def register_prestador(data: PrestadorRegisterCreate, request: Request):
-    user = await get_optional_user(request)
-
-    # Normalizar documentos: aceptar tanto strings como objetos {path, url, filename}
-    docs_normalizados = []
-    for d in data.documentos:
-        if isinstance(d, str):
-            docs_normalizados.append(d)
-        elif isinstance(d, dict):
-            docs_normalizados.append(d.get("url") or d.get("path") or str(d))
-
-    solicitud = {
-        "id": str(uuid.uuid4()),
-        "nombre": data.nombre_negocio,
-        "tipo": data.tipo,
-        "subtipo": data.subtipo,
-        "municipio_id": data.municipio_id,
-        "descripcion": data.descripcion,
-        "telefono": data.telefono,
-        "whatsapp": data.whatsapp,
-        "horarios": data.horarios,
-        "direccion": data.direccion,
-        "responsable": data.nombre_contacto,
-        "email": data.email_contacto,
-        "documentos": docs_normalizados,
-        "estado": "pendiente",
-        "user_id": user["user_id"] if user else None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    await db.solicitudes_prestador.insert_one(solicitud)
-    solicitud.pop("_id", None)
-    return {"ok": True, "id": solicitud["id"], "mensaje": "Solicitud enviada, ser├í revisada por el equipo."}
-
-
-@api_router.get("/prestadores/register/solicitudes")
-async def get_solicitudes_registro(
-    estado: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
-):
-    if current_user["rol"] not in ["superadmin", "admin"]:
-        raise HTTPException(status_code=403, detail="Sin permiso")
-    query: Dict[str, Any] = {}
-    if estado:
-        query["estado"] = estado
-    solicitudes = await db.solicitudes_prestador.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
-    return {"solicitudes": solicitudes, "total": len(solicitudes)}
-
-
-@api_router.put("/prestadores/register/{solicitud_id}/estado")
-async def update_solicitud_estado(
-    solicitud_id: str,
-    request: Request,
-    current_user: dict = Depends(get_current_user)
-):
-    if current_user["rol"] not in ["superadmin", "admin"]:
-        raise HTTPException(status_code=403, detail="Sin permiso")
-    body = await request.json()
-    estado = body.get("estado")
-    if estado not in ["aprobado", "rechazado", "pendiente"]:
-        raise HTTPException(status_code=400, detail="Estado inv├ílido")
-    await db.solicitudes_prestador.update_one(
-        {"id": solicitud_id},
-        {"$set": {"estado": estado, "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    return {"ok": True}
-
-
-# ============== UPLOAD P├ÜBLICO ==============
+# ============== UPLOAD PÚBLICO ==============
 
 @api_router.post("/public/upload")
 async def public_upload(file: UploadFile = File(...)):
