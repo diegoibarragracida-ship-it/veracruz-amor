@@ -1845,6 +1845,21 @@ async def get_prestadores(
 
 # ============== REGISTRO DE PRESTADOR ==============
 
+class PrestadorRegisterCreate(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    nombre_negocio: str
+    tipo: str
+    subtipo: Optional[str] = None
+    municipio_id: str
+    descripcion: Optional[str] = None
+    telefono: Optional[str] = None
+    whatsapp: Optional[str] = None
+    horarios: Optional[str] = None
+    direccion: Optional[str] = None
+    nombre_contacto: Optional[str] = None
+    email_contacto: Optional[str] = None
+    documentos: List[Any] = []
+
 @api_router.post("/prestadores/register")
 async def register_prestador(data: PrestadorRegisterCreate, request: Request):
     user = await get_optional_user(request)
