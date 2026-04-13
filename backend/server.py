@@ -3911,7 +3911,8 @@ async def subir_foto_diario(
 # ============== REGISTRO DE PRESTADOR ==============
 
 class PrestadorRegisterCreate(BaseModel):
-    nombre: str
+    model_config = ConfigDict(extra="allow")
+    nombre_negocio: str
     tipo: str
     subtipo: Optional[str] = None
     municipio_id: str
@@ -3920,11 +3921,10 @@ class PrestadorRegisterCreate(BaseModel):
     whatsapp: Optional[str] = None
     horarios: Optional[str] = None
     direccion: Optional[str] = None
-    responsable: Optional[str] = None
-    email: Optional[str] = None
-    documentos: List[str] = []          # URLs de archivos ya subidos
-    lat: Optional[float] = None
-    lng: Optional[float] = None
+    nombre_contacto: Optional[str] = None
+    email_contacto: Optional[str] = None
+    documentos: List[Any] = []
+
 
 @api_router.post("/prestadores/register")
 async def register_prestador(data: PrestadorRegisterCreate, request: Request):
