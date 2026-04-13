@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import axios from "axios";
 import { API } from "@/App";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PrestadorCard from "@/components/PrestadorCard";
 import PanicButton from "@/components/PanicButton";
-import { Users, Filter, Loader2, Search } from "lucide-react";
+import { Users, Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -29,6 +29,7 @@ const PrestadoresPage = () => {
     { value: "OTROS", label: "Otros" },
   ];
 
+  // Fetch de Municipios
   useEffect(() => {
     const fetchMunicipios = async () => {
       try {
@@ -41,6 +42,7 @@ const PrestadoresPage = () => {
     fetchMunicipios();
   }, []);
 
+  // Fetch de Prestadores con Debounce
   useEffect(() => {
     const fetchPrestadores = async () => {
       setLoading(true);
@@ -63,6 +65,7 @@ const PrestadoresPage = () => {
     return () => clearTimeout(debounce);
   }, [tipo, municipioId, searchQuery]);
 
+  // Handlers para filtros
   const handleTipoChange = (value) => {
     const params = new URLSearchParams(searchParams);
     if (value && value !== "all") {
@@ -87,7 +90,7 @@ const PrestadoresPage = () => {
     <div className="min-h-screen bg-[#F5F5F5]" data-testid="prestadores-page">
       <Header />
       
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="pt-24 pb-12 px-4 bg-gradient-to-br from-[#F9A825] to-[#F57F17]">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Playfair Display' }}>
@@ -99,11 +102,11 @@ const PrestadoresPage = () => {
         </div>
       </section>
 
-      {/* Filters */}
+      {/* Filters Sticky Bar */}
       <section className="sticky top-16 md:top-20 z-30 bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* Search */}
+            {/* Buscador de texto */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
@@ -115,7 +118,7 @@ const PrestadoresPage = () => {
               />
             </div>
             
-            {/* Tipo Filter */}
+            {/* Filtro por Tipo */}
             <Select value={tipo || "all"} onValueChange={handleTipoChange}>
               <SelectTrigger className="w-[180px]" data-testid="filter-tipo">
                 <SelectValue placeholder="Tipo de servicio" />
@@ -128,7 +131,7 @@ const PrestadoresPage = () => {
               </SelectContent>
             </Select>
             
-            {/* Municipio Filter */}
+            {/* Filtro por Municipio */}
             <Select value={municipioId || "all"} onValueChange={handleMunicipioChange}>
               <SelectTrigger className="w-[200px]" data-testid="filter-municipio">
                 <SelectValue placeholder="Municipio" />
@@ -144,7 +147,7 @@ const PrestadoresPage = () => {
         </div>
       </section>
 
-      {/* Content */}
+      {/* Grid de Contenido */}
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           {loading ? (
@@ -154,14 +157,24 @@ const PrestadoresPage = () => {
           ) : prestadores.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {prestadores.map((p) => (
-                <PrestadorCard key={p.id} prestador={p} />
+                /* Enlace dinámico: Envolvemos la card. 
+                   Asegúrate de que en PrestadorCard no haya otros <Link> o <a> 
+                   que puedan romper el HTML.
+                */
+                <Link 
+                  key={p.id} 
+                  to={`/prestador/${p.id}`}
+                  className="block transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg rounded-xl"
+                >
+                  <PrestadorCard prestador={p} />
+                </Link>
               ))}
             </div>
           ) : (
             <div className="text-center py-20">
               <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-gray-500 text-lg">No se encontraron prestadores</p>
-              <p className="text-sm text-gray-400 mt-2">Intenta con otros filtros</p>
+              <p className="text-sm text-gray-400 mt-2">Intenta con otros filtros o términos de búsqueda</p>
             </div>
           )}
         </div>

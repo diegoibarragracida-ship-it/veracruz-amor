@@ -19,6 +19,7 @@ import RutasPage from "@/pages/RutasPage";
 import ChatBot from "@/components/ChatBot";
 import DiarioViajero from "@/pages/DiarioViajero";
 import MapaPrestadores from "@/components/MapaPrestadores";
+import PrestadorPage from "@/pages/PrestadorPage";
 import ConstructorPaquete from "@/components/ConstructorPaquete";
 
 // Admin Pages
@@ -213,6 +214,7 @@ function AppRouter() {
       <Route path="/rutas/:region" element={<RutasPage />} />
       <Route path="/mi-diario" element={<ProtectedRoute><DiarioViajero /></ProtectedRoute>} />
       <Route path="/mi-diario/:itinerarioId" element={<ProtectedRoute><DiarioViajero /></ProtectedRoute>} />
+      <Route path="/prestador/:prestadorId" element={<PrestadorPage />} />
 
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
