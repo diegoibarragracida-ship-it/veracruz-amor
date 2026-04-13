@@ -29,10 +29,6 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'default_secret_change_me')
 JWT_ALGORITHM = "HS256"
 
 # Object Storage Config
-# Cloudinary config (reemplaza Emergent Object Storage)
-CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
-CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "")
-CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "")
 APP_NAME = "veracruz-contigo"
 
 # Configure logging
