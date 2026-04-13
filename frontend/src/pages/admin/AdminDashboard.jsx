@@ -581,13 +581,77 @@ const EmergenciasAdmin = () => {
   );
 };
 
+// ✅ CORREGIDO: Formulario separado en su propio componente para aislar re-renders.
+// Esto evita el error removeChild de Radix UI + React 18 cuando un Select dentro
+// de un Dialog actualiza el estado y ambos intentan modificar el DOM al mismo tiempo.
+const CreateUserDialogForm = ({ municipios, onUserCreated, onClose }) => {
+  const [newUser, setNewUser] = useState({ email: "", nombre: "", rol: "encargado", municipio_id: "" });
+  const [createdPassword, setCreatedPassword] = useState("");
+
+  const handleCreateUser = async () => {
+    try {
+      const response = await axios.post(`${API}/admin/usuarios`, newUser);
+      setCreatedPassword(response.data.password);
+      onUserCreated(response.data);
+      toast.success("Usuario creado");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Error al crear usuario");
+    }
+  };
+
+  const handleClose = () => {
+    setNewUser({ email: "", nombre: "", rol: "encargado", municipio_id: "" });
+    setCreatedPassword("");
+    onClose();
+  };
+
+  return (
+    <>
+      <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
+      <div className="space-y-4">
+        <div><Label>Nombre completo</Label><Input value={newUser.nombre} onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })} placeholder="Nombre del usuario" /></div>
+        <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@ejemplo.com" /></div>
+        <div>
+          <Label>Rol</Label>
+          <Select value={newUser.rol} onValueChange={(v) => setNewUser((prev) => ({ ...prev, rol: v, municipio_id: "" }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="encargado">Encargado Municipal</SelectItem>
+              <SelectItem value="prestador">Prestador de Servicios</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div style={{ display: newUser.rol === "encargado" ? "block" : "none" }}>
+          <Label>Municipio</Label>
+          <Select value={newUser.municipio_id} onValueChange={(v) => setNewUser((prev) => ({ ...prev, municipio_id: v }))}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
+            <SelectContent>
+              {municipios.filter(m => !m.encargado_id).map((m) => (
+                <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {createdPassword && (
+          <div className="p-4 bg-green-50 rounded-lg">
+            <p className="text-sm text-green-800 font-medium">Usuario creado exitosamente</p>
+            <p className="text-sm text-green-700 mt-1">Contraseña: <span className="font-mono">{createdPassword}</span></p>
+          </div>
+        )}
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={handleClose}>{createdPassword ? "Cerrar" : "Cancelar"}</Button>
+        {!createdPassword && <Button onClick={handleCreateUser} className="bg-[#1B5E20] hover:bg-[#145218]">Crear Usuario</Button>}
+      </DialogFooter>
+    </>
+  );
+};
+
 const UsuariosAdmin = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [municipios, setMunicipios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
-  const [newUser, setNewUser] = useState({ email: "", nombre: "", rol: "encargado", municipio_id: "" });
   const [loading, setLoading] = useState(true);
-  const [createdPassword, setCreatedPassword] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -599,17 +663,6 @@ const UsuariosAdmin = () => {
     }).catch(e => console.error("Error:", e))
       .finally(() => setLoading(false));
   }, []);
-
-  const handleCreateUser = async () => {
-    try {
-      const response = await axios.post(`${API}/admin/usuarios`, newUser);
-      setUsuarios([response.data, ...usuarios]);
-      setCreatedPassword(response.data.password);
-      toast.success("Usuario creado");
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Error al crear usuario");
-    }
-  };
 
   const rolColors = { superadmin: "bg-purple-100 text-purple-800", encargado: "bg-blue-100 text-blue-800", prestador: "bg-orange-100 text-orange-800", turista: "bg-green-100 text-green-800" };
 
@@ -637,46 +690,15 @@ const UsuariosAdmin = () => {
         </Table>
       </div>
 
-      {/* ✅ CORREGIDO: aria-describedby={undefined} para suprimir warning de accesibilidad */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Nombre completo</Label><Input value={newUser.nombre} onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })} placeholder="Nombre del usuario" /></div>
-            <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@ejemplo.com" /></div>
-            <div>
-              <Label>Rol</Label>
-              <Select value={newUser.rol} onValueChange={(v) => setTimeout(() => setNewUser({ ...newUser, rol: v }), 0)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="encargado">Encargado Municipal</SelectItem>
-                  <SelectItem value="prestador">Prestador de Servicios</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* ✅ CORREGIDO: usar display en lugar de desmontar para evitar error removeChild */}
-            <div style={{ display: newUser.rol === "encargado" ? "block" : "none" }}>
-              <Label>Municipio</Label>
-              <Select value={newUser.municipio_id} onValueChange={(v) => setNewUser({ ...newUser, municipio_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
-                <SelectContent>
-                  {municipios.filter(m => !m.encargado_id).map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {createdPassword && (
-              <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">Usuario creado exitosamente</p>
-                <p className="text-sm text-green-700 mt-1">Contraseña: <span className="font-mono">{createdPassword}</span></p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowDialog(false); setCreatedPassword(""); }}>{createdPassword ? "Cerrar" : "Cancelar"}</Button>
-            {!createdPassword && <Button onClick={handleCreateUser} className="bg-[#1B5E20] hover:bg-[#145218]">Crear Usuario</Button>}
-          </DialogFooter>
+          {showDialog && (
+            <CreateUserDialogForm
+              municipios={municipios}
+              onUserCreated={(newUserData) => setUsuarios((prev) => [newUserData, ...prev])}
+              onClose={() => setShowDialog(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
