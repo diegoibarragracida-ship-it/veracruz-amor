@@ -512,15 +512,16 @@ const AlertasAdmin = () => {
             <div><Label>Descripción</Label><Textarea value={newAlerta.descripcion} onChange={(e) => setNewAlerta({ ...newAlerta, descripcion: e.target.value })} placeholder="Descripción detallada" /></div>
             <div>
               <Label>Tipo</Label>
-              <Select modal={false} value={newAlerta.tipo} onValueChange={(v) => setNewAlerta({ ...newAlerta, tipo: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meteorológica">Meteorológica</SelectItem>
-                  <SelectItem value="seguridad">Seguridad</SelectItem>
-                  <SelectItem value="vial">Vial</SelectItem>
-                  <SelectItem value="salud">Salud</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={newAlerta.tipo}
+                onChange={(e) => setNewAlerta({ ...newAlerta, tipo: e.target.value })}
+                style={{ width:"100%", padding:"8px 12px", borderRadius:"6px", border:"1px solid #e2e8f0", fontSize:"14px", backgroundColor:"white", cursor:"pointer" }}
+              >
+                <option value="meteorológica">Meteorológica</option>
+                <option value="seguridad">Seguridad</option>
+                <option value="vial">Vial</option>
+                <option value="salud">Salud</option>
+              </select>
             </div>
           </div>
           <DialogFooter>
@@ -605,6 +606,12 @@ const CreateUserDialogForm = ({ municipios, onUserCreated, onClose }) => {
     onClose();
   };
 
+  const selectStyle = {
+    width: "100%", padding: "8px 12px", borderRadius: "6px",
+    border: "1px solid #e2e8f0", fontSize: "14px",
+    backgroundColor: "white", cursor: "pointer", outline: "none",
+  };
+
   return (
     <>
       <DialogHeader><DialogTitle>Crear Usuario</DialogTitle></DialogHeader>
@@ -613,24 +620,27 @@ const CreateUserDialogForm = ({ municipios, onUserCreated, onClose }) => {
         <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@ejemplo.com" /></div>
         <div>
           <Label>Rol</Label>
-          <Select modal={false} value={newUser.rol} onValueChange={(v) => setNewUser((prev) => ({ ...prev, rol: v, municipio_id: "" }))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="encargado">Encargado Municipal</SelectItem>
-              <SelectItem value="prestador">Prestador de Servicios</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={newUser.rol}
+            onChange={(e) => setNewUser((prev) => ({ ...prev, rol: e.target.value, municipio_id: "" }))}
+            style={selectStyle}
+          >
+            <option value="encargado">Encargado Municipal</option>
+            <option value="prestador">Prestador de Servicios</option>
+          </select>
         </div>
         <div style={{ display: newUser.rol === "encargado" ? "block" : "none" }}>
           <Label>Municipio</Label>
-          <Select modal={false} value={newUser.municipio_id} onValueChange={(v) => setNewUser((prev) => ({ ...prev, municipio_id: v }))}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
-            <SelectContent>
-              {municipios.filter(m => !m.encargado_id).map((m) => (
-                <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={newUser.municipio_id}
+            onChange={(e) => setNewUser((prev) => ({ ...prev, municipio_id: e.target.value }))}
+            style={selectStyle}
+          >
+            <option value="">Seleccionar municipio</option>
+            {municipios.filter(m => !m.encargado_id).map((m) => (
+              <option key={m.id} value={m.id}>{m.nombre}</option>
+            ))}
+          </select>
         </div>
         {createdPassword && (
           <div className="p-4 bg-green-50 rounded-lg">
