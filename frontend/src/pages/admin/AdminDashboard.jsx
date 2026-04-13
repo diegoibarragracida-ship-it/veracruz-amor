@@ -512,7 +512,7 @@ const AlertasAdmin = () => {
             <div><Label>Descripción</Label><Textarea value={newAlerta.descripcion} onChange={(e) => setNewAlerta({ ...newAlerta, descripcion: e.target.value })} placeholder="Descripción detallada" /></div>
             <div>
               <Label>Tipo</Label>
-              <Select value={newAlerta.tipo} onValueChange={(v) => setNewAlerta({ ...newAlerta, tipo: v })}>
+              <Select modal={false} value={newAlerta.tipo} onValueChange={(v) => setNewAlerta({ ...newAlerta, tipo: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="meteorológica">Meteorológica</SelectItem>
@@ -613,7 +613,7 @@ const CreateUserDialogForm = ({ municipios, onUserCreated, onClose }) => {
         <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@ejemplo.com" /></div>
         <div>
           <Label>Rol</Label>
-          <Select value={newUser.rol} onValueChange={(v) => setNewUser((prev) => ({ ...prev, rol: v, municipio_id: "" }))}>
+          <Select modal={false} value={newUser.rol} onValueChange={(v) => setNewUser((prev) => ({ ...prev, rol: v, municipio_id: "" }))}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="encargado">Encargado Municipal</SelectItem>
@@ -623,7 +623,7 @@ const CreateUserDialogForm = ({ municipios, onUserCreated, onClose }) => {
         </div>
         <div style={{ display: newUser.rol === "encargado" ? "block" : "none" }}>
           <Label>Municipio</Label>
-          <Select value={newUser.municipio_id} onValueChange={(v) => setNewUser((prev) => ({ ...prev, municipio_id: v }))}>
+          <Select modal={false} value={newUser.municipio_id} onValueChange={(v) => setNewUser((prev) => ({ ...prev, municipio_id: v }))}>
             <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
             <SelectContent>
               {municipios.filter(m => !m.encargado_id).map((m) => (
