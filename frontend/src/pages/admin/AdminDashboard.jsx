@@ -654,19 +654,18 @@ const UsuariosAdmin = () => {
                 </SelectContent>
               </Select>
             </div>
-            {newUser.rol === "encargado" && (
-              <div>
-                <Label>Municipio</Label>
-                <Select value={newUser.municipio_id} onValueChange={(v) => setNewUser({ ...newUser, municipio_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
-                  <SelectContent>
-                    {municipios.filter(m => !m.encargado_id).map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {/* ✅ CORREGIDO: usar display en lugar de desmontar para evitar error removeChild */}
+            <div style={{ display: newUser.rol === "encargado" ? "block" : "none" }}>
+              <Label>Municipio</Label>
+              <Select value={newUser.municipio_id} onValueChange={(v) => setNewUser({ ...newUser, municipio_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar municipio" /></SelectTrigger>
+                <SelectContent>
+                  {municipios.filter(m => !m.encargado_id).map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {createdPassword && (
               <div className="p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-green-800 font-medium">Usuario creado exitosamente</p>
