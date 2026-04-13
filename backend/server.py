@@ -518,6 +518,14 @@ import cloudinary
 import cloudinary.uploader
 
 def init_cloudinary():
+    # Intenta con CLOUDINARY_URL primero (una sola variable)
+    cloudinary_url = os.environ.get("CLOUDINARY_URL", "")
+    if cloudinary_url:
+        import cloudinary
+        cloudinary.config_from_url(cloudinary_url)
+        logger.info(f"Cloudinary configured via CLOUDINARY_URL")
+        return True
+    # Fallback con variables separadas
     cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
     api_key = os.environ.get("CLOUDINARY_API_KEY", "")
     api_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
