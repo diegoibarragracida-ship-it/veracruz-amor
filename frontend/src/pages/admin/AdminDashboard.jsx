@@ -646,7 +646,7 @@ const UsuariosAdmin = () => {
             <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@ejemplo.com" /></div>
             <div>
               <Label>Rol</Label>
-              <Select value={newUser.rol} onValueChange={(v) => setNewUser({ ...newUser, rol: v })}>
+              <Select value={newUser.rol} onValueChange={(v) => setTimeout(() => setNewUser({ ...newUser, rol: v }), 0)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="encargado">Encargado Municipal</SelectItem>
