@@ -518,12 +518,15 @@ import cloudinary
 import cloudinary.uploader
 
 def init_cloudinary():
-    # Intenta con CLOUDINARY_URL primero (una sola variable)
+    # Intenta con CLOUDINARY_URL primero
     cloudinary_url = os.environ.get("CLOUDINARY_URL", "")
-    if cloudinary_url:
-        import cloudinary
-        cloudinary.config_from_url(cloudinary_url)
-        logger.info(f"Cloudinary configured via CLOUDINARY_URL")
+    if cloudinary_url and cloudinary_url.startswith("cloudinary://"):
+        # Parsear manualmente: cloudinary://api_key:api_secret@cloud_name
+        rest = cloudinary_url[len("cloudinary://"):]
+        credentials, cloud = rest.rsplit("@", 1)
+        api_key, api_secret = credentials.split(":", 1)
+        cloudinary.config(cloud_name=cloud, api_key=api_key, api_secret=api_secret)
+        logger.info(f"Cloudinary configured via CLOUDINARY_URL: cloud={cloud}")
         return True
     # Fallback con variables separadas
     cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
@@ -533,11 +536,7 @@ def init_cloudinary():
     if not cloud_name:
         logger.warning("Cloudinary not configured")
         return False
-    cloudinary.config(
-        cloud_name=cloud_name,
-        api_key=api_key,
-        api_secret=api_secret
-    )
+    cloudinary.config(cloud_name=cloud_name, api_key=api_key, api_secret=api_secret)
     return True
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
