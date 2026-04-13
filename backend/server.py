@@ -2385,6 +2385,107 @@ async def update_solicitud(solicitud_id: str, request: Request):
 
 # ============== ADMIN ENDPOINTS ==============
 
+@api_router.get("/admin/registros-prestadores")
+async def get_registros_prestadores(
+    estado: Optional[str] = "pendiente",
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    query: Dict[str, Any] = {}
+    if estado:
+        query["estado"] = estado
+    docs = await db.solicitudes_prestador.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    # Enriquecer con nombre del municipio
+    for d in docs:
+        if d.get("municipio_id"):
+            mun = await db.municipios.find_one({"id": d["municipio_id"]}, {"nombre": 1})
+            d["municipio_nombre"] = mun["nombre"] if mun else d.get("municipio_id", "")
+        # Normalizar campos para el frontend
+        d.setdefault("nombre_negocio", d.get("nombre", ""))
+        d.setdefault("nombre_contacto", d.get("responsable", ""))
+        d.setdefault("email_contacto", d.get("email", ""))
+        d.setdefault("fecha_registro", d.get("created_at", ""))
+    return docs
+
+
+@api_router.put("/admin/registros-prestadores/{registro_id}")
+async def update_registro_prestador(
+    registro_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    body = await request.json()
+    estado = body.get("estado")
+
+    if estado == "aprobado":
+        # Obtener la solicitud
+        solicitud = await db.solicitudes_prestador.find_one({"id": registro_id})
+        if not solicitud:
+            raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+
+        # Crear usuario prestador
+        import secrets, string
+        password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+        email = solicitud.get("email", "").lower().strip()
+        nombre = solicitud.get("responsable") or solicitud.get("nombre", "Prestador")
+
+        existing = await db.usuarios.find_one({"email": email})
+        if not existing:
+            user_id = str(uuid.uuid4())
+            await db.usuarios.insert_one({
+                "user_id": user_id,
+                "email": email,
+                "nombre": nombre,
+                "password_hash": hash_password(password),
+                "rol": "prestador",
+                "activo": True,
+                "fecha_registro": datetime.now(timezone.utc).isoformat(),
+            })
+        else:
+            user_id = existing["user_id"]
+            password = "(ya tenía cuenta)"
+
+        # Crear el prestador
+        prestador_id = str(uuid.uuid4())
+        await db.prestadores.insert_one({
+            "id": prestador_id,
+            "nombre": solicitud.get("nombre", ""),
+            "tipo": solicitud.get("tipo", ""),
+            "subtipo": solicitud.get("subtipo"),
+            "municipio_id": solicitud.get("municipio_id", ""),
+            "descripcion": solicitud.get("descripcion"),
+            "telefono": solicitud.get("telefono"),
+            "whatsapp": solicitud.get("whatsapp"),
+            "horarios": solicitud.get("horarios"),
+            "direccion": solicitud.get("direccion"),
+            "verificado": True,
+            "activo": True,
+            "user_id": user_id,
+            "calificacion_promedio": 0.0,
+            "total_resenas": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+        await db.solicitudes_prestador.update_one(
+            {"id": registro_id},
+            {"$set": {"estado": "aprobado", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return {
+            "ok": True,
+            "credentials": {"email": email, "password": password}
+        }
+
+    # Rechazado u otro estado
+    await db.solicitudes_prestador.update_one(
+        {"id": registro_id},
+        {"$set": {"estado": estado, "comentario": body.get("comentario", ""), "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"ok": True}
+
+
 @api_router.get("/admin/stats")
 async def get_admin_stats(request: Request):
     user = await get_current_user(request)
@@ -2400,7 +2501,7 @@ async def get_admin_stats(request: Request):
     emergencias_activas = await db.emergencias.count_documents({"estado": "activa"})
     emergencias_resueltas = await db.emergencias.count_documents({"estado": "resuelta"})
     eventos_proximos = await db.eventos.count_documents({"publicado": True})
-    solicitudes_pendientes = await db.solicitudes_prestadores.count_documents({"estado": "pendiente"})
+    solicitudes_pendientes = await db.solicitudes_prestador.count_documents({"estado": "pendiente"})
     
     return {
         "municipios": {
