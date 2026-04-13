@@ -315,6 +315,131 @@ class ItinerarioRequest(BaseModel):
     intereses: List[str] = []
     num_personas: int = 2
 
+# ============== MODELOS PRESTADOR COMPLETO ==============
+
+class PrestadorImagenCreate(BaseModel):
+    url: str
+    categoria: Optional[str] = "general"   # general|habitaciones|comida|tours|vehiculos
+    es_portada: bool = False
+
+class ServicioPrestadorCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    precio: float
+    precio_promocional: Optional[float] = None
+    duracion: Optional[str] = None          # "2h", "1 día"
+    capacidad: Optional[int] = None
+    fotos: List[str] = []
+    disponible: bool = True
+    tipo_prestador: Optional[str] = None   # tour|transporte|hospedaje|restaurante
+
+class ReservaCreate(BaseModel):
+    prestador_id: str
+    servicio_id: Optional[str] = None
+    fecha_reserva: str                     # ISO date
+    num_personas: int = 1
+    nota_turista: Optional[str] = None
+
+class MenuCategoriaCreate(BaseModel):
+    nombre: str                            # Desayunos | Comidas | Bebidas | Postres
+    orden: int = 0
+
+class MenuItemCreate(BaseModel):
+    categoria_id: str
+    nombre: str
+    descripcion: Optional[str] = None
+    precio: float
+    foto_url: Optional[str] = None
+    disponible: bool = True
+
+class HabitacionCreate(BaseModel):
+    nombre: str                            # Sencilla | Doble | Suite
+    descripcion: Optional[str] = None
+    precio_noche: float
+    capacidad: int = 2
+    amenidades: List[str] = []
+    fotos: List[str] = []
+    disponible: bool = True
+
+class FlotaCreate(BaseModel):
+    nombre: str                            # Van 12 pasajeros
+    descripcion: Optional[str] = None
+    capacidad: int
+    precio_viaje: float
+    fotos: List[str] = []
+    disponible: bool = True
+
+class PromocionCreate(BaseModel):
+    titulo: str
+    descripcion: Optional[str] = None
+    descuento_pct: int                     # 10, 20, 50
+    fecha_inicio: str
+    fecha_fin: str
+    activa: bool = True
+
+class PrestadorPerfilUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    descripcion_larga: Optional[str] = None
+    direccion: Optional[str] = None
+    horarios: Optional[str] = None
+    telefono: Optional[str] = None
+    whatsapp: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    logo_url: Optional[str] = None
+    instagram: Optional[str] = None
+    facebook: Optional[str] = None
+    tiktok: Optional[str] = None
+    website: Optional[str] = None
+
+# Modelos para itinerarios (Diario del Viajero)
+class LugarEnItinerario(BaseModel):
+    lugar_id: str
+    nombre: str
+    tipo: str
+    municipio: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    foto_portada: Optional[str] = None
+    hora_visita: Optional[str] = None
+    duracion_min: int = 120
+    costo_estimado: int = 0
+    estado: str = "pendiente"
+    nota: Optional[str] = None
+    fotos_usuario: List[str] = []
+    incluido: bool = True
+
+class ServicioExtra(BaseModel):
+    tipo: str
+    nombre: str
+    descripcion: Optional[str] = None
+    precio_estimado: int = 0
+    incluido: bool = False
+
+class DiarioDelDia(BaseModel):
+    dia_num: int
+    fecha: Optional[str] = None
+    titulo: Optional[str] = None
+    lugares: List[LugarEnItinerario] = []
+
+class ItinerarioCreate(BaseModel):
+    nombre: str
+    region: str
+    fecha_inicio: Optional[str] = None
+    fecha_fin: Optional[str] = None
+    num_personas: int = 2
+    dias: List[DiarioDelDia] = []
+    servicios_extra: List[ServicioExtra] = []
+    costo_total_estimado: int = 0
+    notas_generales: Optional[str] = None
+
+class LugarEstadoUpdate(BaseModel):
+    dia_num: int
+    lugar_id: str
+    estado: str
+    nota: Optional[str] = None
+
 # ============== HELPER FUNCTIONS ==============
 
 def hash_password(password: str) -> str:
@@ -1392,6 +1517,14 @@ async def trigger_spike_check(request: Request):
     spikes = await check_interest_spikes()
     return {"spikes_detected": len(spikes), "spikes": spikes}
 
+@api_router.post("/public/upload")
+async def public_upload(file: UploadFile = File(...)):
+    content = await file.read()
+    ext = file.filename.split(".")[-1] if file.filename else "jpg"
+    path = f"uploads/public/{uuid.uuid4()}.{ext}"
+    result = put_object(path, content, file.content_type or "image/jpeg")
+    return {"url": result["url"]}
+
 # ============== AUTH ENDPOINTS ==============
 
 @api_router.post("/auth/register")
@@ -1710,6 +1843,52 @@ async def get_prestadores(
     total = await db.prestadores.count_documents(query)
     
     return {"prestadores": prestadores, "total": total}
+
+@api_router.get("/prestadores/mapa")
+async def get_prestadores_mapa(
+    region: Optional[str] = None,
+    municipio_id: Optional[str] = None,
+    tipo: Optional[str] = None,
+):
+    query: Dict[str, Any] = {
+        "verificado": True,
+        "activo": True,
+        "lat": {"$exists": True, "$ne": None},
+        "lng": {"$exists": True, "$ne": None},
+    }
+    if region:
+        municipios_region = await db.municipios.find(
+            {"region": region.capitalize()}, {"_id": 0, "id": 1}
+        ).to_list(100)
+        ids = [m["id"] for m in municipios_region]
+        query["municipio_id"] = {"$in": ids}
+    if municipio_id:
+        query["municipio_id"] = municipio_id
+    if tipo:
+        query["tipo"] = tipo
+    cursor = db.prestadores.find(query, {
+        "_id": 0, "id": 1, "nombre": 1, "tipo": 1, "subtipo": 1,
+        "municipio_id": 1, "lat": 1, "lng": 1,
+        "descripcion": 1, "foto_url": 1, "calificacion_promedio": 1,
+        "horarios": 1, "direccion": 1, "telefono": 1, "whatsapp": 1,
+    }).limit(200)
+    prestadores = await cursor.to_list(200)
+    return {"prestadores": prestadores, "total": len(prestadores)}
+
+
+@api_router.get("/prestadores/me")
+async def get_my_prestador(current_user: dict = Depends(get_current_user)):
+    prestador = await db.prestadores.find_one(
+        {"user_id": current_user["user_id"]}, {"_id": 0}
+    )
+    if not prestador:
+        prestador = await db.prestadores.find_one(
+            {"municipio_id": current_user.get("municipio_id")}, {"_id": 0}
+        )
+    if not prestador:
+        raise HTTPException(status_code=404, detail="No tienes un perfil de prestador")
+    return prestador
+
 
 @api_router.get("/prestadores/{prestador_id}")
 async def get_prestador(prestador_id: str):
@@ -3017,6 +3196,21 @@ async def get_lugares(
     return {"lugares": lugares, "total": len(lugares)}
 
 
+@api_router.get("/lugares/municipio/{municipio_id}")
+async def get_lugares_por_municipio(municipio_id: str, tipo: Optional[str] = None):
+    query: Dict[str, Any] = {
+        "$or": [
+            {"municipio_id": municipio_id},
+            {"municipio": {"$regex": f"^{municipio_id}$", "$options": "i"}}
+        ]
+    }
+    if tipo:
+        query["tipo"] = tipo
+    cursor = db.lugares.find(query, {"_id": 0}).sort("calificacion", -1)
+    lugares = await cursor.to_list(30)
+    return {"lugares": lugares, "municipio": municipio_id, "total": len(lugares)}
+
+
 @api_router.get("/lugares/{lugar_id}")
 async def get_lugar(lugar_id: str):
     lugar = await db.lugares.find_one({"$or": [{"id": lugar_id}, {"slug": lugar_id}]}, {"_id": 0})
@@ -3176,6 +3370,545 @@ async def seed_orizaba_atracciones_endpoint(request: Request):
 
     return {"ok": True, "insertados": len(docs), "eliminados_anteriores": deleted.deleted_count, "municipio": municipio["nombre"]}
 
+# ============== PRESTADOR: PERFIL PROPIO ==============
+
+@api_router.put("/prestadores/me/perfil")
+async def update_my_perfil(
+    data: PrestadorPerfilUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    prestador = await db.prestadores.find_one({"user_id": current_user["user_id"]})
+    if not prestador:
+        raise HTTPException(status_code=404, detail="Prestador no encontrado")
+    update = {k: v for k, v in data.model_dump().items() if v is not None}
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.prestadores.update_one(
+        {"user_id": current_user["user_id"]}, {"$set": update}
+    )
+    return await db.prestadores.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+
+
+# ============== GALERÍA DE IMÁGENES ==============
+
+
+# ============== GALERÍA DE IMÁGENES ==============
+
+@api_router.get("/prestadores/{prestador_id}/imagenes")
+async def get_prestador_imagenes(prestador_id: str):
+    imagenes = await db.prestador_imagenes.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return {"imagenes": imagenes}
+
+
+@api_router.post("/prestadores/{prestador_id}/imagenes")
+async def add_prestador_imagen(
+    prestador_id: str,
+    data: PrestadorImagenCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    if data.es_portada:
+        await db.prestador_imagenes.update_many(
+            {"prestador_id": prestador_id}, {"$set": {"es_portada": False}}
+        )
+        await db.prestadores.update_one(
+            {"id": prestador_id}, {"$set": {"foto_url": data.url}}
+        )
+    imagen = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        "url": data.url,
+        "categoria": data.categoria,
+        "es_portada": data.es_portada,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.prestador_imagenes.insert_one(imagen)
+    imagen.pop("_id", None)
+    return imagen
+
+
+@api_router.delete("/prestadores/imagenes/{imagen_id}")
+async def delete_prestador_imagen(
+    imagen_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    await db.prestador_imagenes.delete_one({"id": imagen_id})
+    return {"message": "Imagen eliminada"}
+
+
+@api_router.put("/prestadores/imagenes/{imagen_id}/portada")
+async def set_imagen_portada(
+    imagen_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    img = await db.prestador_imagenes.find_one({"id": imagen_id})
+    if not img:
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    await db.prestador_imagenes.update_many(
+        {"prestador_id": img["prestador_id"]}, {"$set": {"es_portada": False}}
+    )
+    await db.prestador_imagenes.update_one(
+        {"id": imagen_id}, {"$set": {"es_portada": True}}
+    )
+    await db.prestadores.update_one(
+        {"id": img["prestador_id"]}, {"$set": {"foto_url": img["url"]}}
+    )
+    return {"message": "Portada actualizada"}
+
+
+# ============== SERVICIOS Y PRECIOS ==============
+
+@api_router.get("/prestadores/{prestador_id}/servicios")
+async def get_servicios(prestador_id: str):
+    servicios = await db.prestador_servicios.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    return {"servicios": servicios}
+
+
+@api_router.post("/prestadores/{prestador_id}/servicios")
+async def create_servicio(
+    prestador_id: str,
+    data: ServicioPrestadorCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    servicio = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.prestador_servicios.insert_one(servicio)
+    servicio.pop("_id", None)
+    return servicio
+
+
+@api_router.put("/prestadores/servicios/{servicio_id}")
+async def update_servicio(
+    servicio_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    body = await request.json()
+    body.pop("id", None)
+    body.pop("prestador_id", None)
+    body["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.prestador_servicios.update_one({"id": servicio_id}, {"$set": body})
+    return await db.prestador_servicios.find_one({"id": servicio_id}, {"_id": 0})
+
+
+@api_router.delete("/prestadores/servicios/{servicio_id}")
+async def delete_servicio(servicio_id: str, current_user: dict = Depends(get_current_user)):
+    await db.prestador_servicios.delete_one({"id": servicio_id})
+    return {"message": "Servicio eliminado"}
+
+
+# ============== RESERVAS ==============
+
+@api_router.get("/prestadores/{prestador_id}/reservas")
+async def get_reservas_prestador(
+    prestador_id: str,
+    estado: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query: Dict[str, Any] = {"prestador_id": prestador_id}
+    if estado:
+        query["estado"] = estado
+    reservas = await db.reservas.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return {"reservas": reservas}
+
+
+@api_router.post("/reservas")
+async def create_reserva(data: ReservaCreate, current_user: dict = Depends(get_current_user)):
+    reserva = {
+        "id": str(uuid.uuid4()),
+        "turista_id": current_user["user_id"],
+        "turista_nombre": current_user["nombre"],
+        "turista_email": current_user["email"],
+        **data.model_dump(),
+        "estado": "pendiente",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.reservas.insert_one(reserva)
+    reserva.pop("_id", None)
+    return reserva
+
+
+@api_router.put("/reservas/{reserva_id}/estado")
+async def update_reserva_estado(
+    reserva_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    body = await request.json()
+    estado = body.get("estado")
+    if estado not in ["aceptada", "cancelada", "completada", "pendiente"]:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+    await db.reservas.update_one(
+        {"id": reserva_id},
+        {"$set": {"estado": estado, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": f"Reserva {estado}"}
+
+
+# ============== MENÚ (restaurantes/cafés/bares) ==============
+
+@api_router.get("/prestadores/{prestador_id}/menu")
+async def get_menu(prestador_id: str):
+    categorias = await db.menu_categorias.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).sort("orden", 1).to_list(20)
+    for cat in categorias:
+        cat["items"] = await db.menu_items.find(
+            {"categoria_id": cat["id"]}, {"_id": 0}
+        ).to_list(100)
+    return {"categorias": categorias}
+
+
+@api_router.post("/prestadores/{prestador_id}/menu/categorias")
+async def create_categoria(
+    prestador_id: str,
+    data: MenuCategoriaCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    cat = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.menu_categorias.insert_one(cat)
+    cat.pop("_id", None)
+    return cat
+
+
+@api_router.post("/menu/items")
+async def create_menu_item(data: MenuItemCreate, current_user: dict = Depends(get_current_user)):
+    item = {
+        "id": str(uuid.uuid4()),
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.menu_items.insert_one(item)
+    item.pop("_id", None)
+    return item
+
+
+@api_router.put("/menu/items/{item_id}")
+async def update_menu_item(
+    item_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    body = await request.json()
+    body.pop("id", None)
+    await db.menu_items.update_one({"id": item_id}, {"$set": body})
+    return await db.menu_items.find_one({"id": item_id}, {"_id": 0})
+
+
+@api_router.delete("/menu/items/{item_id}")
+async def delete_menu_item(item_id: str, current_user: dict = Depends(get_current_user)):
+    await db.menu_items.delete_one({"id": item_id})
+    return {"message": "Item eliminado"}
+
+
+@api_router.delete("/menu/categorias/{cat_id}")
+async def delete_categoria(cat_id: str, current_user: dict = Depends(get_current_user)):
+    await db.menu_categorias.delete_one({"id": cat_id})
+    await db.menu_items.delete_many({"categoria_id": cat_id})
+    return {"message": "Categoría eliminada"}
+
+
+# ============== HABITACIONES (hoteles) ==============
+
+@api_router.get("/prestadores/{prestador_id}/habitaciones")
+async def get_habitaciones(prestador_id: str):
+    habs = await db.habitaciones.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).to_list(50)
+    return {"habitaciones": habs}
+
+
+@api_router.post("/prestadores/{prestador_id}/habitaciones")
+async def create_habitacion(
+    prestador_id: str,
+    data: HabitacionCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    hab = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.habitaciones.insert_one(hab)
+    hab.pop("_id", None)
+    return hab
+
+
+@api_router.put("/habitaciones/{hab_id}")
+async def update_habitacion(
+    hab_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    body = await request.json()
+    body.pop("id", None)
+    await db.habitaciones.update_one({"id": hab_id}, {"$set": body})
+    return await db.habitaciones.find_one({"id": hab_id}, {"_id": 0})
+
+
+@api_router.delete("/habitaciones/{hab_id}")
+async def delete_habitacion(hab_id: str, current_user: dict = Depends(get_current_user)):
+    await db.habitaciones.delete_one({"id": hab_id})
+    return {"message": "Habitación eliminada"}
+
+
+# ============== FLOTAS / EQUIPO (transporte/tours) ==============
+
+@api_router.get("/prestadores/{prestador_id}/flota")
+async def get_flota(prestador_id: str):
+    flota = await db.flota.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).to_list(50)
+    return {"flota": flota}
+
+
+@api_router.post("/prestadores/{prestador_id}/flota")
+async def create_vehiculo(
+    prestador_id: str,
+    data: FlotaCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    vehiculo = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.flota.insert_one(vehiculo)
+    vehiculo.pop("_id", None)
+    return vehiculo
+
+
+@api_router.delete("/flota/{vehiculo_id}")
+async def delete_vehiculo(vehiculo_id: str, current_user: dict = Depends(get_current_user)):
+    await db.flota.delete_one({"id": vehiculo_id})
+    return {"message": "Vehículo eliminado"}
+
+
+# ============== PROMOCIONES ==============
+
+@api_router.get("/prestadores/{prestador_id}/promociones")
+async def get_promociones(prestador_id: str):
+    promos = await db.promociones.find(
+        {"prestador_id": prestador_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    return {"promociones": promos}
+
+
+@api_router.post("/prestadores/{prestador_id}/promociones")
+async def create_promocion(
+    prestador_id: str,
+    data: PromocionCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    promo = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        **data.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.promociones.insert_one(promo)
+    promo.pop("_id", None)
+    return promo
+
+
+@api_router.delete("/promociones/{promo_id}")
+async def delete_promocion(promo_id: str, current_user: dict = Depends(get_current_user)):
+    await db.promociones.delete_one({"id": promo_id})
+    return {"message": "Promoción eliminada"}
+
+
+# ============== ANALÍTICAS DEL PRESTADOR ==============
+
+@api_router.get("/prestadores/{prestador_id}/analiticas")
+async def get_analiticas_prestador(
+    prestador_id: str,
+    days: int = 30,
+    current_user: dict = Depends(get_current_user)
+):
+    start = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    views = await db.analytics.count_documents({
+        "target_id": prestador_id, "event_type": "view", "timestamp": {"$gte": start}
+    })
+    contacts = await db.analytics.count_documents({
+        "target_id": prestador_id, "event_type": "contact", "timestamp": {"$gte": start}
+    })
+    reservas_total = await db.reservas.count_documents({"prestador_id": prestador_id})
+    reservas_pendientes = await db.reservas.count_documents(
+        {"prestador_id": prestador_id, "estado": "pendiente"}
+    )
+    reservas_completadas = await db.reservas.count_documents(
+        {"prestador_id": prestador_id, "estado": "completada"}
+    )
+    views_pipeline = [
+        {"$match": {"target_id": prestador_id, "event_type": "view", "timestamp": {"$gte": start}}},
+        {"$group": {"_id": "$date", "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]
+    views_by_day = await db.analytics.aggregate(views_pipeline).to_list(100)
+    resenas = await db.resenas.find(
+        {"prestador_id": prestador_id}, {"_id": 0, "calificacion": 1, "texto": 1, "fecha": 1}
+    ).sort("fecha", -1).limit(5).to_list(5)
+    return {
+        "periodo_dias": days,
+        "visitas": views,
+        "contactos": contacts,
+        "reservas": {
+            "total": reservas_total,
+            "pendientes": reservas_pendientes,
+            "completadas": reservas_completadas,
+        },
+        "visitas_por_dia": views_by_day,
+        "ultimas_resenas": resenas,
+    }
+
+
+# ============== DIARIO DEL VIAJERO / ITINERARIOS GUARDADOS ==============
+
+@api_router.post("/itinerarios")
+async def crear_itinerario(
+    datos: ItinerarioCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["user_id"],
+        "nombre": datos.nombre,
+        "region": datos.region,
+        "fecha_inicio": datos.fecha_inicio,
+        "fecha_fin": datos.fecha_fin,
+        "num_personas": datos.num_personas,
+        "dias": [d.model_dump() for d in datos.dias],
+        "servicios_extra": [s.model_dump() for s in datos.servicios_extra],
+        "costo_total_estimado": datos.costo_total_estimado,
+        "notas_generales": datos.notas_generales,
+        "estado": "planificado",
+        "creado_en": now,
+        "actualizado_en": now,
+    }
+    await db.itinerarios.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.get("/itinerarios")
+async def mis_itinerarios(current_user: dict = Depends(get_current_user)):
+    cursor = db.itinerarios.find(
+        {"user_id": current_user["user_id"]}, {"_id": 0}
+    ).sort("creado_en", -1)
+    items = await cursor.to_list(50)
+    return {"itinerarios": items, "total": len(items)}
+
+
+@api_router.get("/itinerarios/{itinerario_id}")
+async def get_itinerario(itinerario_id: str, current_user: dict = Depends(get_current_user)):
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    return doc
+
+
+@api_router.delete("/itinerarios/{itinerario_id}")
+async def eliminar_itinerario(itinerario_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.itinerarios.delete_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    return {"ok": True}
+
+
+@api_router.put("/itinerarios/{itinerario_id}/lugar")
+async def actualizar_lugar(
+    itinerario_id: str,
+    update: LugarEstadoUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    dias = doc.get("dias", [])
+    updated = False
+    for dia in dias:
+        if dia["dia_num"] == update.dia_num:
+            for lugar in dia.get("lugares", []):
+                if lugar["lugar_id"] == update.lugar_id:
+                    lugar["estado"] = update.estado
+                    if update.nota is not None:
+                        lugar["nota"] = update.nota
+                    updated = True
+                    break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Lugar no encontrado")
+    total = sum(len(d.get("lugares", [])) for d in dias)
+    visitados = sum(
+        sum(1 for l in d.get("lugares", []) if l.get("estado") == "visitado")
+        for d in dias
+    )
+    estado_general = "planificado"
+    if visitados > 0 and visitados < total:
+        estado_general = "en_curso"
+    elif visitados == total and total > 0:
+        estado_general = "completado"
+    await db.itinerarios.update_one(
+        {"id": itinerario_id},
+        {"$set": {
+            "dias": dias,
+            "estado": estado_general,
+            "actualizado_en": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"ok": True, "estado_general": estado_general, "visitados": visitados, "total": total}
+
+
+@api_router.post("/itinerarios/{itinerario_id}/foto")
+async def subir_foto_diario(
+    itinerario_id: str,
+    dia_num: int,
+    lugar_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    doc = await db.itinerarios.find_one(
+        {"id": itinerario_id, "user_id": current_user["user_id"]}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Itinerario no encontrado")
+    content = await file.read()
+    path = f"diarios/{itinerario_id}/{dia_num}/{lugar_id}/{uuid.uuid4()}.jpg"
+    result = put_object(path, content, file.content_type or "image/jpeg")
+    foto_url = result["url"]
+    dias = doc.get("dias", [])
+    for dia in dias:
+        if dia["dia_num"] == dia_num:
+            for lugar in dia.get("lugares", []):
+                if lugar["lugar_id"] == lugar_id:
+                    lugar.setdefault("fotos_usuario", []).append(foto_url)
+                    break
+    await db.itinerarios.update_one(
+        {"id": itinerario_id},
+        {"$set": {"dias": dias, "actualizado_en": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"url": foto_url}
+
+
 # ============== HEALTH CHECK ==============
 
 @api_router.get("/health")
@@ -3231,6 +3964,15 @@ async def startup_event():
     await db.paquetes.create_index("region")
     await db.itinerarios.create_index("user_id")
     await db.itinerarios.create_index("id", unique=True)
+    await db.prestador_imagenes.create_index("prestador_id")
+    await db.prestador_servicios.create_index("prestador_id")
+    await db.reservas.create_index("prestador_id")
+    await db.reservas.create_index("turista_id")
+    await db.menu_categorias.create_index("prestador_id")
+    await db.menu_items.create_index("categoria_id")
+    await db.habitaciones.create_index("prestador_id")
+    await db.flota.create_index("prestador_id")
+    await db.promociones.create_index("prestador_id")
     
     logger.info("Veracruz Contigo API ready!")
 
