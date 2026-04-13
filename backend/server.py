@@ -522,13 +522,16 @@ import cloudinary
 import cloudinary.uploader
 
 def init_cloudinary():
-    if not CLOUDINARY_CLOUD_NAME:
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+    api_key = os.environ.get("CLOUDINARY_API_KEY", "")
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
+    if not cloud_name:
         logger.warning("Cloudinary not configured")
         return False
     cloudinary.config(
-        cloud_name=CLOUDINARY_CLOUD_NAME,
-        api_key=CLOUDINARY_API_KEY,
-        api_secret=CLOUDINARY_API_SECRET
+        cloud_name=cloud_name,
+        api_key=api_key,
+        api_secret=api_secret
     )
     return True
 
@@ -1516,14 +1519,6 @@ async def trigger_spike_check(request: Request):
     
     spikes = await check_interest_spikes()
     return {"spikes_detected": len(spikes), "spikes": spikes}
-
-@api_router.post("/public/upload")
-async def public_upload(file: UploadFile = File(...)):
-    content = await file.read()
-    ext = file.filename.split(".")[-1] if file.filename else "jpg"
-    path = f"uploads/public/{uuid.uuid4()}.{ext}"
-    result = put_object(path, content, file.content_type or "image/jpeg")
-    return {"url": result["url"]}
 
 # ============== AUTH ENDPOINTS ==============
 
