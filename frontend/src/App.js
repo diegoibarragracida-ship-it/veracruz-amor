@@ -30,8 +30,15 @@ import PrestadorDashboard from "@/pages/admin/PrestadorDashboard";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Configure axios
+// Configure axios — send token from localStorage on every request
 axios.defaults.withCredentials = true;
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // Auth Context
 const AuthContext = createContext(null);
@@ -54,6 +61,7 @@ const AuthProvider = ({ children }) => {
       setUser(response.data);
     } catch (error) {
       setUser(null);
+      localStorage.removeItem("access_token");
     } finally {
       setLoading(false);
     }
@@ -65,29 +73,29 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await axios.post(`${API}/auth/login`, { email, password });
-    setUser(response.data);
-    return response.data;
+    const data = response.data;
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+    }
+    const { access_token, ...userWithoutToken } = data;
+    setUser(userWithoutToken);
+    return userWithoutToken;
   };
 
   const loginWithGoogle = () => {
-  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-
-  const redirectUri =
-    "https://veracruz-amor.vercel.app/auth/callback";
-
-  const scope = "email profile";
-
-  const googleUrl =
-    `https://accounts.google.com/o/oauth2/v2/auth` +
-    `?client_id=${clientId}` +
-    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-    `&response_type=code` +
-    `&scope=${encodeURIComponent(scope)}` +
-    `&access_type=offline` +
-    `&prompt=consent`;
-
-  window.location.href = googleUrl;
-};
+    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    const redirectUri = "https://veracruz-amor.vercel.app/auth/callback";
+    const scope = "email profile";
+    const googleUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth` +
+      `?client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=code` +
+      `&scope=${encodeURIComponent(scope)}` +
+      `&access_type=offline` +
+      `&prompt=consent`;
+    window.location.href = googleUrl;
+  };
 
   const logout = async () => {
     try {
@@ -95,6 +103,7 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout error:", error);
     }
+    localStorage.removeItem("access_token");
     setUser(null);
   };
 
@@ -136,17 +145,17 @@ const AuthCallback = () => {
 
       try {
         const response = await axios.post(`${API}/auth/google/callback`, { code });
-        setUser(response.data);
-        const role = response.data.rol;
-        if (role === 'superadmin') {
-          navigate('/admin', { replace: true });
-        } else if (role === 'encargado') {
-          navigate('/encargado', { replace: true });
-        } else if (role === 'prestador') {
-          navigate('/prestador-panel', { replace: true });
-        } else {
-          navigate('/', { replace: true });
+        const data = response.data;
+        if (data.access_token) {
+          localStorage.setItem("access_token", data.access_token);
         }
+        const { access_token, ...userWithoutToken } = data;
+        setUser(userWithoutToken);
+        const role = userWithoutToken.rol;
+        if (role === 'superadmin') navigate('/admin', { replace: true });
+        else if (role === 'encargado') navigate('/encargado', { replace: true });
+        else if (role === 'prestador') navigate('/prestador-panel', { replace: true });
+        else navigate('/', { replace: true });
       } catch (error) {
         console.error("Auth callback error:", error);
         navigate('/login');
@@ -195,8 +204,8 @@ function AppRouter() {
   const location = useLocation();
 
   if (location.pathname === '/auth/callback') {
-  return <AuthCallback />;
-}
+    return <AuthCallback />;
+  }
 
   return (
     <Routes>
@@ -262,7 +271,7 @@ function App() {
       <AuthProvider>
         <AppRouter />
         <Toaster position="top-right" richColors />
-        <ChatBot />  {/* ← AQUÍ, así aparece en TODAS las páginas */}
+        <ChatBot />
       </AuthProvider>
     </BrowserRouter>
   );

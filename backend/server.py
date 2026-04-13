@@ -1578,11 +1578,11 @@ async def login(credentials: UserLogin, response: Response):
     access_token = create_access_token(user["user_id"], email, user["rol"])
     refresh_token = create_refresh_token(user["user_id"])
     
-    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False, samesite="lax", max_age=86400, path="/")
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="none", max_age=86400, path="/")
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="none", max_age=604800, path="/")
     
     user.pop("password_hash", None)
-    return user
+    return {**user, "access_token": access_token}
 
 @api_router.post("/auth/google/callback")
 async def google_callback(request: Request, response: Response):
@@ -1653,8 +1653,8 @@ async def google_callback(request: Request, response: Response):
         access_token = create_access_token(user["user_id"], email, user.get("rol", "turista"))
         refresh_token = create_refresh_token(user["user_id"])
         
-        response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False, samesite="lax", max_age=86400, path="/")
-        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
+        response.set_cookie(key="access_token", value=access_token, httponly=True, secure=True, samesite="none", max_age=86400, path="/")
+        response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="none", max_age=604800, path="/")
         
         return {
             "user_id": user["user_id"],
@@ -1662,7 +1662,8 @@ async def google_callback(request: Request, response: Response):
             "nombre": user.get("nombre", name),
             "rol": user.get("rol", "turista"),
             "foto_url": user.get("foto_url", picture),
-            "activo": user.get("activo", True)
+            "activo": user.get("activo", True),
+            "access_token": access_token,
         }
         
     except Exception as e:
