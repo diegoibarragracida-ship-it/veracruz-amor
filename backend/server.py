@@ -1843,6 +1843,54 @@ async def get_prestadores(
     
     return {"prestadores": prestadores, "total": total}
 
+# ============== REGISTRO DE PRESTADOR ==============
+
+@api_router.post("/prestadores/register")
+async def register_prestador(data: PrestadorRegisterCreate, request: Request):
+    user = await get_optional_user(request)
+    docs_normalizados = []
+    for d in data.documentos:
+        if isinstance(d, str):
+            docs_normalizados.append(d)
+        elif isinstance(d, dict):
+            docs_normalizados.append(d.get("url") or d.get("path") or str(d))
+    solicitud = {
+        "id": str(uuid.uuid4()),
+        "nombre": data.nombre_negocio,
+        "tipo": data.tipo,
+        "subtipo": data.subtipo,
+        "municipio_id": data.municipio_id,
+        "descripcion": data.descripcion,
+        "telefono": data.telefono,
+        "whatsapp": data.whatsapp,
+        "horarios": data.horarios,
+        "direccion": data.direccion,
+        "responsable": data.nombre_contacto,
+        "email": data.email_contacto,
+        "documentos": docs_normalizados,
+        "estado": "pendiente",
+        "user_id": user["user_id"] if user else None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.solicitudes_prestador.insert_one(solicitud)
+    solicitud.pop("_id", None)
+    return {"ok": True, "id": solicitud["id"], "mensaje": "Solicitud enviada, será revisada por el equipo."}
+
+
+@api_router.get("/prestadores/register/solicitudes")
+async def get_solicitudes_registro(
+    estado: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["rol"] not in ["superadmin", "admin"]:
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    query: Dict[str, Any] = {}
+    if estado:
+        query["estado"] = estado
+    solicitudes = await db.solicitudes_prestador.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"solicitudes": solicitudes, "total": len(solicitudes)}
+
+
 @api_router.get("/prestadores/mapa")
 async def get_prestadores_mapa(
     region: Optional[str] = None,
@@ -3906,6 +3954,25 @@ async def subir_foto_diario(
         {"$set": {"dias": dias, "actualizado_en": datetime.now(timezone.utc).isoformat()}}
     )
     return {"url": foto_url}
+
+
+@api_router.put("/prestadores/register/{solicitud_id}/estado")
+async def update_solicitud_estado(
+    solicitud_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["rol"] not in ["superadmin", "admin"]:
+        raise HTTPException(status_code=403, detail="Sin permiso")
+    body = await request.json()
+    estado = body.get("estado")
+    if estado not in ["aprobado", "rechazado", "pendiente"]:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+    await db.solicitudes_prestador.update_one(
+        {"id": solicitud_id},
+        {"$set": {"estado": estado, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"ok": True}
 
 
 # ============== UPLOAD PÚBLICO ==============
