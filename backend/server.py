@@ -3904,6 +3904,21 @@ async def subir_foto_diario(
     return {"url": foto_url}
 
 
+# ============== UPLOAD PÚBLICO ==============
+
+@api_router.post("/public/upload")
+async def public_upload(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        ext = file.filename.split(".")[-1] if file.filename else "jpg"
+        path = f"uploads/public/{uuid.uuid4()}.{ext}"
+        result = put_object(path, content, file.content_type or "image/jpeg")
+        return {"url": result["url"]}
+    except Exception as e:
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============== HEALTH CHECK ==============
 
 @api_router.get("/health")
