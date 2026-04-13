@@ -2534,14 +2534,14 @@ async def create_usuario(request: Request):
     rol = body.get("rol", "encargado")
     municipio_id = body.get("municipio_id")
     password = body.get("password", f"Veracruz{uuid.uuid4().hex[:8]}!")
-    
+
     if rol not in ["encargado", "prestador"]:
         raise HTTPException(status_code=400, detail="Rol inválido")
-    
+
     existing = await db.usuarios.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="Email ya registrado")
-    
+
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     user = {
         "user_id": user_id,
@@ -2555,16 +2555,44 @@ async def create_usuario(request: Request):
         "fecha_registro": datetime.now(timezone.utc).isoformat(),
         "ultimo_acceso": None
     }
-    
     await db.usuarios.insert_one(user)
-    
-    # If encargado, assign to municipio
+
+    # Si es encargado, asignar al municipio
     if rol == "encargado" and municipio_id:
         await db.municipios.update_one(
             {"id": municipio_id},
             {"$set": {"encargado_id": user_id}}
         )
-    
+
+    # ✅ Si es prestador, crear documento en db.prestadores
+    if rol == "prestador":
+        prestador_id = str(uuid.uuid4())
+        await db.prestadores.insert_one({
+            "id": prestador_id,
+            "nombre": nombre,
+            "tipo": "SERVICIOS",
+            "subtipo": None,
+            "municipio_id": municipio_id,
+            "descripcion": None,
+            "telefono": None,
+            "whatsapp": None,
+            "verificado": True,
+            "activo": True,
+            "user_id": user_id,
+            "calificacion_promedio": 0.0,
+            "total_resenas": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contraseña: {password}")
+    return {
+        "user_id": user_id,
+        "email": email,
+        "nombre": nombre,
+        "rol": rol,
+        "password": password,
+        "message": "Usuario creado. Email enviado con credenciales."
+    }
     # Log email notification (MOCKED)
     logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contraseña: {password}")
     
