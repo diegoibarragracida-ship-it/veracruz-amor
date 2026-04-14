@@ -711,7 +711,7 @@ const ModuloGaleria = ({ prestadorId }) => {
     setUploading(true);
     try {
       const fd = new FormData(); fd.append("file", file);
-      const { data: up } = await axios.post(`${API}/upload`, fd);
+      const { data: up } = await axios.post(`${API}/public/upload`, fd);
       await axios.post(`${API}/prestadores/${prestadorId}/imagenes`, { url: up.url, categoria });
       toast.success("Imagen agregada"); fetchImagenes();
     } catch { toast.error("Error subiendo imagen"); }
@@ -782,7 +782,8 @@ const ModuloGaleria = ({ prestadorId }) => {
 const ModuloMenu = ({ prestadorId, menuUrl }) => {
   const [categorias, setCategorias] = useState([]);
   const [newCat, setNewCat] = useState("");
-  const [newItem, setNewItem] = useState({ nombre: "", descripcion: "", precio: "", disponible: true });
+  const [newItem, setNewItem] = useState({ nombre: "", descripcion: "", precio: "", precio_promocional: "", foto_url: "", disponible: true });
+  const [uploadingItem, setUploadingItem] = useState(false);
   const [showItemForm, setShowItemForm] = useState(null);
 
   useEffect(() => { fetchMenu(); }, [prestadorId]);
@@ -798,10 +799,26 @@ const ModuloMenu = ({ prestadorId, menuUrl }) => {
     setNewCat(""); fetchMenu();
   };
 
+  const uploadItemFoto = async (file) => {
+    if (!file) return;
+    setUploadingItem(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const { data: up } = await axios.post(`${API}/public/upload`, fd);
+      setNewItem(prev => ({ ...prev, foto_url: up.url }));
+    } catch { toast.error("Error subiendo foto"); }
+    finally { setUploadingItem(false); }
+  };
+
   const addItem = async (catId) => {
     if (!newItem.nombre || !newItem.precio) return toast.error("Nombre y precio requeridos");
-    await axios.post(`${API}/menu/items`, { ...newItem, categoria_id: catId, precio: parseFloat(newItem.precio) });
-    setNewItem({ nombre: "", descripcion: "", precio: "", disponible: true });
+    await axios.post(`${API}/menu/items`, {
+      ...newItem,
+      categoria_id: catId,
+      precio: parseFloat(newItem.precio),
+      precio_promocional: newItem.precio_promocional ? parseFloat(newItem.precio_promocional) : null,
+    });
+    setNewItem({ nombre: "", descripcion: "", precio: "", precio_promocional: "", foto_url: "", disponible: true });
     setShowItemForm(null); fetchMenu(); toast.success("Platillo agregado");
   };
 
@@ -843,7 +860,18 @@ const ModuloMenu = ({ prestadorId, menuUrl }) => {
                   <Inp value={newItem.nombre} onChange={e => setNewItem({ ...newItem, nombre: e.target.value })} placeholder="Nombre del platillo" />
                 </div>
                 <Inp type="number" value={newItem.precio} onChange={e => setNewItem({ ...newItem, precio: e.target.value })} placeholder="Precio MXN" />
-                <Inp value={newItem.descripcion} onChange={e => setNewItem({ ...newItem, descripcion: e.target.value })} placeholder="Descripción corta" />
+                <Inp type="number" value={newItem.precio_promocional} onChange={e => setNewItem({ ...newItem, precio_promocional: e.target.value })} placeholder="Precio promo (opcional)" />
+                <div className="col-span-2">
+                  <Inp value={newItem.descripcion} onChange={e => setNewItem({ ...newItem, descripcion: e.target.value })} placeholder="Descripción corta" />
+                </div>
+                <div className="col-span-2 flex items-center gap-3">
+                  {newItem.foto_url && <img src={newItem.foto_url} className="w-12 h-12 rounded-lg object-cover" alt="" />}
+                  <label className="cursor-pointer flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-600 hover:bg-gray-100">
+                    {uploadingItem ? <Loader2 className="w-3 h-3 animate-spin" /> : "📷"}
+                    {uploadingItem ? "Subiendo..." : "Foto del platillo"}
+                    <input type="file" accept="image/*" className="hidden" onChange={e => uploadItemFoto(e.target.files[0])} disabled={uploadingItem} />
+                  </label>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => addItem(cat.id)} className="flex-1 py-2 bg-[#1B5E20] text-white rounded-lg text-sm font-bold">Agregar</button>
@@ -855,17 +883,22 @@ const ModuloMenu = ({ prestadorId, menuUrl }) => {
           <div className="divide-y divide-gray-50">
             {cat.items?.map(item => (
               <div key={item.id} className={`flex items-center gap-3 py-2.5 ${!item.disponible ? "opacity-50" : ""}`}>
+                {item.foto_url && <img src={item.foto_url} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="" />}
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
                   {item.descripcion && <p className="text-xs text-gray-500">{item.descripcion}</p>}
                 </div>
-                <span className="font-bold text-gray-900 text-sm">${item.precio}</span>
+                <div className="text-right flex-shrink-0">
+                  {item.precio_promocional ? (
+                    <><p className="text-xs text-gray-400 line-through">${item.precio}</p><p className="font-bold text-[#1B5E20] text-sm">${item.precio_promocional}</p></>
+                  ) : <p className="font-bold text-gray-900 text-sm">${item.precio}</p>}
+                </div>
                 <button type="button" onClick={async () => { await axios.put(`${API}/menu/items/${item.id}`, { disponible: !item.disponible }); fetchMenu(); }}
-                  className={`text-xs px-2.5 py-1 rounded-full font-medium ${item.disponible ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${item.disponible ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                   {item.disponible ? "Disponible" : "Agotado"}
                 </button>
                 <button type="button" onClick={async () => { await axios.delete(`${API}/menu/items/${item.id}`); fetchMenu(); }}
-                  className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100">
+                  className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 flex-shrink-0">
                   <Trash2 className="w-3 h-3" />
                 </button>
               </div>
@@ -1053,13 +1086,22 @@ const ModuloReservas = ({ prestadorId }) => {
                       <p className="font-semibold text-gray-900 text-sm">{r.turista_nombre}</p>
                       <p className="text-xs text-gray-500">{r.turista_email}</p>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                        <span>{r.fecha_reserva}</span>
-                        <span>{r.num_personas} personas</span>
+                        <span>📅 {r.fecha_reserva}</span>
+                        <span>👥 {r.num_personas} personas</span>
                       </div>
-                      {r.nota_turista && <p className="text-xs text-gray-600 mt-1.5 bg-gray-50 px-2 py-1 rounded-lg">{r.nota_turista}</p>}
+                      {r.nota_turista && <p className="text-xs text-gray-600 mt-1.5 bg-gray-50 px-2 py-1 rounded-lg">💬 {r.nota_turista}</p>}
+                      <p className="text-[10px] text-gray-400 mt-1">Recibida: {new Date(r.created_at).toLocaleString("es-MX")}</p>
                     </div>
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize flex-shrink-0 ${ESTADO_COLORS[r.estado]}`}>{r.estado}</span>
                   </div>
+                  {/* WhatsApp al turista */}
+                  {r.turista_whatsapp && (
+                    <a href={`https://wa.me/${r.turista_whatsapp}?text=${encodeURIComponent(`Hola ${r.turista_nombre}, confirmamos tu reserva para ${r.num_personas} personas el ${r.fecha_reserva} en ${r.prestador_nombre || "nuestro establecimiento"}.`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-green-700 bg-green-50 px-3 py-1.5 rounded-lg hover:bg-green-100 mb-3 font-medium">
+                      <span>📱</span> Confirmar por WhatsApp
+                    </a>
+                  )}
                   {r.estado === "pendiente" && (
                     <div className="flex gap-2">
                       <button type="button" onClick={() => actualizarEstado(r.id, "aceptada")}
@@ -1229,7 +1271,7 @@ const PrestadorDashboard = () => {
     setUploading("foto");
     try {
       const fd = new FormData(); fd.append("file", file);
-      const { data: up } = await axios.post(`${API}/upload`, fd);
+      const { data: up } = await axios.post(`${API}/public/upload`, fd);
       await axios.put(`${API}/prestadores/${prestador.id}`, { foto_url: up.url });
       toast.success("Foto actualizada"); fetchPrestador();
     } catch { toast.error("Error subiendo foto"); }
@@ -1241,7 +1283,7 @@ const PrestadorDashboard = () => {
     setUploading("logo");
     try {
       const fd = new FormData(); fd.append("file", file);
-      const { data: up } = await axios.post(`${API}/upload`, fd);
+      const { data: up } = await axios.post(`${API}/public/upload`, fd);
       await axios.put(`${API}/prestadores/me/perfil`, { logo_url: up.url });
       toast.success("Logo actualizado"); fetchPrestador();
     } catch { toast.error("Error subiendo logo"); }
