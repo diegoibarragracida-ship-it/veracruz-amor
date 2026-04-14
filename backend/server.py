@@ -379,6 +379,8 @@ class PrestadorPerfilUpdate(BaseModel):
     descripcion_larga: Optional[str] = None
     direccion: Optional[str] = None
     horarios: Optional[str] = None
+    # Horarios detallados por día (Lun-Dom)
+    horarios_detallados: Optional[dict] = None
     telefono: Optional[str] = None
     whatsapp: Optional[str] = None
     lat: Optional[float] = None
@@ -388,6 +390,25 @@ class PrestadorPerfilUpdate(BaseModel):
     facebook: Optional[str] = None
     tiktok: Optional[str] = None
     website: Optional[str] = None
+    # Precio
+    precio_min: Optional[float] = None
+    precio_max: Optional[float] = None
+    # Estado en tiempo real
+    esta_abierto: Optional[bool] = None
+    # Menú digital (URL externa o QR)
+    menu_url: Optional[str] = None
+    # Perfil gastronómico (solo alimentos y bebidas)
+    categoria_gastronomica: Optional[str] = None
+    subcategoria_gastronomica: Optional[str] = None
+    etiquetas: Optional[List[str]] = None
+    momentos: Optional[List[str]] = None
+    # Reservas de mesa
+    reservas_mesa_activas: Optional[bool] = None
+    reservas_mesa_capacidad: Optional[int] = None
+    reservas_mesa_notas: Optional[str] = None
+    # Pedidos por WhatsApp
+    pedidos_whatsapp_activo: Optional[bool] = None
+    pedidos_whatsapp_mensaje: Optional[str] = None
 
 # Modelos para itinerarios (Diario del Viajero)
 class LugarEnItinerario(BaseModel):
