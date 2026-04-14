@@ -48,7 +48,7 @@ const ETIQUETAS_GRUPOS = [
   { grupo: "Precio", opciones: ["Económico","Precio medio","Caro","Gourmet"] },
   { grupo: "Experiencia", opciones: ["Familiar","Romántico","Para grupos","Casual","Elegante","Rápido","Experiencia premium"] },
   { grupo: "Servicio", opciones: ["Para comer ahí","Para llevar","A domicilio","Pickup","Reservación","Sin reservación"] },
-  { grupo: "Ambiente", opciones: ["Nocturno","Música en vivo","DJ","Tranquilo","Fiesta","Bar","Terraza","Con vista"] },
+  { grupo: "Ambiente", opciones: ["Nocturno","Con música en vivo","DJ","Tranquilo","Fiesta","Bar","Terraza","Con vista"] },
   { grupo: "Especialidades", opciones: ["Por kilo","Buffet","A la carta","Comida corrida","Todo incluido"] },
   { grupo: "Preferencias", opciones: ["Vegano friendly","Vegetariano friendly","Sin gluten","Opciones saludables"] },
   { grupo: "Extras", opciones: ["Pet friendly","Área infantil","Estacionamiento","WiFi","Climatizado","Accesible (silla de ruedas)"] },
@@ -593,6 +593,26 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
               />
             </Card>
           )}
+
+          {/* Momentos ideales */}
+          <Card>
+            <SectionTitle>Momento ideal ⏰</SectionTitle>
+            <p className="text-xs text-gray-500 mb-3">¿En qué momento del día atienden mejor? Selecciona todos los que apliquen.</p>
+            <div className="flex flex-wrap gap-2">
+              {["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"].map(m => (
+                <button key={m} type="button"
+                  onClick={() => {
+                    const curr = form.momentos || [];
+                    setForm({ ...form, momentos: curr.includes(m) ? curr.filter(x => x !== m) : [...curr, m] });
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                    (form.momentos || []).includes(m)
+                      ? "bg-[#1B5E20] text-white border-[#1B5E20]"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]"
+                  }`}>{m}</button>
+              ))}
+            </div>
+          </Card>
         </div>
       )}
 
