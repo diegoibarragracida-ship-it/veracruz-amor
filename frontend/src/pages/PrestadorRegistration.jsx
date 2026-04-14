@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 const TIPOS_SERVICIO = [
   { value: "HOSPEDAJE", label: "Hospedaje", subtipos: ["Hotel", "Hostal", "Airbnb", "Cabaña", "Campamento"] },
-  { value: "GASTRONOMÍA", label: "Gastronomia", subtipos: ["Restaurante", "Cafetería", "Bar", "Fonda", "Food Truck"] },
+  { value: "GASTRONOMIA", label: "Gastronomia", subtipos: ["Restaurante", "Cafetería", "Bar", "Fonda", "Food Truck"] },
   { value: "TURISMO", label: "Turismo", subtipos: ["Tour operador", "Guía turístico", "Agencia de viajes", "Ecoturismo"] },
   { value: "TRANSPORTE", label: "Transporte", subtipos: ["Taxi", "Renta de autos", "Lancha", "Autobús turístico"] },
   { value: "COMERCIO", label: "Comercio", subtipos: ["Artesanías", "Souvenirs", "Mercado local", "Tienda"] },
