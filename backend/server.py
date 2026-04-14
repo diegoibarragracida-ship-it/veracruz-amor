@@ -374,39 +374,40 @@ class PromocionCreate(BaseModel):
     activa: bool = True
 
 class PrestadorPerfilUpdate(BaseModel):
+    model_config = ConfigDict(extra="allow")
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     descripcion_larga: Optional[str] = None
     direccion: Optional[str] = None
     horarios: Optional[str] = None
-    # Horarios detallados por día (Lun-Dom)
-    horarios_detallados: Optional[dict] = None
+    horarios_detallados: Optional[Dict[str, Any]] = None
     telefono: Optional[str] = None
     whatsapp: Optional[str] = None
     lat: Optional[float] = None
     lng: Optional[float] = None
     logo_url: Optional[str] = None
+    foto_url: Optional[str] = None
     instagram: Optional[str] = None
     facebook: Optional[str] = None
     tiktok: Optional[str] = None
     website: Optional[str] = None
-    # Precio
-    precio_min: Optional[float] = None
-    precio_max: Optional[float] = None
-    # Estado en tiempo real
-    esta_abierto: Optional[bool] = None
-    # Menú digital (URL externa o QR)
-    menu_url: Optional[str] = None
-    # Perfil gastronómico (solo alimentos y bebidas)
+    # Gastronomía
     categoria_gastronomica: Optional[str] = None
     subcategoria_gastronomica: Optional[str] = None
     etiquetas: Optional[List[str]] = None
+    etiquetas_bebidas: Optional[List[str]] = None
     momentos: Optional[List[str]] = None
-    # Reservas de mesa
+    tipo_bebidas: Optional[List[str]] = None
+    metodos_pago: Optional[List[str]] = None
+    precio_min: Optional[float] = None
+    precio_max: Optional[float] = None
+    precio_familia: Optional[float] = None
+    capacidad_personas: Optional[int] = None
+    esta_abierto: Optional[bool] = None
+    menu_url: Optional[str] = None
     reservas_mesa_activas: Optional[bool] = None
-    reservas_mesa_capacidad: Optional[int] = None
+    reservas_mesa_capacidad: Optional[str] = None
     reservas_mesa_notas: Optional[str] = None
-    # Pedidos por WhatsApp
     pedidos_whatsapp_activo: Optional[bool] = None
     pedidos_whatsapp_mensaje: Optional[str] = None
 
@@ -2407,6 +2408,14 @@ async def update_solicitud(solicitud_id: str, request: Request):
 
 # ============== ADMIN ENDPOINTS ==============
 
+@api_router.get("/admin/registros-prestadores/debug")
+async def debug_registros(current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    docs = await db.solicitudes_prestador.find({}, {"_id": 0}).to_list(100)
+    return {"total": len(docs), "docs": docs}
+
+
 @api_router.get("/admin/registros-prestadores")
 async def get_registros_prestadores(
     estado: Optional[str] = "pendiente",
@@ -2452,7 +2461,13 @@ async def update_registro_prestador(
         import secrets, string
         password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
         email = solicitud.get("email", "").lower().strip()
-        nombre = solicitud.get("responsable") or solicitud.get("nombre", "Prestador")
+        nombre_responsable = solicitud.get("responsable") or solicitud.get("nombre_contacto") or solicitud.get("nombre", "Prestador")
+        nombre_negocio = solicitud.get("nombre_negocio") or solicitud.get("nombre", "Negocio")
+
+        # Normalizar tipo — quitar acentos para consistencia
+        tipo_raw = solicitud.get("tipo", "SERVICIOS")
+        import unicodedata
+        tipo_norm = unicodedata.normalize("NFD", tipo_raw).encode("ascii", "ignore").decode("ascii").upper()
 
         existing = await db.usuarios.find_one({"email": email})
         if not existing:
@@ -2460,7 +2475,7 @@ async def update_registro_prestador(
             await db.usuarios.insert_one({
                 "user_id": user_id,
                 "email": email,
-                "nombre": nombre,
+                "nombre": nombre_responsable,
                 "password_hash": hash_password(password),
                 "rol": "prestador",
                 "activo": True,
@@ -2474,8 +2489,8 @@ async def update_registro_prestador(
         prestador_id = str(uuid.uuid4())
         await db.prestadores.insert_one({
             "id": prestador_id,
-            "nombre": solicitud.get("nombre", ""),
-            "tipo": solicitud.get("tipo", ""),
+            "nombre": nombre_negocio,
+            "tipo": tipo_norm,
             "subtipo": solicitud.get("subtipo"),
             "municipio_id": solicitud.get("municipio_id", ""),
             "descripcion": solicitud.get("descripcion"),
@@ -2555,14 +2570,14 @@ async def create_usuario(request: Request):
     rol = body.get("rol", "encargado")
     municipio_id = body.get("municipio_id")
     password = body.get("password", f"Veracruz{uuid.uuid4().hex[:8]}!")
-
+    
     if rol not in ["encargado", "prestador"]:
         raise HTTPException(status_code=400, detail="Rol inválido")
-
+    
     existing = await db.usuarios.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="Email ya registrado")
-
+    
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     user = {
         "user_id": user_id,
@@ -2576,44 +2591,16 @@ async def create_usuario(request: Request):
         "fecha_registro": datetime.now(timezone.utc).isoformat(),
         "ultimo_acceso": None
     }
+    
     await db.usuarios.insert_one(user)
-
-    # Si es encargado, asignar al municipio
+    
+    # If encargado, assign to municipio
     if rol == "encargado" and municipio_id:
         await db.municipios.update_one(
             {"id": municipio_id},
             {"$set": {"encargado_id": user_id}}
         )
-
-    # ✅ Si es prestador, crear documento en db.prestadores
-    if rol == "prestador":
-        prestador_id = str(uuid.uuid4())
-        await db.prestadores.insert_one({
-            "id": prestador_id,
-            "nombre": nombre,
-            "tipo": "SERVICIOS",
-            "subtipo": None,
-            "municipio_id": municipio_id,
-            "descripcion": None,
-            "telefono": None,
-            "whatsapp": None,
-            "verificado": True,
-            "activo": True,
-            "user_id": user_id,
-            "calificacion_promedio": 0.0,
-            "total_resenas": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-
-    logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contraseña: {password}")
-    return {
-        "user_id": user_id,
-        "email": email,
-        "nombre": nombre,
-        "rol": rol,
-        "password": password,
-        "message": "Usuario creado. Email enviado con credenciales."
-    }
+    
     # Log email notification (MOCKED)
     logger.info(f"[MOCKED EMAIL] Nuevo usuario creado: {email} con contraseña: {password}")
     
@@ -4139,6 +4126,26 @@ async def update_solicitud_estado(
         {"$set": {"estado": estado, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"ok": True}
+
+
+# ============== ADMIN: CORREGIR TIPO PRESTADOR ==============
+
+@api_router.put("/admin/prestadores/{prestador_id}/tipo")
+async def fix_prestador_tipo(
+    prestador_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    if current_user["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    body = await request.json()
+    tipo = body.get("tipo", "").upper()
+    nombre = body.get("nombre")
+    update = {"tipo": tipo, "updated_at": datetime.now(timezone.utc).isoformat()}
+    if nombre:
+        update["nombre"] = nombre
+    await db.prestadores.update_one({"id": prestador_id}, {"$set": update})
+    return {"ok": True, "tipo": tipo}
 
 
 # ============== UPLOAD PÚBLICO ==============
