@@ -11,8 +11,13 @@ import { toast } from "sonner";
 
 // ── Constantes gastronómicas ──────────────────────────────────
 const TIPOS_ALIMENTOS = [
-  "GASTRONOMÍA","CAFETERÍA","BAR","BEBIDAS","RESTAURANTE","FOOD_TRUCK","PUESTO"
+  "GASTRONOMIA","GASTRONOMÍA","CAFETERIA","CAFETERÍA",
+  "BAR","BEBIDAS","RESTAURANTE","FOOD_TRUCK","PUESTO"
 ];
+
+// Normaliza texto quitando acentos para comparación segura
+const norm = (s) => s?.toUpperCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
 
 const CATEGORIAS_GASTRONOMICAS = [
   "Comida mexicana","Comida rápida","Parrilla y carnes","Mariscos",
@@ -91,9 +96,9 @@ const TAB_LABELS = {
   flota: "Flota", promociones: "Promociones", resenas: "Reseñas", analiticas: "Analíticas",
 };
 
-const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(tipo?.toUpperCase());
+const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
 const esBebidas = (tipo, categoria) =>
-  ["BAR","BEBIDAS","CAFETERÍA"].includes(tipo?.toUpperCase()) ||
+  ["BAR","BEBIDAS","CAFETERIA"].includes(norm(tipo)) ||
   ["Bar y bebidas","Cafetería y postres"].includes(categoria);
 
 // ── Componentes base ──────────────────────────────────────────
