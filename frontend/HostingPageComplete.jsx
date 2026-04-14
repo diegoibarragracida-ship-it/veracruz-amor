@@ -1,0 +1,1 @@
+// HostingPageComplete component implementation

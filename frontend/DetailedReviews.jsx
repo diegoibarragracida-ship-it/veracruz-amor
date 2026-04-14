@@ -1,0 +1,1 @@
+// DetailedReviews component implementation

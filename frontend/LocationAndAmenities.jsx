@@ -1,0 +1,1 @@
+// LocationAndAmenities component implementation

@@ -1,0 +1,1 @@
+// RoomComparator component implementation

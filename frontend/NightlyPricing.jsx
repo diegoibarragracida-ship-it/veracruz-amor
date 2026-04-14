@@ -1,0 +1,1 @@
+// NightlyPricing component implementation

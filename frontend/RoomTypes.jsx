@@ -1,0 +1,1 @@
+// RoomTypes component implementation

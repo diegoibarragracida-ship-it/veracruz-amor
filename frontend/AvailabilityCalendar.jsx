@@ -1,0 +1,1 @@
+// AvailabilityCalendar component implementation

@@ -1,0 +1,1 @@
+// Example hotel data implementation

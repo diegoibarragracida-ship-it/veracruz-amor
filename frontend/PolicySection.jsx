@@ -1,0 +1,1 @@
+// PolicySection component implementation
