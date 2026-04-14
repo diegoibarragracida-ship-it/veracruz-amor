@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API, useAuth } from "@/App";
-import { 
-  LayoutDashboard, MapPin, Camera, Calendar, Users, LogOut, 
+import {
+  LayoutDashboard, MapPin, Camera, Calendar, Users, LogOut,
   Save, Eye, Loader2, Plus, Trash2, Upload, BarChart3,
-  Phone, Clock, Star, X, ChevronDown, Building2, UtensilsCrossed,
-  Compass, Car, Zap, ShoppingBag, Music, Waves, TreePine, 
-  Stethoscope, GraduationCap, Wrench, Coffee, Hotel, Bike,
-  Check
+  Phone, Clock, Star, X, Building2, UtensilsCrossed,
+  Compass, Car, Zap, ShoppingBag, Music, Waves, TreePine,
+  Stethoscope, GraduationCap, Wrench, Hotel, Check,
+  Newspaper, Shield, Tag, AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,97 +17,782 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 
-// ─── Catálogo completo de tipos de prestadores ───────────────────────────────
+// ─── Catálogo de tipos de prestadores ────────────────────────────────────────
 const TIPOS_PRESTADOR = [
-  {
-    grupo: "🏨 Hospedaje",
-    tipo: "hospedaje",
-    icon: Hotel,
-    color: "bg-blue-50 border-blue-200 text-blue-700",
-    subtipos: ["Hotel", "Hostal", "Cabaña", "B&B", "Casa de huéspedes", "Glamping", "Hacienda", "Villa", "Departamento turístico", "Camping"],
-  },
-  {
-    grupo: "🍽️ Gastronomía",
-    tipo: "restaurante",
-    icon: UtensilsCrossed,
-    color: "bg-orange-50 border-orange-200 text-orange-700",
-    subtipos: ["Restaurante", "Marisquería", "Taquería", "Cafetería", "Panadería", "Heladería", "Bar & Grill", "Fonda", "Lonchería", "Food truck", "Mezcalería", "Coctelería"],
-  },
-  {
-    grupo: "🧭 Guías Turísticos",
-    tipo: "guia",
-    icon: Compass,
-    color: "bg-green-50 border-green-200 text-green-700",
-    subtipos: ["Guía de naturaleza", "Guía histórico-cultural", "Guía de aventura", "Guía gastronómico", "Guía bilingüe", "Guía certificado SECTUR", "Guía de fotografía"],
-  },
-  {
-    grupo: "🚗 Transporte",
-    tipo: "transporte",
-    icon: Car,
-    color: "bg-slate-50 border-slate-200 text-slate-700",
-    subtipos: ["Taxi turístico", "Renta de autos", "Transfer aeropuerto", "Autobús turístico", "Lancha / bote", "Moto-taxi", "Renta de bicicletas", "Renta de ATVs", "Servicio de chofer"],
-  },
-  {
-    grupo: "⚡ Actividades & Tours",
-    tipo: "actividad",
-    icon: Zap,
-    color: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    subtipos: ["Tour de café", "Tour de aventura", "Rapel / tirolesa", "Kayak / rafting", "Senderismo", "Pesca deportiva", "Avistamiento de aves", "Tour en bicicleta", "Parapente", "Buceo / snorkel", "Tour nocturno", "Taller artesanal"],
-  },
-  {
-    grupo: "🏪 Comercio Turístico",
-    tipo: "comercio",
-    icon: ShoppingBag,
-    color: "bg-pink-50 border-pink-200 text-pink-700",
-    subtipos: ["Artesanías", "Joyería regional", "Textiles", "Galería de arte", "Tienda de productos locales", "Mercado de productores", "Bodega de café / cacao", "Tienda de mezcal / licores"],
-  },
-  {
-    grupo: "🎭 Cultura & Entretenimiento",
-    tipo: "cultura",
-    icon: Music,
-    color: "bg-purple-50 border-purple-200 text-purple-700",
-    subtipos: ["Museo", "Galería", "Teatro", "Centro cultural", "Zona arqueológica", "Hacienda histórica", "Festival / evento recurrente", "Espectáculo de danza", "Mariachi / son jarocho"],
-  },
-  {
-    grupo: "🏖️ Playa & Agua",
-    tipo: "playa",
-    icon: Waves,
-    color: "bg-cyan-50 border-cyan-200 text-cyan-700",
-    subtipos: ["Club de playa", "Renta de equipo acuático", "Buceo", "Surf / kitesurf", "Pesca deportiva costera", "Paseo en lancha", "Restaurante de playa"],
-  },
-  {
-    grupo: "🌿 Ecoturismo & Naturaleza",
-    tipo: "ecoturismo",
-    icon: TreePine,
-    color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    subtipos: ["Reserva natural privada", "Jardín botánico", "Criadero de fauna", "Granja agroturística", "Rancho ecoturístico", "Centro de educación ambiental", "Observatorio astronómico"],
-  },
-  {
-    grupo: "💆 Bienestar & Salud",
-    tipo: "bienestar",
-    icon: Stethoscope,
-    color: "bg-rose-50 border-rose-200 text-rose-700",
-    subtipos: ["Spa & masajes", "Temazcal", "Retiro de yoga", "Meditación", "Medicina tradicional", "Termas / aguas termales", "Centro holístico"],
-  },
-  {
-    grupo: "📚 Educación & Talleres",
-    tipo: "educacion",
-    icon: GraduationCap,
-    color: "bg-indigo-50 border-indigo-200 text-indigo-700",
-    subtipos: ["Taller de cocina", "Taller de cerámica", "Clases de salsa / danza", "Taller de fotografía", "Curso de idiomas", "Escuela de surf", "Taller de chocolate / café"],
-  },
-  {
-    grupo: "🔧 Servicios de Apoyo",
-    tipo: "servicio",
-    icon: Wrench,
-    color: "bg-gray-50 border-gray-200 text-gray-700",
-    subtipos: ["Agencia de viajes local", "Casa de cambio", "Renta de equipo outdoor", "Lavandería turística", "Farmacia", "Clínica / urgencias", "Internet / coworking"],
-  },
+  { grupo: "🏨 Hospedaje", tipo: "hospedaje", icon: Hotel, color: "bg-blue-50 border-blue-200 text-blue-700", subtipos: ["Hotel","Hostal","Cabaña","B&B","Casa de huéspedes","Glamping","Hacienda","Villa","Departamento turístico","Camping"] },
+  { grupo: "🍽️ Gastronomía", tipo: "gastronomia", icon: UtensilsCrossed, color: "bg-orange-50 border-orange-200 text-orange-700", subtipos: ["Restaurante","Marisquería","Taquería","Cafetería","Panadería","Heladería","Bar & Grill","Fonda","Lonchería","Food truck","Mezcalería","Coctelería"] },
+  { grupo: "🧭 Guías Turísticos", tipo: "guia", icon: Compass, color: "bg-green-50 border-green-200 text-green-700", subtipos: ["Guía de naturaleza","Guía histórico-cultural","Guía de aventura","Guía gastronómico","Guía bilingüe","Guía certificado SECTUR"] },
+  { grupo: "🚗 Transporte", tipo: "transporte", icon: Car, color: "bg-slate-50 border-slate-200 text-slate-700", subtipos: ["Taxi turístico","Renta de autos","Transfer aeropuerto","Autobús turístico","Lancha / bote","Renta de bicicletas","Renta de ATVs"] },
+  { grupo: "⚡ Actividades & Tours", tipo: "actividad", icon: Zap, color: "bg-yellow-50 border-yellow-200 text-yellow-700", subtipos: ["Tour de café","Tour de aventura","Rapel / tirolesa","Kayak / rafting","Senderismo","Pesca deportiva","Avistamiento de aves","Parapente","Buceo / snorkel"] },
+  { grupo: "🏪 Comercio Turístico", tipo: "comercio", icon: ShoppingBag, color: "bg-pink-50 border-pink-200 text-pink-700", subtipos: ["Artesanías","Joyería regional","Textiles","Galería de arte","Tienda de productos locales","Bodega de café / cacao"] },
+  { grupo: "🎭 Cultura & Entretenimiento", tipo: "cultura", icon: Music, color: "bg-purple-50 border-purple-200 text-purple-700", subtipos: ["Museo","Galería","Teatro","Centro cultural","Zona arqueológica","Festival / evento recurrente"] },
+  { grupo: "🌿 Ecoturismo", tipo: "ecoturismo", icon: TreePine, color: "bg-emerald-50 border-emerald-200 text-emerald-700", subtipos: ["Reserva natural","Jardín botánico","Granja agroturística","Rancho ecoturístico","Observatorio astronómico"] },
+  { grupo: "💆 Bienestar & Salud", tipo: "bienestar", icon: Stethoscope, color: "bg-rose-50 border-rose-200 text-rose-700", subtipos: ["Spa & masajes","Temazcal","Retiro de yoga","Termas / aguas termales","Centro holístico"] },
+  { grupo: "🔧 Servicios de Apoyo", tipo: "servicio", icon: Wrench, color: "bg-gray-50 border-gray-200 text-gray-700", subtipos: ["Agencia de viajes local","Casa de cambio","Renta de equipo outdoor","Lavandería turística","Farmacia","Clínica / urgencias"] },
 ];
 
+const CATEGORIAS_EVENTO = ["Festival","Cultural","Deportivo","Concierto","Feria","Gastronómico","Religioso","Artesanal","Otro"];
+const CATEGORIAS_ATRACCION = ["Natural","Cultural","Histórico","Familiar","Aventura","Gastronomía","Religioso","Arqueológico"];
+const CATEGORIAS_NOTICIA = ["Aviso","Seguridad","Cultura","Obras","Turismo","Salud","Otro"];
+const TIPOS_SERVICIO_MUNICIPAL = ["Hospital","Clínica","Policía","Protección Civil","Bomberos","Cruz Roja","Farmacia","Otro"];
+
+// ─── Componentes base ─────────────────────────────────────────────────────────
+const Card = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl border border-gray-100 shadow-sm p-5 ${className}`}>{children}</div>
+);
+
+const SectionHeader = ({ title, action }) => (
+  <div className="flex items-center justify-between mb-5">
+    <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+    {action}
+  </div>
+);
+
+const EmptyState = ({ icon: Icon, title, sub, onAdd, label }) => (
+  <div className="text-center py-16 text-gray-400">
+    <Icon className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+    <p className="font-medium text-gray-500">{title}</p>
+    <p className="text-sm mt-1">{sub}</p>
+    {onAdd && <Button onClick={onAdd} className="mt-4 bg-[#1B5E20] hover:bg-[#145218]" size="sm"><Plus className="w-4 h-4 mr-2" />{label}</Button>}
+  </div>
+);
+
+// ─── Upload helper ────────────────────────────────────────────────────────────
+const uploadFile = async (file) => {
+  const fd = new FormData(); fd.append("file", file);
+  const { data } = await axios.post(`${API}/public/upload`, fd);
+  return data.url;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB: EVENTOS
+// ══════════════════════════════════════════════════════════════════════════════
+const EventosTab = ({ municipioId, municipioNombre }) => {
+  const [eventos, setEventos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const emptyForm = { nombre: "", descripcion: "", fecha_inicio: "", fecha_fin: "", lugar: "", tipo: "Festival", precio_min: 0, precio_max: 0, es_gratis: true, foto_url: "", publicado: false };
+  const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => { fetchEventos(); }, [municipioId]);
+
+  const fetchEventos = async () => {
+    try {
+      const { data } = await axios.get(`${API}/eventos`, { params: { municipio_id: municipioId, limit: 100 } });
+      setEventos(data.eventos || []);
+    } finally { setLoading(false); }
+  };
+
+  const handleUploadFoto = async (file) => {
+    setUploading(true);
+    try { setForm(f => ({ ...f, foto_url: "" })); const url = await uploadFile(file); setForm(f => ({ ...f, foto_url: url })); }
+    catch { toast.error("Error subiendo imagen"); }
+    finally { setUploading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!form.nombre || !form.fecha_inicio) return toast.error("Nombre y fecha requeridos");
+    setSaving(true);
+    try {
+      const payload = { ...form, municipio_id: municipioId, precio_min: form.es_gratis ? 0 : parseFloat(form.precio_min || 0), precio_max: form.es_gratis ? 0 : parseFloat(form.precio_max || 0) };
+      if (editId) await axios.put(`${API}/eventos/${editId}`, payload);
+      else await axios.post(`${API}/eventos`, payload);
+      toast.success(editId ? "Evento actualizado" : "Evento creado");
+      setShowDialog(false); setForm(emptyForm); setEditId(null); fetchEventos();
+    } catch { toast.error("Error guardando"); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("¿Eliminar este evento?")) return;
+    await axios.delete(`${API}/eventos/${id}`);
+    setEventos(prev => prev.filter(e => e.id !== id));
+    toast.success("Evento eliminado");
+  };
+
+  const handlePublish = async (id, publicado) => {
+    await axios.put(`${API}/eventos/${id}`, { publicado });
+    setEventos(prev => prev.map(e => e.id === id ? { ...e, publicado } : e));
+    toast.success(publicado ? "Evento publicado" : "Evento despublicado");
+  };
+
+  const hoy = new Date().toISOString().split("T")[0];
+  const eventosHoy = eventos.filter(e => e.fecha_inicio === hoy || (e.fecha_inicio <= hoy && e.fecha_fin >= hoy));
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader
+        title={`Eventos de ${municipioNombre}`}
+        action={<Button onClick={() => { setForm(emptyForm); setEditId(null); setShowDialog(true); }} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Nuevo evento</Button>}
+      />
+
+      {eventosHoy.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <p className="font-semibold text-green-800 mb-2">🎉 Eventos hoy ({eventosHoy.length})</p>
+          {eventosHoy.map(e => <p key={e.id} className="text-sm text-green-700">• {e.nombre}</p>)}
+        </div>
+      )}
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+        : eventos.length === 0 ? <EmptyState icon={Calendar} title="No hay eventos" sub="Crea eventos para promocionar tu municipio" onAdd={() => setShowDialog(true)} label="Crear primer evento" />
+        : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {eventos.map(e => (
+              <div key={e.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                {e.foto_url ? <img src={e.foto_url} alt={e.nombre} className="w-full h-40 object-cover" />
+                  : <div className="w-full h-40 bg-gradient-to-br from-[#1B5E20]/10 to-[#1B5E20]/5 flex items-center justify-center text-5xl">🎉</div>}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">{e.nombre}</h3>
+                      <Badge className={e.publicado ? "bg-green-100 text-green-800 text-xs mt-1" : "bg-gray-100 text-gray-600 text-xs mt-1"}>{e.publicado ? "Publicado" : "Borrador"}</Badge>
+                    </div>
+                    <Badge className="bg-blue-100 text-blue-800 text-xs flex-shrink-0">{e.tipo}</Badge>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-1">📅 {e.fecha_inicio}{e.fecha_fin && e.fecha_fin !== e.fecha_inicio ? ` → ${e.fecha_fin}` : ""}</p>
+                  {e.lugar && <p className="text-xs text-gray-500 mb-2">📍 {e.lugar}</p>}
+                  <p className="text-xs font-medium text-[#1B5E20]">{e.es_gratis ? "🆓 Gratis" : `$${e.precio_min}${e.precio_max > e.precio_min ? ` – $${e.precio_max}` : ""}`}</p>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => handlePublish(e.id, !e.publicado)}>
+                      {e.publicado ? "Despublicar" : "Publicar"}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setForm({ ...e, es_gratis: e.es_gratis ?? e.precio_min === 0 }); setEditId(e.id); setShowDialog(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(e.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editId ? "Editar evento" : "Nuevo evento"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div><Label>Nombre del evento *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Festival de la Cerveza, Feria de Artesanías..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Categoría</Label>
+                <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{CATEGORIAS_EVENTO.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Lugar / Dirección</Label><Input value={form.lugar} onChange={e => setForm({ ...form, lugar: e.target.value })} placeholder="Plaza principal..." /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Fecha inicio *</Label><Input type="date" value={form.fecha_inicio} onChange={e => setForm({ ...form, fecha_inicio: e.target.value })} /></div>
+              <div><Label>Fecha fin</Label><Input type="date" value={form.fecha_fin} onChange={e => setForm({ ...form, fecha_fin: e.target.value })} /></div>
+            </div>
+            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={3} placeholder="Describe el evento..." /></div>
+            <div>
+              <Label>Precio</Label>
+              <div className="flex items-center gap-3 mt-1">
+                <button type="button" onClick={() => setForm({ ...form, es_gratis: !form.es_gratis })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${form.es_gratis ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                  {form.es_gratis ? "✓ Gratis" : "Gratis"}
+                </button>
+                {!form.es_gratis && (
+                  <div className="flex gap-2 flex-1">
+                    <Input type="number" value={form.precio_min} onChange={e => setForm({ ...form, precio_min: e.target.value })} placeholder="Precio mín" />
+                    <Input type="number" value={form.precio_max} onChange={e => setForm({ ...form, precio_max: e.target.value })} placeholder="Precio máx" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label>Imagen / Banner</Label>
+              <div className="flex items-center gap-3 mt-1">
+                {form.foto_url && <img src={form.foto_url} className="w-16 h-16 rounded-lg object-cover" alt="" />}
+                <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? "Subiendo..." : "Subir imagen"}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadFoto(e.target.files[0])} disabled={uploading} />
+                </label>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setForm({ ...form, publicado: !form.publicado })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${form.publicado ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                {form.publicado ? "✓ Publicar al guardar" : "Guardar como borrador"}
+              </button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}{editId ? "Actualizar" : "Crear evento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB: ATRACCIONES
+// ══════════════════════════════════════════════════════════════════════════════
+const AtraccionesTab = ({ municipioId, municipioNombre }) => {
+  const [atracciones, setAtracciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const empty = { nombre: "", descripcion: "", tipo: "Natural", horarios: "", costo: "Gratis", costo_min: 0, costo_max: 0, direccion: "", lat: "", lng: "", foto_portada: "", recomendaciones: "", destacado: false };
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => { fetchAtracciones(); }, [municipioId]);
+
+  const fetchAtracciones = async () => {
+    try {
+      const { data } = await axios.get(`${API}/lugares`, { params: { municipio_id: municipioId } });
+      setAtracciones(data.lugares || []);
+    } finally { setLoading(false); }
+  };
+
+  const handleUpload = async (file) => {
+    setUploading(true);
+    try { const url = await uploadFile(file); setForm(f => ({ ...f, foto_portada: url })); }
+    catch { toast.error("Error subiendo imagen"); }
+    finally { setUploading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!form.nombre) return toast.error("Nombre requerido");
+    setSaving(true);
+    try {
+      const payload = { ...form, municipio_id: municipioId, municipio: municipioNombre, region: "centro", slug: form.nombre.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), costo_min: parseFloat(form.costo_min || 0), costo_max: parseFloat(form.costo_max || 0), lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null, fotos: form.foto_portada ? [form.foto_portada] : [] };
+      if (editId) await axios.put(`${API}/lugares/${editId}`, payload);
+      else await axios.post(`${API}/lugares`, payload);
+      toast.success(editId ? "Atracción actualizada" : "Atracción creada");
+      setShowDialog(false); setForm(empty); setEditId(null); fetchAtracciones();
+    } catch { toast.error("Error guardando"); }
+    finally { setSaving(false); }
+  };
+
+  const ICONOS = { Natural: "🌿", Cultural: "🎭", Histórico: "🏛️", Familiar: "👨‍👩‍👧", Aventura: "🧗", Gastronomía: "🍽️", Religioso: "⛪", Arqueológico: "🏺" };
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader
+        title="Atracciones Turísticas"
+        action={<Button onClick={() => { setForm(empty); setEditId(null); setShowDialog(true); }} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Nueva atracción</Button>}
+      />
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+        : atracciones.length === 0 ? <EmptyState icon={MapPin} title="No hay atracciones registradas" sub="Agrega los lugares más importantes de tu municipio" onAdd={() => setShowDialog(true)} label="Agregar primera atracción" />
+        : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {atracciones.map(a => (
+              <div key={a.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                {a.foto_portada ? <img src={a.foto_portada} alt={a.nombre} className="w-full h-36 object-cover" />
+                  : <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-5xl">{ICONOS[a.tipo] || "📍"}</div>}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-gray-900 text-sm">{a.nombre}</h3>
+                    <Badge className="bg-emerald-100 text-emerald-800 text-xs flex-shrink-0">{a.tipo}</Badge>
+                  </div>
+                  {a.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{a.descripcion}</p>}
+                  <div className="text-xs text-gray-400 space-y-0.5">
+                    {a.horarios && <p>⏰ {a.horarios}</p>}
+                    <p>💰 {a.costo || "Gratis"}</p>
+                    {a.calificacion > 0 && <p>⭐ {a.calificacion}</p>}
+                  </div>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                    <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => { setForm({ ...a, lat: a.lat || "", lng: a.lng || "" }); setEditId(a.id); setShowDialog(true); }}>✏️ Editar</Button>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={async () => { if (!confirm("¿Eliminar?")) return; await axios.delete(`${API}/lugares/${a.id}`); fetchAtracciones(); }}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editId ? "Editar atracción" : "Nueva atracción turística"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div><Label>Nombre *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Cascada El Salto, Zona arqueológica..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Categoría</Label>
+                <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{CATEGORIAS_ATRACCION.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Horario</Label><Input value={form.horarios} onChange={e => setForm({ ...form, horarios: e.target.value })} placeholder="8:00–18:00" /></div>
+            </div>
+            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={3} /></div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1"><Label>Costo (texto)</Label><Input value={form.costo} onChange={e => setForm({ ...form, costo: e.target.value })} placeholder="Gratis / $50 MXN" /></div>
+              <div><Label>Precio mín</Label><Input type="number" value={form.costo_min} onChange={e => setForm({ ...form, costo_min: e.target.value })} /></div>
+              <div><Label>Precio máx</Label><Input type="number" value={form.costo_max} onChange={e => setForm({ ...form, costo_max: e.target.value })} /></div>
+            </div>
+            <div><Label>Dirección / Referencias</Label><Input value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} placeholder="19.18" /></div>
+              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} placeholder="-96.14" /></div>
+            </div>
+            <div><Label>Recomendaciones</Label><Textarea value={form.recomendaciones} onChange={e => setForm({ ...form, recomendaciones: e.target.value })} rows={2} placeholder="Llevar repelente, mejor época para visitar..." /></div>
+            <div>
+              <Label>Foto principal</Label>
+              <div className="flex items-center gap-3 mt-1">
+                {form.foto_portada && <img src={form.foto_portada} className="w-16 h-16 rounded-lg object-cover" alt="" />}
+                <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? "Subiendo..." : "Subir foto"}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => handleUpload(e.target.files[0])} disabled={uploading} />
+                </label>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setForm({ ...form, destacado: !form.destacado })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${form.destacado ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                {form.destacado ? "⭐ Destacado" : "Marcar como destacado"}
+              </button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}{editId ? "Actualizar" : "Crear atracción"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB: NOTICIAS
+// ══════════════════════════════════════════════════════════════════════════════
+const NoticiasTab = ({ municipioId, municipioNombre }) => {
+  const [noticias, setNoticias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const empty = { titulo: "", contenido: "", imagen_url: "", categoria: "Aviso", publicado: false };
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => { fetchNoticias(); }, [municipioId]);
+
+  const fetchNoticias = async () => {
+    try {
+      const { data } = await axios.get(`${API}/noticias`, { params: { municipio_id: municipioId } });
+      setNoticias(data.noticias || data || []);
+    } catch { setNoticias([]); }
+    finally { setLoading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!form.titulo || !form.contenido) return toast.error("Título y contenido requeridos");
+    setSaving(true);
+    try {
+      const payload = { ...form, municipio_id: municipioId };
+      if (editId) await axios.put(`${API}/noticias/${editId}`, payload);
+      else await axios.post(`${API}/noticias`, payload);
+      toast.success(editId ? "Noticia actualizada" : "Noticia publicada");
+      setShowDialog(false); setForm(empty); setEditId(null); fetchNoticias();
+    } catch { toast.error("Error guardando"); }
+    finally { setSaving(false); }
+  };
+
+  const COLORES = { Aviso: "bg-blue-100 text-blue-800", Seguridad: "bg-red-100 text-red-800", Cultura: "bg-purple-100 text-purple-800", Obras: "bg-orange-100 text-orange-800", Turismo: "bg-green-100 text-green-800", Salud: "bg-pink-100 text-pink-800", Otro: "bg-gray-100 text-gray-800" };
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader
+        title="Noticias y Avisos"
+        action={<Button onClick={() => { setForm(empty); setEditId(null); setShowDialog(true); }} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Nueva noticia</Button>}
+      />
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+        : noticias.length === 0 ? <EmptyState icon={Newspaper} title="Sin noticias" sub="Publica avisos y noticias de tu municipio" onAdd={() => setShowDialog(true)} label="Publicar primera noticia" />
+        : (
+          <div className="space-y-3">
+            {noticias.map(n => (
+              <Card key={n.id} className="!p-4">
+                <div className="flex items-start gap-4">
+                  {n.imagen_url && <img src={n.imagen_url} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" alt="" />}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className={`text-xs ${COLORES[n.categoria] || COLORES.Otro}`}>{n.categoria}</Badge>
+                      {!n.publicado && <Badge className="text-xs bg-gray-100 text-gray-600">Borrador</Badge>}
+                    </div>
+                    <h3 className="font-semibold text-gray-900 text-sm">{n.titulo}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{n.contenido}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{new Date(n.fecha || n.created_at).toLocaleDateString("es-MX")}</p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setForm(n); setEditId(n.id); setShowDialog(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={async () => { if (!confirm("¿Eliminar?")) return; await axios.delete(`${API}/noticias/${n.id}`); fetchNoticias(); }}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editId ? "Editar noticia" : "Nueva noticia"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div><Label>Título *</Label><Input value={form.titulo} onChange={e => setForm({ ...form, titulo: e.target.value })} placeholder="Aviso importante para visitantes..." /></div>
+            <div><Label>Categoría</Label>
+              <Select value={form.categoria} onValueChange={v => setForm({ ...form, categoria: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CATEGORIAS_NOTICIA.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Contenido *</Label><Textarea value={form.contenido} onChange={e => setForm({ ...form, contenido: e.target.value })} rows={5} placeholder="Escribe el contenido de la noticia..." /></div>
+            <div>
+              <Label>Imagen</Label>
+              <div className="flex items-center gap-3 mt-1">
+                {form.imagen_url && <img src={form.imagen_url} className="w-16 h-16 rounded-lg object-cover" alt="" />}
+                <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? "Subiendo..." : "Subir imagen"}
+                  <input type="file" accept="image/*" className="hidden" onChange={async e => { setUploading(true); try { const url = await uploadFile(e.target.files[0]); setForm(f => ({ ...f, imagen_url: url })); } finally { setUploading(false); } }} disabled={uploading} />
+                </label>
+              </div>
+            </div>
+            <button type="button" onClick={() => setForm({ ...form, publicado: !form.publicado })}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${form.publicado ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+              {form.publicado ? "✓ Publicar al guardar" : "Guardar como borrador"}
+            </button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}{editId ? "Actualizar" : "Publicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB: SERVICIOS MUNICIPALES
+// ══════════════════════════════════════════════════════════════════════════════
+const ServiciosMunicipalesTab = ({ municipioId }) => {
+  const [servicios, setServicios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const empty = { nombre: "", tipo: "Hospital", telefono: "", telefono_emergencia: "", direccion: "", lat: "", lng: "", descripcion: "", activo: true };
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => { fetchServicios(); }, [municipioId]);
+
+  const fetchServicios = async () => {
+    try {
+      const { data } = await axios.get(`${API}/servicios-municipales`, { params: { municipio_id: municipioId } });
+      setServicios(data.servicios || data || []);
+    } catch { setServicios([]); }
+    finally { setLoading(false); }
+  };
+
+  const handleSave = async () => {
+    if (!form.nombre || !form.tipo) return toast.error("Nombre y tipo requeridos");
+    setSaving(true);
+    try {
+      const payload = { ...form, municipio_id: municipioId, lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null };
+      if (editId) await axios.put(`${API}/servicios-municipales/${editId}`, payload);
+      else await axios.post(`${API}/servicios-municipales`, payload);
+      toast.success("Guardado");
+      setShowDialog(false); setForm(empty); setEditId(null); fetchServicios();
+    } catch { toast.error("Error guardando"); }
+    finally { setSaving(false); }
+  };
+
+  const ICONOS_SERVICIO = { Hospital: "🏥", Clínica: "🏨", Policía: "👮", "Protección Civil": "🚨", Bomberos: "🚒", "Cruz Roja": "🔴", Farmacia: "💊", Otro: "🏢" };
+
+  return (
+    <div className="space-y-5">
+      <SectionHeader
+        title="Servicios Municipales de Emergencia"
+        action={<Button onClick={() => { setForm(empty); setEditId(null); setShowDialog(true); }} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Agregar servicio</Button>}
+      />
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+        : servicios.length === 0 ? <EmptyState icon={Shield} title="Sin servicios registrados" sub="Agrega hospitales, policía, protección civil y más" onAdd={() => setShowDialog(true)} label="Agregar primer servicio" />
+        : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {servicios.map(s => (
+              <Card key={s.id} className="!p-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">{ICONOS_SERVICIO[s.tipo] || "🏢"}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm">{s.nombre}</h3>
+                    <Badge className="bg-blue-100 text-blue-800 text-xs mt-1">{s.tipo}</Badge>
+                    {s.telefono && <p className="text-xs text-gray-600 mt-2">📞 {s.telefono}</p>}
+                    {s.telefono_emergencia && <p className="text-xs text-red-600 font-semibold">🚨 {s.telefono_emergencia}</p>}
+                    {s.direccion && <p className="text-xs text-gray-500 mt-1">📍 {s.direccion}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => { setForm({ ...s, lat: s.lat || "", lng: s.lng || "" }); setEditId(s.id); setShowDialog(true); }}>✏️ Editar</Button>
+                  <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={async () => { if (!confirm("¿Eliminar?")) return; await axios.delete(`${API}/servicios-municipales/${s.id}`); fetchServicios(); }}><Trash2 className="w-3.5 h-3.5" /></Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader><DialogTitle>{editId ? "Editar servicio" : "Nuevo servicio municipal"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Nombre *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Hospital General de Orizaba" /></div>
+              <div><Label>Tipo *</Label>
+                <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{TIPOS_SERVICIO_MUNICIPAL.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Teléfono general</Label><Input value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} placeholder="272 000 0000" /></div>
+              <div><Label>Teléfono emergencias 🚨</Label><Input value={form.telefono_emergencia} onChange={e => setForm({ ...form, telefono_emergencia: e.target.value })} placeholder="911 / 066" /></div>
+            </div>
+            <div><Label>Dirección</Label><Input value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} /></div>
+              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} /></div>
+            </div>
+            <div><Label>Descripción / Servicios</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={2} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB: PRESTADORES (existing logic preserved)
+// ══════════════════════════════════════════════════════════════════════════════
+const PrestadoresTab = ({ municipioId, municipioNombre }) => {
+  const [prestadores, setPrestadores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [form, setForm] = useState({ nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "", whatsapp: "", horarios: "", direccion: "", foto_url: "", lat: "", lng: "" });
+
+  useEffect(() => { fetchPrestadores(); }, [municipioId]);
+
+  const fetchPrestadores = async () => {
+    try {
+      const res = await axios.get(`${API}/prestadores`, { params: { municipio_id: municipioId, limit: 100 } });
+      setPrestadores(res.data.prestadores || []);
+    } finally { setLoading(false); }
+  };
+
+  const handleVerificar = async (id, verificar) => {
+    try {
+      await axios.post(`${API}/prestadores/${id}/${verificar ? "verificar" : "desverificar"}`);
+      setPrestadores(prev => prev.map(p => p.id === id ? { ...p, verificado: verificar } : p));
+      toast.success(verificar ? "✅ Prestador verificado" : "Prestador desverificado");
+    } catch { toast.error("Error al actualizar"); }
+  };
+
+  const handleDestacado = async (id, destacado) => {
+    try {
+      await axios.put(`${API}/prestadores/${id}`, { destacado });
+      setPrestadores(prev => prev.map(p => p.id === id ? { ...p, destacado } : p));
+      toast.success(destacado ? "🔥 Marcado como destacado" : "Destacado removido");
+    } catch { toast.error("Error al actualizar"); }
+  };
+
+  const handleSubmit = async () => {
+    if (!form.nombre || !form.tipo) { toast.error("Nombre y tipo son obligatorios"); return; }
+    setSaving(true);
+    try {
+      await axios.post(`${API}/prestadores`, { ...form, municipio_id: municipioId, lat: form.lat ? parseFloat(form.lat) : undefined, lng: form.lng ? parseFloat(form.lng) : undefined });
+      toast.success("Prestador agregado");
+      setShowDialog(false);
+      setForm({ nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "", whatsapp: "", horarios: "", direccion: "", foto_url: "", lat: "", lng: "" });
+      fetchPrestadores();
+    } catch (e) { toast.error(e.response?.data?.detail || "Error al guardar"); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("¿Eliminar este prestador?")) return;
+    await axios.delete(`${API}/prestadores/${id}`);
+    setPrestadores(prev => prev.filter(p => p.id !== id));
+    toast.success("Prestador eliminado");
+  };
+
+  const tipoActual = TIPOS_PRESTADOR.find(t => t.tipo === form.tipo);
+  const pendientes = prestadores.filter(p => !p.verificado);
+  const verificados = prestadores.filter(p => p.verificado);
+  const filtrados = filtroTipo === "todos" ? verificados : verificados.filter(p => p.tipo === filtroTipo);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Prestadores de Servicios</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{municipioNombre} · <span className="text-green-600 font-medium">{verificados.length} verificados</span>{pendientes.length > 0 && <span className="text-amber-600 font-medium"> · {pendientes.length} pendientes</span>}</p>
+        </div>
+        <Button onClick={() => setShowDialog(true)} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Agregar prestador</Button>
+      </div>
+
+      {pendientes.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+            <h3 className="font-semibold text-amber-800">Pendientes de verificación ({pendientes.length})</h3>
+          </div>
+          <div className="space-y-3">
+            {pendientes.map(p => {
+              const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
+              return (
+                <div key={p.id} className="bg-white rounded-lg p-4 flex items-center justify-between gap-4 border border-amber-100">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{cat?.grupo.split(" ")[0] || "🏢"}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{p.nombre}</p>
+                      <p className="text-xs text-gray-500">{p.subtipo || p.tipo} {p.telefono && `· ${p.telefono}`}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" onClick={() => handleVerificar(p.id, true)}><Check className="w-3.5 h-3.5 mr-1" />Verificar</Button>
+                    <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-8 text-xs" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5 mr-1" />Rechazar</Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+        <button onClick={() => setFiltroTipo("todos")} className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === "todos" ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}>
+          <span className="text-xl">🗂️</span><p className="text-xs font-semibold text-gray-700 mt-1">Todos</p><p className="text-lg font-bold text-gray-900">{prestadores.length}</p>
+        </button>
+        {TIPOS_PRESTADOR.map(cat => (
+          <button key={cat.tipo} onClick={() => setFiltroTipo(cat.tipo)} className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}>
+            <span className="text-xl">{cat.grupo.split(" ")[0]}</span>
+            <p className="text-xs font-semibold text-gray-700 mt-1 truncate">{cat.grupo.slice(3)}</p>
+            <p className="text-lg font-bold text-gray-900">{verificados.filter(p => p.tipo === cat.tipo).length}</p>
+          </button>
+        ))}
+      </div>
+
+      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+        : filtrados.length === 0 ? <EmptyState icon={Users} title="No hay prestadores en esta categoría" sub='Haz clic en "Agregar prestador" para comenzar' onAdd={() => setShowDialog(true)} label="Agregar primero" />
+        : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtrados.map(p => {
+              const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
+              return (
+                <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  {p.foto_url ? <img src={p.foto_url} alt={p.nombre} className="w-full h-36 object-cover" />
+                    : <div className={`w-full h-36 flex items-center justify-center text-5xl ${cat?.color || "bg-gray-50"}`}>{cat?.grupo.split(" ")[0] || "🏢"}</div>}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-sm">{p.nombre}</h3>
+                        <span className="text-xs text-gray-500">{p.subtipo || p.tipo}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {p.verificado && <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-green-600" /></span>}
+                        {p.destacado && <span className="text-sm">🔥</span>}
+                      </div>
+                    </div>
+                    {p.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-3">{p.descripcion}</p>}
+                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 flex-wrap">
+                      <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => handleVerificar(p.id, !p.verificado)}>
+                        {p.verificado ? "✅ Verificado" : "Verificar"}
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => handleDestacado(p.id, !p.destacado)} title="Destacar">
+                        {p.destacado ? "🔥" : "⭐"}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Agregar Prestador de Servicio</DialogTitle></DialogHeader>
+          <div className="space-y-5 py-2">
+            <div>
+              <Label className="text-sm font-semibold mb-3 block">Categoría *</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {TIPOS_PRESTADOR.map(cat => (
+                  <button key={cat.tipo} type="button" onClick={() => setForm({ ...form, tipo: cat.tipo, subtipo: "" })}
+                    className={`p-3 rounded-xl border-2 text-left transition-all ${form.tipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`}>
+                    <span className="text-2xl">{cat.grupo.split(" ")[0]}</span>
+                    <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{cat.grupo.slice(3)}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {form.tipo && (
+              <div><Label>Tipo específico *</Label>
+                <Select value={form.subtipo} onValueChange={v => setForm({ ...form, subtipo: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecciona el tipo exacto..." /></SelectTrigger>
+                  <SelectContent>{tipoActual?.subtipos.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            )}
+            <div><Label>Nombre *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Hotel Paraíso Verde, Marisquería El Puerto..." /></div>
+            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={3} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Teléfono</Label><Input value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} /></div>
+              <div><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} /></div>
+            </div>
+            <div><Label>Horarios</Label><Input value={form.horarios} onChange={e => setForm({ ...form, horarios: e.target.value })} placeholder="Lun–Dom 9:00–20:00" /></div>
+            <div><Label>Dirección</Label><Textarea value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} rows={2} /></div>
+            <div><Label>URL de foto</Label><Input value={form.foto_url} onChange={e => setForm({ ...form, foto_url: e.target.value })} placeholder="https://..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} /></div>
+              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}Agregar prestador
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD PRINCIPAL
+// ══════════════════════════════════════════════════════════════════════════════
 const EncargadoDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -122,11 +807,8 @@ const EncargadoDashboard = () => {
         const response = await axios.get(`${API}/municipios`);
         const found = response.data.municipios?.find(m => m.id === user.municipio_id);
         if (found) setMunicipio(found);
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
     };
     fetchMunicipio();
   }, [user?.municipio_id]);
@@ -136,30 +818,19 @@ const EncargadoDashboard = () => {
     setSaving(true);
     try {
       await axios.put(`${API}/municipios/${municipio.slug}`, {
-        descripcion: municipio.descripcion,
-        historia: municipio.historia,
-        que_hacer: municipio.que_hacer,
-        como_llegar: municipio.como_llegar,
-        clima: municipio.clima,
-        altitud: municipio.altitud,
-        tags: municipio.tags,
-        estado: publish ? "publicado" : "borrador",
+        descripcion: municipio.descripcion, historia: municipio.historia,
+        que_hacer: municipio.que_hacer, como_llegar: municipio.como_llegar,
+        clima: municipio.clima, altitud: municipio.altitud,
+        tags: municipio.tags, estado: publish ? "publicado" : "borrador",
       });
       toast.success(publish ? "Municipio publicado" : "Borrador guardado");
-    } catch (error) {
-      toast.error("Error al guardar");
-    } finally {
-      setSaving(false);
-    }
+    } catch { toast.error("Error al guardar"); }
+    finally { setSaving(false); }
   };
 
   const handleLogout = async () => { await logout(); navigate("/"); };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" />
-    </div>
-  );
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>;
 
   if (!municipio) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-8" data-testid="encargado-no-municipio">
@@ -170,7 +841,7 @@ const EncargadoDashboard = () => {
     </div>
   );
 
-  const allTags = ["Pueblo Mágico", "Playa", "Sierra", "Ciudad", "Gastronomía", "Naturaleza", "Cultura", "Aventura"];
+  const allTags = ["Pueblo Mágico","Playa","Sierra","Ciudad","Gastronomía","Naturaleza","Cultura","Aventura"];
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="encargado-dashboard">
@@ -178,9 +849,7 @@ const EncargadoDashboard = () => {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#1B5E20] rounded-lg flex items-center justify-center">
-                <MapPin className="w-4 h-4 text-white" />
-              </div>
+              <div className="w-8 h-8 bg-[#1B5E20] rounded-lg flex items-center justify-center"><MapPin className="w-4 h-4 text-white" /></div>
             </Link>
             <div>
               <h1 className="font-semibold text-gray-900">{municipio.nombre}</h1>
@@ -188,13 +857,8 @@ const EncargadoDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link to={`/municipio/${municipio.slug}`} target="_blank">
-              <Button variant="outline" size="sm"><Eye className="w-4 h-4 mr-2" />Ver público</Button>
-            </Link>
-            <Button onClick={() => handleSave(false)} disabled={saving} variant="outline" size="sm">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Guardar borrador
-            </Button>
+            <Link to={`/municipio/${municipio.slug}`} target="_blank"><Button variant="outline" size="sm"><Eye className="w-4 h-4 mr-2" />Ver público</Button></Link>
+            <Button onClick={() => handleSave(false)} disabled={saving} variant="outline" size="sm">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}Borrador</Button>
             <Button onClick={() => handleSave(true)} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]" size="sm">Publicar</Button>
             <Button onClick={handleLogout} variant="ghost" size="sm"><LogOut className="w-4 h-4" /></Button>
           </div>
@@ -203,65 +867,61 @@ const EncargadoDashboard = () => {
 
       <main className="max-w-7xl mx-auto p-6">
         <Tabs defaultValue="info" className="space-y-6">
-          <TabsList className="bg-white p-1 rounded-xl shadow-sm">
+          <TabsList className="bg-white p-1 rounded-xl shadow-sm flex-wrap h-auto gap-1">
             <TabsTrigger value="info" className="rounded-lg"><LayoutDashboard className="w-4 h-4 mr-2" />Información</TabsTrigger>
             <TabsTrigger value="galeria" className="rounded-lg"><Camera className="w-4 h-4 mr-2" />Galería</TabsTrigger>
             <TabsTrigger value="eventos" className="rounded-lg"><Calendar className="w-4 h-4 mr-2" />Eventos</TabsTrigger>
+            <TabsTrigger value="atracciones" className="rounded-lg"><MapPin className="w-4 h-4 mr-2" />Atracciones</TabsTrigger>
             <TabsTrigger value="prestadores" className="rounded-lg"><Users className="w-4 h-4 mr-2" />Prestadores</TabsTrigger>
+            <TabsTrigger value="noticias" className="rounded-lg"><Newspaper className="w-4 h-4 mr-2" />Noticias</TabsTrigger>
+            <TabsTrigger value="servicios" className="rounded-lg"><Shield className="w-4 h-4 mr-2" />Servicios</TabsTrigger>
             <TabsTrigger value="estadisticas" className="rounded-lg"><BarChart3 className="w-4 h-4 mr-2" />Estadísticas</TabsTrigger>
           </TabsList>
 
-          {/* Info Tab */}
+          {/* INFO */}
           <TabsContent value="info" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Descripción Turística</h2>
-                  <Textarea value={municipio.descripcion || ""} onChange={(e) => setMunicipio({ ...municipio, descripcion: e.target.value })} placeholder="Describe los atractivos turísticos de tu municipio..." rows={6} />
+                  <Textarea value={municipio.descripcion || ""} onChange={e => setMunicipio({ ...municipio, descripcion: e.target.value })} rows={6} placeholder="Describe los atractivos turísticos de tu municipio..." />
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Historia</h2>
-                  <Textarea value={municipio.historia || ""} onChange={(e) => setMunicipio({ ...municipio, historia: e.target.value })} placeholder="Breve historia del municipio..." rows={4} />
+                  <Textarea value={municipio.historia || ""} onChange={e => setMunicipio({ ...municipio, historia: e.target.value })} rows={4} placeholder="Breve historia del municipio..." />
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Qué hacer aquí</h2>
                   <div className="space-y-2">
                     {(municipio.que_hacer || []).map((item, index) => (
                       <div key={index} className="flex gap-2">
-                        <Input value={item} onChange={(e) => { const u = [...municipio.que_hacer]; u[index] = e.target.value; setMunicipio({ ...municipio, que_hacer: u }); }} placeholder="Actividad..." />
-                        <Button variant="ghost" size="icon" onClick={() => setMunicipio({ ...municipio, que_hacer: municipio.que_hacer.filter((_, i) => i !== index) })}>
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
+                        <Input value={item} onChange={e => { const u = [...municipio.que_hacer]; u[index] = e.target.value; setMunicipio({ ...municipio, que_hacer: u }); }} placeholder="Actividad..." />
+                        <Button variant="ghost" size="icon" onClick={() => setMunicipio({ ...municipio, que_hacer: municipio.que_hacer.filter((_, i) => i !== index) })}><Trash2 className="w-4 h-4 text-red-500" /></Button>
                       </div>
                     ))}
-                    <Button variant="outline" size="sm" onClick={() => setMunicipio({ ...municipio, que_hacer: [...(municipio.que_hacer || []), ""] })}>
-                      <Plus className="w-4 h-4 mr-2" />Agregar actividad
-                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setMunicipio({ ...municipio, que_hacer: [...(municipio.que_hacer || []), ""] })}><Plus className="w-4 h-4 mr-2" />Agregar actividad</Button>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Cómo llegar</h2>
-                  <Textarea value={municipio.como_llegar || ""} onChange={(e) => setMunicipio({ ...municipio, como_llegar: e.target.value })} placeholder="Indicaciones para llegar..." rows={3} />
+                  <Textarea value={municipio.como_llegar || ""} onChange={e => setMunicipio({ ...municipio, como_llegar: e.target.value })} rows={3} />
                 </div>
               </div>
               <div className="space-y-6">
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Información básica</h2>
                   <div className="space-y-4">
-                    <div><Label>Clima</Label><Input value={municipio.clima || ""} onChange={(e) => setMunicipio({ ...municipio, clima: e.target.value })} placeholder="Ej: Templado húmedo" /></div>
-                    <div><Label>Altitud</Label><Input value={municipio.altitud || ""} onChange={(e) => setMunicipio({ ...municipio, altitud: e.target.value })} placeholder="Ej: 1,427 msnm" /></div>
+                    <div><Label>Clima</Label><Input value={municipio.clima || ""} onChange={e => setMunicipio({ ...municipio, clima: e.target.value })} placeholder="Templado húmedo" /></div>
+                    <div><Label>Altitud</Label><Input value={municipio.altitud || ""} onChange={e => setMunicipio({ ...municipio, altitud: e.target.value })} placeholder="1,427 msnm" /></div>
                     <div><Label>Región</Label><Input value={municipio.region} disabled /></div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Tags</h2>
                   <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
-                      <button key={tag} onClick={() => {
-                        const current = municipio.tags || [];
-                        setMunicipio({ ...municipio, tags: current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag] });
-                      }} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${(municipio.tags || []).includes(tag) ? "bg-[#1B5E20] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
-                        {tag}
+                    {allTags.map(tag => (
+                      <button key={tag} onClick={() => { const c = municipio.tags || []; setMunicipio({ ...municipio, tags: c.includes(tag) ? c.filter(t => t !== tag) : [...c, tag] }); }}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${(municipio.tags || []).includes(tag) ? "bg-[#1B5E20] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{tag}
                       </button>
                     ))}
                   </div>
@@ -276,24 +936,34 @@ const EncargadoDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* Galería Tab */}
+          {/* GALERÍA */}
           <TabsContent value="galeria">
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Galería de Fotos</h2>
-                <Button className="bg-[#1B5E20] hover:bg-[#145218]"><Upload className="w-4 h-4 mr-2" />Subir fotos</Button>
+                <label className="cursor-pointer">
+                  <Button className="bg-[#1B5E20] hover:bg-[#145218]" asChild><span><Upload className="w-4 h-4 mr-2" />Subir fotos</span></Button>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={async e => {
+                    for (const file of Array.from(e.target.files)) {
+                      try { const url = await uploadFile(file); setMunicipio(m => ({ ...m, fotos: [...(m.fotos || []), { url }] })); toast.success(`${file.name} subida`); }
+                      catch { toast.error(`Error subiendo ${file.name}`); }
+                    }
+                  }} />
+                </label>
               </div>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center">
-                <Camera className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500 mb-2">Arrastra fotos aquí o haz clic para seleccionar</p>
-                <p className="text-xs text-gray-400">Máximo 20 fotos, 5MB cada una. JPG, PNG, WebP</p>
-              </div>
-              {(municipio.fotos || []).length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  {municipio.fotos.map((foto, index) => (
-                    <div key={index} className="relative aspect-[4/3] rounded-lg overflow-hidden group">
+              {(municipio.fotos || []).length === 0 ? (
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-12 text-center">
+                  <Camera className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 mb-2">Sube fotos de tu municipio</p>
+                  <p className="text-xs text-gray-400">JPG, PNG, WebP — máx 10MB</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {municipio.fotos.map((foto, i) => (
+                    <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden group">
                       <img src={foto.url || foto} alt="" className="w-full h-full object-cover" />
-                      <button className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button onClick={() => setMunicipio(m => ({ ...m, fotos: m.fotos.filter((_, idx) => idx !== i) }))}
+                        className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -303,346 +973,37 @@ const EncargadoDashboard = () => {
             </div>
           </TabsContent>
 
-          {/* Eventos Tab */}
+          {/* EVENTOS */}
           <TabsContent value="eventos">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Eventos de {municipio.nombre}</h2>
-                <Button className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Nuevo evento</Button>
-              </div>
-              <div className="text-center py-12 text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>No hay eventos creados</p>
-                <p className="text-sm text-gray-400 mt-1">Crea eventos para promocionar tu municipio</p>
-              </div>
-            </div>
+            <EventosTab municipioId={municipio.id} municipioNombre={municipio.nombre} />
           </TabsContent>
 
-          {/* ── PRESTADORES TAB ─────────────────────────────────────── */}
+          {/* ATRACCIONES */}
+          <TabsContent value="atracciones">
+            <AtraccionesTab municipioId={municipio.id} municipioNombre={municipio.nombre} />
+          </TabsContent>
+
+          {/* PRESTADORES */}
           <TabsContent value="prestadores">
             <PrestadoresTab municipioId={municipio.id} municipioNombre={municipio.nombre} />
           </TabsContent>
 
-          {/* Estadísticas Tab */}
+          {/* NOTICIAS */}
+          <TabsContent value="noticias">
+            <NoticiasTab municipioId={municipio.id} municipioNombre={municipio.nombre} />
+          </TabsContent>
+
+          {/* SERVICIOS MUNICIPALES */}
+          <TabsContent value="servicios">
+            <ServiciosMunicipalesTab municipioId={municipio.id} />
+          </TabsContent>
+
+          {/* ESTADÍSTICAS */}
           <TabsContent value="estadisticas">
             <AnalyticsDashboard municipioId={municipio.id} isGlobal={false} />
           </TabsContent>
         </Tabs>
       </main>
-    </div>
-  );
-};
-
-// ─── PrestadoresTab ───────────────────────────────────────────────────────────
-const PrestadoresTab = ({ municipioId, municipioNombre }) => {
-  const [prestadores, setPrestadores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showDialog, setShowDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [filtroTipo, setFiltroTipo] = useState("todos");
-  const [form, setForm] = useState({
-    nombre: "", tipo: "", subtipo: "", descripcion: "",
-    telefono: "", whatsapp: "", horarios: "", direccion: "",
-    foto_url: "", lat: "", lng: "",
-  });
-
-  useEffect(() => {
-    fetchPrestadores();
-  }, [municipioId]);
-
-  const fetchPrestadores = async () => {
-    try {
-      const res = await axios.get(`${API}/prestadores`, { params: { municipio_id: municipioId, limit: 100 } });
-      setPrestadores(res.data.prestadores || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerificar = async (id, verificar) => {
-    try {
-      const endpoint = verificar ? "verificar" : "desverificar";
-      await axios.post(`${API}/prestadores/${id}/${endpoint}`);
-      setPrestadores(prev => prev.map(p => p.id === id ? { ...p, verificado: verificar } : p));
-      toast.success(verificar ? "✅ Prestador verificado — ya aparece en la página pública" : "Prestador desverificado");
-    } catch (e) {
-      toast.error("Error al actualizar");
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!form.nombre || !form.tipo) { toast.error("Nombre y tipo son obligatorios"); return; }
-    setSaving(true);
-    try {
-      await axios.post(`${API}/prestadores`, {
-        ...form,
-        municipio_id: municipioId,
-        lat: form.lat ? parseFloat(form.lat) : undefined,
-        lng: form.lng ? parseFloat(form.lng) : undefined,
-      });
-      toast.success("Prestador agregado exitosamente");
-      setShowDialog(false);
-      setForm({ nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "", whatsapp: "", horarios: "", direccion: "", foto_url: "", lat: "", lng: "" });
-      fetchPrestadores();
-    } catch (e) {
-      toast.error(e.response?.data?.detail || "Error al guardar");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm("¿Eliminar este prestador?")) return;
-    try {
-      await axios.delete(`${API}/prestadores/${id}`);
-      setPrestadores(prestadores.filter(p => p.id !== id));
-      toast.success("Prestador eliminado");
-    } catch (e) {
-      toast.error("Error al eliminar");
-    }
-  };
-
-  const tipoActual = TIPOS_PRESTADOR.find(t => t.tipo === form.tipo);
-  const pendientes = prestadores.filter(p => !p.verificado);
-  const verificados = prestadores.filter(p => p.verificado);
-  const prestadoresFiltrados = (filtroTipo === "todos" ? verificados : verificados.filter(p => p.tipo === filtroTipo));
-  const conteo = (tipo) => verificados.filter(p => p.tipo === tipo).length;
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Prestadores de Servicios</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {municipioNombre} · <span className="text-green-600 font-medium">{verificados.length} verificados</span>
-            {pendientes.length > 0 && <span className="text-amber-600 font-medium"> · {pendientes.length} pendientes</span>}
-          </p>
-        </div>
-        <Button onClick={() => setShowDialog(true)} className="bg-[#1B5E20] hover:bg-[#145218]">
-          <Plus className="w-4 h-4 mr-2" />Agregar prestador
-        </Button>
-      </div>
-
-      {/* Pendientes de verificación */}
-      {pendientes.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-            <h3 className="font-semibold text-amber-800">Pendientes de verificación ({pendientes.length})</h3>
-            <span className="text-xs text-amber-600">— Solo aparecen en la página pública al verificarlos</span>
-          </div>
-          <div className="space-y-3">
-            {pendientes.map((p) => {
-              const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
-              return (
-                <div key={p.id} className="bg-white rounded-lg p-4 flex items-center justify-between gap-4 border border-amber-100">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{cat?.grupo.split(" ")[0] || "🏢"}</span>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">{p.nombre}</p>
-                      <p className="text-xs text-gray-500">{p.subtipo || p.tipo} {p.telefono && `· ${p.telefono}`}</p>
-                      {p.descripcion && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{p.descripcion}</p>}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" onClick={() => handleVerificar(p.id, true)}>
-                      <Check className="w-3.5 h-3.5 mr-1" />Verificar
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-8 text-xs" onClick={() => handleDelete(p.id)}>
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />Rechazar
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Categorías resumen */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        <button
-          onClick={() => setFiltroTipo("todos")}
-          className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === "todos" ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}
-        >
-          <span className="text-xl">🗂️</span>
-          <p className="text-xs font-semibold text-gray-700 mt-1">Todos</p>
-          <p className="text-lg font-bold text-gray-900">{prestadores.length}</p>
-        </button>
-        {TIPOS_PRESTADOR.map((cat) => (
-          <button
-            key={cat.tipo}
-            onClick={() => setFiltroTipo(cat.tipo)}
-            className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}
-          >
-            <span className="text-xl">{cat.grupo.split(" ")[0]}</span>
-            <p className="text-xs font-semibold text-gray-700 mt-1 truncate">{cat.grupo.slice(3)}</p>
-            <p className="text-lg font-bold text-gray-900">{conteo(cat.tipo)}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Lista */}
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
-      ) : prestadoresFiltrados.length === 0 ? (
-        <div className="bg-white rounded-2xl p-16 text-center border-2 border-dashed border-gray-200">
-          <Users className="w-14 h-14 mx-auto mb-4 text-gray-200" />
-          <p className="text-gray-500 font-medium">No hay prestadores en esta categoría</p>
-          <p className="text-sm text-gray-400 mt-1">Haz clic en "Agregar prestador" para comenzar</p>
-          <Button onClick={() => setShowDialog(true)} className="mt-4 bg-[#1B5E20] hover:bg-[#145218]" size="sm">
-            <Plus className="w-4 h-4 mr-2" />Agregar primero
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {prestadoresFiltrados.map((p) => {
-            const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
-            return (
-              <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                {p.foto_url ? (
-                  <img src={p.foto_url} alt={p.nombre} className="w-full h-36 object-cover" />
-                ) : (
-                  <div className={`w-full h-36 flex items-center justify-center text-5xl ${cat?.color || "bg-gray-50"}`}>
-                    {cat?.grupo.split(" ")[0] || "🏢"}
-                  </div>
-                )}
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">{p.nombre}</h3>
-                      <span className="text-xs text-gray-500">{p.subtipo || p.tipo}</span>
-                    </div>
-                    {p.verificado && (
-                      <span className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 text-green-600" />
-                      </span>
-                    )}
-                  </div>
-                  {p.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-3">{p.descripcion}</p>}
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    {p.telefono && <span>📞 {p.telefono}</span>}
-                    {p.calificacion_promedio > 0 && <span className="flex items-center gap-0.5"><Star className="w-3 h-3 text-amber-400 fill-amber-400" />{p.calificacion_promedio}</span>}
-                  </div>
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                    <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => handleVerificar(p.id, false)} title="Quitar verificación">
-                      ✅ Verificado
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(p.id)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Dialog agregar prestador */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Agregar Prestador de Servicio</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-5 py-2">
-            {/* Selector de tipo visual */}
-            <div>
-              <Label className="text-sm font-semibold mb-3 block">Categoría del servicio *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {TIPOS_PRESTADOR.map((cat) => (
-                  <button
-                    key={cat.tipo}
-                    type="button"
-                    onClick={() => setForm({ ...form, tipo: cat.tipo, subtipo: "" })}
-                    className={`p-3 rounded-xl border-2 text-left transition-all ${form.tipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`}
-                  >
-                    <span className="text-2xl">{cat.grupo.split(" ")[0]}</span>
-                    <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{cat.grupo.slice(3)}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Subtipo */}
-            {form.tipo && (
-              <div>
-                <Label>Tipo específico *</Label>
-                <Select value={form.subtipo} onValueChange={(v) => setForm({ ...form, subtipo: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecciona el tipo exacto..." /></SelectTrigger>
-                  <SelectContent>
-                    {tipoActual?.subtipos.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Nombre */}
-            <div>
-              <Label>Nombre del negocio *</Label>
-              <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Hotel Paraíso Verde, Marisquería El Puerto..." />
-            </div>
-
-            {/* Descripción */}
-            <div>
-              <Label>Descripción</Label>
-              <Textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} placeholder="Describe brevemente el servicio, especialidad, propuesta de valor..." rows={3} />
-            </div>
-
-            {/* Contacto */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Teléfono</Label>
-                <Input value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} placeholder="272-123-4567" />
-              </div>
-              <div>
-                <Label>WhatsApp</Label>
-                <Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="522721234567" />
-              </div>
-            </div>
-
-            {/* Horarios y dirección */}
-            <div>
-              <Label>Horarios de atención</Label>
-              <Input value={form.horarios} onChange={(e) => setForm({ ...form, horarios: e.target.value })} placeholder="Lun–Dom 9:00–20:00" />
-            </div>
-            <div>
-              <Label>Dirección</Label>
-              <Textarea value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} placeholder="Calle, colonia, referencias..." rows={2} />
-            </div>
-
-            {/* Foto y coordenadas */}
-            <div>
-              <Label>URL de foto principal</Label>
-              <Input value={form.foto_url} onChange={(e) => setForm({ ...form, foto_url: e.target.value })} placeholder="https://..." />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Latitud (opcional)</Label>
-                <Input value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} placeholder="18.8534" />
-              </div>
-              <div>
-                <Label>Longitud (opcional)</Label>
-                <Input value={form.lng} onChange={(e) => setForm({ ...form, lng: e.target.value })} placeholder="-97.1014" />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-              Agregar prestador
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
