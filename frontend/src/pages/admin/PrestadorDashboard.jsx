@@ -75,7 +75,12 @@ const MOMENTOS = ["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"];
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
 const TIPOS_PRESTADOR = {
-  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","servicios","habitaciones","reservas","promociones","resenas","analiticas"] },
+  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
   GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
   GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
   CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
@@ -100,6 +105,56 @@ const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
 const esBebidas = (tipo, categoria) =>
   ["BAR","BEBIDAS","CAFETERIA"].includes(norm(tipo)) ||
   ["Bar y bebidas","Cafetería y postres"].includes(categoria);
+
+// ── Constantes de hospedaje ───────────────────────────────────
+const TIPOS_HOSPEDAJE = [
+  "HOSPEDAJE","HOTEL","HOSTAL","CABANA","CABAÑA","GLAMPING",
+  "BNB","B&B","HACIENDA","VILLA","CAMPING","POSADA"
+];
+const esHospedaje = (tipo) => TIPOS_HOSPEDAJE.includes(norm(tipo));
+
+const TIPOS_HABITACION = [
+  "Sencilla","Doble","Matrimonial","Suite","Junior Suite","Familiar",
+  "Cabaña","Loft","Penthouse","Estudio","Dormitorio compartido"
+];
+
+const AMENIDADES_HABITACION = [
+  "WiFi","Aire acondicionado","Calefacción","TV","Baño privado",
+  "Jacuzzi","Minibar","Caja fuerte","Balcón","Terraza privada",
+  "Vista al jardín","Vista a la montaña","Vista al río","Cocina equipada",
+  "Cafetera","Secadora de cabello","Plancha"
+];
+
+const AMENIDADES_HOTEL = [
+  { grupo: "Servicios", opciones: ["Recepción 24h","Estacionamiento","Estacionamiento techado","WiFi en todo el hotel","Conserjería","Botones","Lavandería","Planchado"] },
+  { grupo: "Alimentación", opciones: ["Restaurante","Bar","Cafetería","Desayuno incluido","Servicio a la habitación","Cocineta compartida"] },
+  { grupo: "Bienestar", opciones: ["Alberca","Jacuzzi","Spa","Gimnasio","Sauna","Temazcal","Área de yoga"] },
+  { grupo: "Negocios", opciones: ["Sala de juntas","Centro de negocios","Proyector","Impresora"] },
+  { grupo: "Entretenimiento", opciones: ["Área de juegos","Zona infantil","Salón de eventos","Jardín","Terraza común","BBQ / asador"] },
+  { grupo: "Accesibilidad", opciones: ["Acceso silla de ruedas","Elevador","Habitaciones adaptadas"] },
+  { grupo: "Extras", opciones: ["Acepta mascotas","Traslado aeropuerto","Tour desk","Renta de bicicletas","Área de fumadores"] },
+];
+
+const ETIQUETAS_HOSPEDAJE_GRUPOS = [
+  { grupo: "Tipo de viajero", opciones: ["Familia","Pareja","Solo","Grupos","Negocios","Luna de miel","Mochilero"] },
+  { grupo: "Estilo", opciones: ["Boutique","Rústico","Moderno","Colonial","Ecológico","Glamping","Lujo","Económico"] },
+  { grupo: "Ambiente", opciones: ["Tranquilo","Romántico","Con vista","En la naturaleza","En el centro","Cerca de playas","En la montaña"] },
+  { grupo: "Precio", opciones: ["Económico","Precio medio","Premium","Lujo"] },
+  { grupo: "Política", opciones: ["Permite mascotas","Solo adultos","Fumadores permitidos","Sin restricciones de edad"] },
+];
+
+const POLITICAS_CANCELACION = [
+  "Cancelación gratuita 24h antes",
+  "Cancelación gratuita 48h antes",
+  "Cancelación gratuita 7 días antes",
+  "No reembolsable",
+  "Reembolso parcial (50%)",
+];
+
+const POLITICAS_CHECK = {
+  checkin: ["12:00","13:00","14:00","15:00","16:00","17:00","18:00"],
+  checkout: ["10:00","11:00","12:00","13:00","14:00"],
+};
 
 // ── Componentes base ──────────────────────────────────────────
 const Field = ({ label, children }) => (
@@ -291,6 +346,26 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
     reservas_mesa_notas:        prestador?.reservas_mesa_notas || "",
     pedidos_whatsapp_activo:    prestador?.pedidos_whatsapp_activo ?? false,
     pedidos_whatsapp_mensaje:   prestador?.pedidos_whatsapp_mensaje || "",
+    // Hospedaje
+    num_habitaciones:           prestador?.num_habitaciones || "",
+    num_pisos:                  prestador?.num_pisos || "",
+    anio_construccion:          prestador?.anio_construccion || "",
+    anio_renovacion:            prestador?.anio_renovacion || "",
+    checkin_desde:              prestador?.checkin_desde || "15:00",
+    checkout_hasta:             prestador?.checkout_hasta || "12:00",
+    checkin_notas:              prestador?.checkin_notas || "",
+    precio_noche_desde:         prestador?.precio_noche_desde || "",
+    precio_noche_hasta:         prestador?.precio_noche_hasta || "",
+    amenidades_hotel:           prestador?.amenidades_hotel || [],
+    etiquetas_hospedaje:        prestador?.etiquetas_hospedaje || [],
+    politica_cancelacion:       prestador?.politica_cancelacion || "",
+    politica_mascotas:          prestador?.politica_mascotas ?? false,
+    politica_menores:           prestador?.politica_menores || "",
+    reservas_activas:           prestador?.reservas_activas ?? false,
+    reservas_anticipacion_dias: prestador?.reservas_anticipacion_dias || "1",
+    reservas_notas:             prestador?.reservas_notas || "",
+    desayuno_incluido:          prestador?.desayuno_incluido ?? false,
+    desayuno_precio:            prestador?.desayuno_precio || "",
   });
   const [saving, setSaving] = useState(false);
   const [seccion, setSeccion] = useState("info");
@@ -298,6 +373,7 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
 
   const es_alimentos = esAlimentos(prestador?.tipo);
   const es_bebidas   = esBebidas(prestador?.tipo, form.categoria_gastronomica);
+  const es_hospedaje = esHospedaje(prestador?.tipo);
 
   const save = async () => {
     setSaving(true);
@@ -328,6 +404,7 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
     { id: "ubicacion",  label: "Ubicación" },
     { id: "redes",      label: "Redes" },
     ...(es_alimentos ? [{ id: "gastronomia", label: "Gastronomía" }] : []),
+    ...(es_hospedaje  ? [{ id: "hospedaje",   label: "Hospedaje" }]  : []),
     { id: "operacion",  label: "Operación" },
   ];
 
@@ -617,6 +694,168 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
                   }`}>{m}</button>
               ))}
             </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ── Hospedaje ── */}
+      {seccion === "hospedaje" && es_hospedaje && (
+        <div className="space-y-5">
+
+          {/* Datos del establecimiento */}
+          <Card>
+            <SectionTitle>Datos del establecimiento</SectionTitle>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <Field label="N° de habitaciones">
+                <Inp type="number" value={form.num_habitaciones} onChange={e => setForm({ ...form, num_habitaciones: e.target.value })} placeholder="20" />
+              </Field>
+              <Field label="N° de pisos">
+                <Inp type="number" value={form.num_pisos} onChange={e => setForm({ ...form, num_pisos: e.target.value })} placeholder="3" />
+              </Field>
+              <Field label="Año construcción">
+                <Inp type="number" value={form.anio_construccion} onChange={e => setForm({ ...form, anio_construccion: e.target.value })} placeholder="1998" />
+              </Field>
+              <Field label="Última renovación">
+                <Inp type="number" value={form.anio_renovacion} onChange={e => setForm({ ...form, anio_renovacion: e.target.value })} placeholder="2022" />
+              </Field>
+            </div>
+          </Card>
+
+          {/* Check-in / Check-out */}
+          <Card>
+            <SectionTitle>Check-in / Check-out</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <Field label="Check-in desde">
+                <Sel value={form.checkin_desde} onChange={e => setForm({ ...form, checkin_desde: e.target.value })}>
+                  {POLITICAS_CHECK.checkin.map(h => <option key={h} value={h}>{h} hrs</option>)}
+                </Sel>
+              </Field>
+              <Field label="Check-out hasta">
+                <Sel value={form.checkout_hasta} onChange={e => setForm({ ...form, checkout_hasta: e.target.value })}>
+                  {POLITICAS_CHECK.checkout.map(h => <option key={h} value={h}>{h} hrs</option>)}
+                </Sel>
+              </Field>
+            </div>
+            <Field label="Notas de check-in / instrucciones de llegada">
+              <Txta value={form.checkin_notas} onChange={e => setForm({ ...form, checkin_notas: e.target.value })}
+                placeholder="Recepción disponible 24h, para llegadas nocturnas llamar al..." rows={2} />
+            </Field>
+          </Card>
+
+          {/* Precios por noche */}
+          <Card>
+            <SectionTitle>Rango de precios por noche</SectionTitle>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <Field label="Precio desde (MXN/noche)">
+                <Inp type="number" value={form.precio_noche_desde} onChange={e => setForm({ ...form, precio_noche_desde: e.target.value })} placeholder="500" />
+              </Field>
+              <Field label="Precio hasta (MXN/noche)">
+                <Inp type="number" value={form.precio_noche_hasta} onChange={e => setForm({ ...form, precio_noche_hasta: e.target.value })} placeholder="2500" />
+              </Field>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <button type="button"
+                onClick={() => setForm({ ...form, desayuno_incluido: !form.desayuno_incluido })}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${form.desayuno_incluido ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
+                🍳 {form.desayuno_incluido ? "Desayuno incluido ✓" : "Agregar desayuno"}
+              </button>
+              {form.desayuno_incluido && (
+                <div className="flex-1">
+                  <Inp type="number" value={form.desayuno_precio} onChange={e => setForm({ ...form, desayuno_precio: e.target.value })}
+                    placeholder="Precio desayuno adicional (si aplica)" />
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Amenidades del hotel */}
+          <Card>
+            <SectionTitle>Amenidades del establecimiento</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Selecciona todo lo que ofrece tu establecimiento — esto aparece en tu perfil público.</p>
+            <div className="space-y-4">
+              {AMENIDADES_HOTEL.map(({ grupo, opciones }) => (
+                <div key={grupo}>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{grupo}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opciones.map(op => (
+                      <button key={op} type="button"
+                        onClick={() => {
+                          const curr = form.amenidades_hotel || [];
+                          setForm({ ...form, amenidades_hotel: curr.includes(op) ? curr.filter(v => v !== op) : [...curr, op] });
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          (form.amenidades_hotel || []).includes(op)
+                            ? "bg-[#1B5E20] text-white border-[#1B5E20]"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20] hover:text-[#1B5E20]"
+                        }`}>{op}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Etiquetas */}
+          <Card>
+            <SectionTitle>Etiquetas del hospedaje</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Estas etiquetas ayudan a los viajeros a encontrarte por filtros específicos.</p>
+            <EtiquetasSelector
+              value={form.etiquetas_hospedaje}
+              onChange={v => setForm({ ...form, etiquetas_hospedaje: v })}
+              grupos={ETIQUETAS_HOSPEDAJE_GRUPOS}
+            />
+          </Card>
+
+          {/* Políticas */}
+          <Card>
+            <SectionTitle>Políticas del establecimiento</SectionTitle>
+            <div className="space-y-4">
+              <Field label="Política de cancelación">
+                <Sel value={form.politica_cancelacion} onChange={e => setForm({ ...form, politica_cancelacion: e.target.value })}>
+                  <option value="">Selecciona política</option>
+                  {POLITICAS_CANCELACION.map(p => <option key={p} value={p}>{p}</option>)}
+                </Sel>
+              </Field>
+              <Field label="Política con menores">
+                <Inp value={form.politica_menores} onChange={e => setForm({ ...form, politica_menores: e.target.value })}
+                  placeholder="Ej: Menores bienvenidos, cuna disponible sin cargo" />
+              </Field>
+              <div className="flex items-center gap-3">
+                <button type="button"
+                  onClick={() => setForm({ ...form, politica_mascotas: !form.politica_mascotas })}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${form.politica_mascotas ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"}`}>
+                  🐾 {form.politica_mascotas ? "Se aceptan mascotas ✓" : "No se aceptan mascotas"}
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Reservas en línea */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <SectionTitle>Reservas en línea</SectionTitle>
+              <Toggle
+                value={form.reservas_activas}
+                onChange={v => setForm({ ...form, reservas_activas: v })}
+                labelOn="Activadas"
+                labelOff="Desactivadas"
+              />
+            </div>
+            {form.reservas_activas ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Anticipación mínima (días)">
+                  <Inp type="number" value={form.reservas_anticipacion_dias}
+                    onChange={e => setForm({ ...form, reservas_anticipacion_dias: e.target.value })} placeholder="1" />
+                </Field>
+                <Field label="Notas para el huésped">
+                  <Inp value={form.reservas_notas}
+                    onChange={e => setForm({ ...form, reservas_notas: e.target.value })}
+                    placeholder="Confirmación en 24h, depósito del 50%..." />
+                </Field>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">Activa esta opción para recibir reservaciones directamente desde la app.</p>
+            )}
           </Card>
         </div>
       )}
@@ -1167,6 +1406,222 @@ const ModuloPromociones = ({ prestadorId }) => {
   );
 };
 
+// ── MÓDULO HABITACIONES ───────────────────────────────────────
+const ModuloHabitaciones = ({ prestadorId }) => {
+  const [habitaciones, setHabitaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const emptyForm = { nombre: "Doble", descripcion: "", precio_noche: "", capacidad: 2, amenidades: [], fotos: [], disponible: true };
+  const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => { fetchHabs(); }, [prestadorId]);
+
+  const fetchHabs = async () => {
+    try {
+      const { data } = await axios.get(`${API}/prestadores/${prestadorId}/habitaciones`);
+      setHabitaciones(data.habitaciones || []);
+    } finally { setLoading(false); }
+  };
+
+  const uploadFoto = async (file) => {
+    setUploadingFoto(true);
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const { data: up } = await axios.post(`${API}/public/upload`, fd);
+      setForm(f => ({ ...f, fotos: [...f.fotos, up.url] }));
+      toast.success("Foto agregada");
+    } catch { toast.error("Error subiendo foto"); }
+    finally { setUploadingFoto(false); }
+  };
+
+  const save = async () => {
+    if (!form.nombre || !form.precio_noche) return toast.error("Nombre y precio requeridos");
+    setSaving(true);
+    try {
+      const payload = { ...form, precio_noche: parseFloat(form.precio_noche), capacidad: parseInt(form.capacidad) };
+      if (editId) await axios.put(`${API}/habitaciones/${editId}`, payload);
+      else await axios.post(`${API}/prestadores/${prestadorId}/habitaciones`, payload);
+      toast.success(editId ? "Habitación actualizada" : "Habitación agregada");
+      setShowForm(false); setForm(emptyForm); setEditId(null); fetchHabs();
+    } catch { toast.error("Error guardando"); }
+    finally { setSaving(false); }
+  };
+
+  const toggleAmenidad = (am) => {
+    const curr = form.amenidades || [];
+    setForm({ ...form, amenidades: curr.includes(am) ? curr.filter(a => a !== am) : [...curr, am] });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-bold text-gray-900">Tipos de habitación</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Configura cada tipo de habitación con sus amenidades y precio por noche</p>
+        </div>
+        <button type="button" onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#1B5E20] text-white rounded-lg text-sm font-semibold hover:bg-[#145218]">
+          <Plus className="w-4 h-4" /> Nueva habitación
+        </button>
+      </div>
+
+      {/* Formulario */}
+      {showForm && (
+        <Card className="border-2 border-[#1B5E20]/20">
+          <SectionTitle>{editId ? "Editar habitación" : "Nueva habitación"}</SectionTitle>
+          <div className="space-y-4">
+            {/* Tipo */}
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Tipo de habitación</label>
+              <div className="flex flex-wrap gap-2">
+                {TIPOS_HABITACION.map(t => (
+                  <button key={t} type="button" onClick={() => setForm({ ...form, nombre: t })}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${form.nombre === t ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]"}`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2">
+                <Inp value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="O escribe un nombre personalizado..." />
+              </div>
+            </div>
+
+            {/* Precio y capacidad */}
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Precio por noche (MXN) *">
+                <Inp type="number" value={form.precio_noche} onChange={e => setForm({ ...form, precio_noche: e.target.value })} placeholder="800" />
+              </Field>
+              <Field label="Capacidad (personas)">
+                <Inp type="number" value={form.capacidad} onChange={e => setForm({ ...form, capacidad: e.target.value })} min="1" max="20" />
+              </Field>
+            </div>
+
+            {/* Descripción */}
+            <Field label="Descripción">
+              <Txta value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                placeholder="Vista a la montaña, cama king size, baño con tina..." rows={2} />
+            </Field>
+
+            {/* Amenidades */}
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Amenidades de la habitación</label>
+              <div className="flex flex-wrap gap-2">
+                {AMENIDADES_HABITACION.map(am => (
+                  <button key={am} type="button" onClick={() => toggleAmenidad(am)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      (form.amenidades || []).includes(am)
+                        ? "bg-[#1B5E20] text-white border-[#1B5E20]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]"
+                    }`}>{am}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fotos */}
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-2">Fotos de la habitación</label>
+              <div className="flex items-center gap-3 flex-wrap">
+                {form.fotos.map((url, i) => (
+                  <div key={i} className="relative">
+                    <img src={url} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                    <button type="button" onClick={() => setForm({ ...form, fotos: form.fotos.filter((_, idx) => idx !== i) })}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">×</button>
+                  </div>
+                ))}
+                <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50">
+                  {uploadingFoto ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "📷"}
+                  {uploadingFoto ? "Subiendo..." : "Agregar foto"}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => uploadFoto(e.target.files[0])} disabled={uploadingFoto} />
+                </label>
+              </div>
+            </div>
+
+            {/* Disponible */}
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setForm({ ...form, disponible: !form.disponible })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${form.disponible ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"}`}>
+                {form.disponible ? "✓ Disponible" : "✗ No disponible"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button type="button" onClick={save} disabled={saving}
+              className="flex-1 py-2.5 bg-[#1B5E20] text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {editId ? "Actualizar" : "Agregar habitación"}
+            </button>
+            <button type="button" onClick={() => { setShowForm(false); setEditId(null); }} className="px-4 py-2.5 border border-gray-200 rounded-lg text-gray-600 text-sm">Cancelar</button>
+          </div>
+        </Card>
+      )}
+
+      {/* Lista */}
+      {loading ? (
+        <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
+      ) : habitaciones.length === 0 && !showForm ? (
+        <Card className="text-center py-12 text-gray-400">
+          <p className="text-2xl mb-2">🛏️</p>
+          <p className="text-sm font-medium mb-1">Sin habitaciones configuradas</p>
+          <p className="text-xs">Agrega los tipos de habitación que ofreces con su precio y amenidades.</p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {habitaciones.map(h => (
+            <Card key={h.id} className={!h.disponible ? "opacity-60" : ""}>
+              {/* Fotos */}
+              {h.fotos?.length > 0 && (
+                <div className="flex gap-2 mb-3 overflow-x-auto">
+                  {h.fotos.map((url, i) => (
+                    <img key={i} src={url} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" alt="" />
+                  ))}
+                </div>
+              )}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <h4 className="font-semibold text-gray-900">{h.nombre}</h4>
+                  <p className="text-xs text-gray-500">👥 {h.capacidad} personas</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-[#1B5E20]">${h.precio_noche}</p>
+                  <p className="text-[10px] text-gray-400">por noche</p>
+                </div>
+              </div>
+              {h.descripcion && <p className="text-xs text-gray-600 mb-2">{h.descripcion}</p>}
+              {h.amenidades?.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {h.amenidades.slice(0, 6).map(a => (
+                    <span key={a} className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{a}</span>
+                  ))}
+                  {h.amenidades.length > 6 && <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">+{h.amenidades.length - 6} más</span>}
+                </div>
+              )}
+              <div className="flex gap-2 pt-3 border-t border-gray-100">
+                <button type="button"
+                  onClick={async () => { await axios.put(`${API}/habitaciones/${h.id}`, { disponible: !h.disponible }); fetchHabs(); }}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${h.disponible ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                  {h.disponible ? "Disponible" : "No disponible"}
+                </button>
+                <button type="button"
+                  onClick={() => { setForm({ ...h, precio_noche: h.precio_noche.toString(), capacidad: h.capacidad.toString() }); setEditId(h.id); setShowForm(true); }}
+                  className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200">✏️</button>
+                <button type="button"
+                  onClick={async () => { await axios.delete(`${API}/habitaciones/${h.id}`); fetchHabs(); }}
+                  className="px-3 py-1.5 rounded-lg bg-red-50 text-red-500 text-xs hover:bg-red-100">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── MÓDULO ANALÍTICAS ─────────────────────────────────────────
 const ModuloAnaliticas = ({ prestadorId }) => {
   const [data, setData] = useState(null);
@@ -1333,12 +1788,7 @@ const PrestadorDashboard = () => {
         {tab === "servicios"    && <ModuloServicios prestadorId={prestador.id} />}
         {tab === "reservas"     && <ModuloReservas prestadorId={prestador.id} />}
         {tab === "menu"         && <ModuloMenu prestadorId={prestador.id} menuUrl={prestador.menu_url} />}
-        {tab === "habitaciones" && (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-sm font-medium mb-1">Módulo de habitaciones</p>
-            <p className="text-xs">Próximamente disponible</p>
-          </div>
-        )}
+        {tab === "habitaciones" && <ModuloHabitaciones prestadorId={prestador.id} />}
         {tab === "flota" && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm font-medium mb-1">Módulo de flota</p>
