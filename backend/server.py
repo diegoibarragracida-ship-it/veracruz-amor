@@ -2738,14 +2738,13 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
             "is_deleted": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.files.insert_one(file_record)
+       await db.files.insert_one(file_record)
         
-   return {  # <--- ESTA ES LA LÍNEA 2743
+        return {
             "path": result["public_id"],
             "url": result["url"],
             "size": len(content)
         }
-}
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Error al subir archivo")
