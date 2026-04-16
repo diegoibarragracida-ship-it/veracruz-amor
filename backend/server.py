@@ -2724,25 +2724,25 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     path = f"{APP_NAME}/uploads/{user['user_id']}/{uuid.uuid4()}.{ext}"
     
-    ....try:
-........result = put_object(path, content, file.content_type)
-........file_record = {
-............"id": str(uuid.uuid4()),
-............"storage_path": result["public_id"],
-............"original_filename": file.filename,
-............"content_type": file.content_type,
-............"size": len(content),
-............"user_id": user["user_id"],
-............"is_deleted": False,
-............"created_at": datetime.now(timezone.utc).isoformat()
-........}
-........await db.files.insert_one(file_record)  # <-- ESTA LÍNEA (2741)
-........
-........return {
-............"path": result["public_id"],
-............"url": result["url"],
-............"size": len(content)
-........}
+    try:
+        result = put_object(path, content, file.content_type)
+        file_record = {
+            "id": str(uuid.uuid4()),
+            "storage_path": result["public_id"], 
+            "original_filename": file.filename,
+            "content_type": file.content_type,
+            "size": len(content),
+            "user_id": user["user_id"],
+            "is_deleted": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.files.insert_one(file_record)
+        
+        return {
+            "path": result["public_id"],
+            "url": result["url"],
+            "size": len(content)
+        }
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Error al subir archivo")
