@@ -2740,7 +2740,7 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
         }
        await db.files.insert_one(file_record)
         
-        return {
+       return {
             "path": result["public_id"],
             "url": result["url"],
             "size": len(content)
