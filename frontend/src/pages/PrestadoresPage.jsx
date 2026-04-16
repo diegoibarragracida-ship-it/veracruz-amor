@@ -21,12 +21,14 @@ const PrestadoresPage = () => {
   const municipioId = searchParams.get("municipio") || "";
 
   const tipos = [
-    { value: "HOSPEDAJE", label: "Hospedaje" },
-    { value: "GASTRONOMÍA", label: "Gastronomía" },
-    { value: "TRANSPORTE", label: "Transporte" },
-    { value: "TURISMO", label: "Turismo" },
-    { value: "ENTREGA", label: "Entrega" },
-    { value: "OTROS", label: "Otros" },
+    { value: "HOSPEDAJE",   label: "Hospedaje" },
+    { value: "GASTRONOMIA", label: "Gastronomía" },
+    { value: "TURISMO",     label: "Tour / Actividad" },
+    { value: "TRANSPORTE",  label: "Transporte" },
+    { value: "COMERCIO",    label: "Comercio" },
+    { value: "ECOTURISMO",  label: "Ecoturismo" },
+    { value: "BIENESTAR",   label: "Bienestar" },
+    { value: "CULTURA",     label: "Cultura" },
   ];
 
   // Fetch de Municipios

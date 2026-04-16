@@ -2730,7 +2730,7 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
         # Store reference in DB
         file_record = {
             "id": str(uuid.uuid4()),
-            "storage_path": result["path"],
+            "storage_path": result["public_id"],
             "original_filename": file.filename,
             "content_type": file.content_type,
             "size": result.get("size", len(content)),
@@ -2740,11 +2740,11 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
         }
         await db.files.insert_one(file_record)
         
-        return {
-            "path": result["path"],
-            "url": f"/api/files/{result['path']}",
-            "size": file_record["size"]
-        }
+      return {
+    "path": result["public_id"], # Usamos public_id como identificador
+    "url": result["url"],        # Usamos la URL directa de Cloudinary que ya tienes
+    "size": file_record["size"]
+}
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Error al subir archivo")

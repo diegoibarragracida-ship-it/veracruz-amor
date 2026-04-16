@@ -113,6 +113,118 @@ const TIPOS_HOSPEDAJE = [
 ];
 const esHospedaje = (tipo) => TIPOS_HOSPEDAJE.includes(norm(tipo));
 
+// ── Constantes de turismo ─────────────────────────────────────
+const TIPOS_TURISMO_LIST = [
+  "TURISMO","TOUR","ECOTURISMO","AVENTURA","EXCURSION","ACTIVIDAD","GUIA"
+];
+const esTurismo = (tipo) => TIPOS_TURISMO_LIST.includes(norm(tipo));
+
+const CATEGORIAS_TURISMO = [
+  "Turismo cultural","Ecoturismo","Turismo de aventura","Turismo gastronómico",
+  "Turismo de naturaleza","Turismo de bienestar","Turismo histórico",
+  "Turismo rural","Turismo de playa","Tours fotográficos","City tours",
+];
+
+const SUBCATEGORIAS_TURISMO = {
+  "Turismo cultural":      ["Recorrido de museos","Tour histórico","Tour arqueológico","Visita a haciendas","Arte y artesanías","Turismo religioso"],
+  "Ecoturismo":            ["Senderismo","Observación de aves","Avistamiento de ballenas","Fotografía de naturaleza","Camping eco","Espeleología"],
+  "Turismo de aventura":   ["Rapel","Escalada","Tirolesa","Kayak","Rafting","Montañismo","Parapente","Cicloturismo","Surf","Buceo"],
+  "Turismo gastronómico":  ["Tour de mercados","Clases de cocina","Cata de mezcal/tequila","Visita a cafetales","Tour de mariscos","Turismo cafetalero"],
+  "Turismo de naturaleza": ["Cascadas","Manglares","Selva tropical","Ríos y lagos","Volcanes","Flora endémica"],
+  "Turismo de bienestar":  ["Temazcal","Yoga en naturaleza","Retiro espiritual","Masajes en sitio","Meditación"],
+  "Turismo histórico":     ["Zona arqueológica","Centro histórico","Ruinas coloniales","Museos locales","Recorridos a pie"],
+  "Turismo rural":         ["Visita a comunidades","Agroturismo","Cosecha de café","Pesca artesanal","Convivencia con familias"],
+  "City tours":            ["Tour a pie","Bus turístico","Tour en bicicleta","Tour nocturno","Tour en carruaje"],
+  "Tours fotográficos":    ["Paisajes urbanos","Naturaleza","Cascadas y cenotes","Wildlife","Aurora y atardeceres"],
+};
+
+const ETIQUETAS_TURISMO_GRUPOS = [
+  { grupo: "Nivel de dificultad", opciones: ["Fácil","Moderado","Difícil","Extremo","Apto para niños","Apto para adultos mayores"] },
+  { grupo: "Duración", opciones: ["Menos de 1 hora","Media jornada","Jornada completa","Varios días"] },
+  { grupo: "Grupo", opciones: ["Individual","Parejas","Familia","Grupos","Privado","Semi-privado"] },
+  { grupo: "Incluye", opciones: ["Transporte","Alimentación","Equipo","Guía certificado","Seguro","Hidratación","Fotografías"] },
+  { grupo: "Temporada", opciones: ["Todo el año","Temporada seca","Temporada lluviosa","Solo fines de semana"] },
+  { grupo: "Idioma", opciones: ["Español","Inglés","Francés","Portugués"] },
+  { grupo: "Precio", opciones: ["Económico","Precio medio","Premium","Precio familiar"] },
+];
+
+const AMENIDADES_TOUR = [
+  { grupo: "Equipo incluido",   opciones: ["Cascos","Arneses","Impermeables","Botas","Cuerdas","Chalecos salvavidas","Kayaks","Bicicletas","Binoculares"] },
+  { grupo: "Servicios",         opciones: ["Guía certificado","Transporte","Seguro de viaje","Primeros auxilios","Hidratación","Snacks","Comida completa","Fotografías del tour"] },
+  { grupo: "Accesibilidad",     opciones: ["Apto para silla de ruedas","Sin restricción de edad","Solo adultos","Acepta mascotas"] },
+];
+
+// ── Constantes de transporte ──────────────────────────────────
+const TIPOS_TRANSPORTE_LIST = [
+  "TRANSPORTE","TRASLADO","RENTA","VEHICULO","TAXI","SHUTTLE","BUS","LANCHA"
+];
+const esTransporte = (tipo) => TIPOS_TRANSPORTE_LIST.includes(norm(tipo));
+
+const CATEGORIAS_TRANSPORTE = [
+  "Traslados aeropuerto","Traslados turísticos","Renta de vehículos",
+  "Transporte ejecutivo","Transporte de grupos","Servicio de taxi",
+  "Shuttle / Combi","Lancha / Barco","Helicóptero","Bicicletas / E-bikes",
+];
+
+const SUBCATEGORIAS_TRANSPORTE = {
+  "Traslados aeropuerto":  ["Aeropuerto → Hotel","Hotel → Aeropuerto","Traslado privado","Traslado compartido"],
+  "Traslados turísticos":  ["Tour en auto privado","Traslado entre ciudades","Traslado a zonas arqueológicas","Traslado a cascadas"],
+  "Renta de vehículos":    ["Autos","Camionetas","Motocicletas","Bicicletas","Cuatrimotos","Scooters"],
+  "Transporte ejecutivo":  ["Sedán ejecutivo","SUV ejecutivo","Van ejecutiva","Limosina","Traslado corporativo"],
+  "Transporte de grupos":  ["Van / Sprinter","Autobús turístico","Minibús","Camioneta de pasajeros"],
+  "Lancha / Barco":        ["Lancha rápida","Barco turístico","Velero","Yate","Lancha de pesca"],
+  "Bicicletas / E-bikes":  ["Bicicleta de montaña","Bicicleta de ruta","E-bike","Triciclo de carga"],
+};
+
+const ETIQUETAS_TRANSPORTE_GRUPOS = [
+  { grupo: "Tipo de servicio", opciones: ["Privado","Compartido","Ejecutivo","Turístico","A demanda","Programado"] },
+  { grupo: "Capacidad",        opciones: ["1-2 personas","3-4 personas","5-8 personas","9-15 personas","16+ personas"] },
+  { grupo: "Incluye",          opciones: ["Chofer","Guía","WiFi a bordo","Aire acondicionado","Agua","Cargadores","Equipo de seguridad"] },
+  { grupo: "Disponibilidad",   opciones: ["24 horas","Solo de día","Fines de semana","Bajo reservación","Inmediato"] },
+  { grupo: "Precio",           opciones: ["Económico","Precio medio","Premium","Por km","Tarifa fija"] },
+];
+
+const AMENIDADES_VEHICULO = [
+  { grupo: "Comodidades",   opciones: ["Aire acondicionado","Calefacción","WiFi","Asientos reclinables","Cargadores USB","Pantalla entretenimiento","Cooler / hielera"] },
+  { grupo: "Seguridad",     opciones: ["Cinturones de seguridad","Airbags","GPS","Seguro de viajero","Botiquín","Extinguidor"] },
+  { grupo: "Equipaje",      opciones: ["Portaequipaje","Rack de bicicletas","Porta-surf","Espacio para silla de ruedas"] },
+  { grupo: "Documentación", opciones: ["Factura disponible","Recibo electrónico","Cotización previa","Contrato de renta"] },
+];
+
+// ── Constantes de servicios ───────────────────────────────────
+const TIPOS_SERVICIOS_LIST = [
+  "SERVICIOS","SERVICIO","SPA","SALON","SALUD","BIENESTAR","FOTOGRAFIA",
+  "EVENTOS","BODAS","EDUCACION","OTRO"
+];
+const esServicios = (tipo) => TIPOS_SERVICIOS_LIST.includes(norm(tipo)) ||
+  (!esTurismo(tipo) && !esTransporte(tipo) && !esAlimentos(tipo) && !esHospedaje(tipo));
+
+const CATEGORIAS_SERVICIOS = [
+  "Salud y bienestar","Belleza y estética","Fotografía y video",
+  "Eventos y bodas","Educación y talleres","Guías locales",
+  "Alquiler de espacios","Servicios digitales","Artesanías y productos locales","Otro",
+];
+
+const SUBCATEGORIAS_SERVICIOS = {
+  "Salud y bienestar":      ["Spa","Masajes","Terapias alternativas","Yoga","Meditación","Nutrición","Psicología","Fisioterapia"],
+  "Belleza y estética":     ["Salón de belleza","Barbería","Uñas","Maquillaje","Peinados","Depilación","Tratamientos faciales"],
+  "Fotografía y video":     ["Fotografía de bodas","Fotografía de quinceañeras","Fotografía aérea (drone)","Video corporativo","Fotografía de producto","Sesiones de retrato"],
+  "Eventos y bodas":        ["Organización de bodas","Decoración","Animación","DJ","Música en vivo","Renta de carpas","Catering","Wedding planner"],
+  "Educación y talleres":   ["Clases de cocina","Talleres artesanales","Clases de idiomas","Música","Pintura","Fotografía","Yoga / meditación","Deportes acuáticos"],
+  "Guías locales":          ["Guía de turismo","Intérprete","Guía de naturaleza","Guía histórico","Guía bilingüe"],
+  "Alquiler de espacios":   ["Salón de eventos","Coworking","Estudio fotográfico","Cancha deportiva","Jardín / área verde","Terraza"],
+  "Artesanías y productos": ["Artesanías locales","Productos orgánicos","Miel","Café","Textiles","Cerámica","Joyería"],
+};
+
+const ETIQUETAS_SERVICIOS_GRUPOS = [
+  { grupo: "Modalidad",    opciones: ["Presencial","A domicilio","En línea","Mixto"] },
+  { grupo: "Duración",     opciones: ["Express (30 min)","1 hora","Medio día","Día completo","Por paquete"] },
+  { grupo: "Para quién",   opciones: ["Individual","Parejas","Grupos","Familiar","Empresas","Niños","Adultos mayores"] },
+  { grupo: "Estilo",       opciones: ["Relajante","Terapéutico","Creativo","Educativo","Espiritual","Recreativo","Profesional"] },
+  { grupo: "Certificación",opciones: ["Certificado","Avalado","Titulado","Con experiencia comprobada"] },
+  { grupo: "Precio",       opciones: ["Económico","Precio medio","Premium","Por paquete","Consultar"] },
+];
+
 const TIPOS_HABITACION = [
   "Sencilla","Doble","Matrimonial","Suite","Junior Suite","Familiar",
   "Cabaña","Loft","Penthouse","Estudio","Dormitorio compartido"
@@ -366,14 +478,55 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
     reservas_notas:             prestador?.reservas_notas || "",
     desayuno_incluido:          prestador?.desayuno_incluido ?? false,
     desayuno_precio:            prestador?.desayuno_precio || "",
+    // Turismo
+    categoria_turismo:          prestador?.categoria_turismo || "",
+    subcategoria_turismo:       prestador?.subcategoria_turismo || "",
+    etiquetas_turismo:          prestador?.etiquetas_turismo || [],
+    amenidades_tour:            prestador?.amenidades_tour || [],
+    duracion_tour:              prestador?.duracion_tour || "",
+    punto_salida:               prestador?.punto_salida || "",
+    incluye_transporte:         prestador?.incluye_transporte ?? false,
+    incluye_alimentacion:       prestador?.incluye_alimentacion ?? false,
+    incluye_equipo:             prestador?.incluye_equipo ?? false,
+    incluye_guia:               prestador?.incluye_guia ?? false,
+    min_personas:               prestador?.min_personas || "",
+    max_personas:               prestador?.max_personas || "",
+    idiomas_guia:               prestador?.idiomas_guia || [],
+    // Transporte
+    categoria_transporte:       prestador?.categoria_transporte || "",
+    subcategoria_transporte:    prestador?.subcategoria_transporte || "",
+    etiquetas_transporte:       prestador?.etiquetas_transporte || [],
+    amenidades_vehiculo:        prestador?.amenidades_vehiculo || [],
+    capacidad_vehiculo:         prestador?.capacidad_vehiculo || "",
+    marca_vehiculo:             prestador?.marca_vehiculo || "",
+    modelo_vehiculo:            prestador?.modelo_vehiculo || "",
+    anio_vehiculo:              prestador?.anio_vehiculo || "",
+    servicio_24h:               prestador?.servicio_24h ?? false,
+    cobertura_zonas:            prestador?.cobertura_zonas || "",
+    tarifa_base:                prestador?.tarifa_base || "",
+    tarifa_por_km:              prestador?.tarifa_por_km || "",
+    // Servicios
+    categoria_servicio:         prestador?.categoria_servicio || "",
+    subcategoria_servicio:      prestador?.subcategoria_servicio || "",
+    etiquetas_servicio:         prestador?.etiquetas_servicio || [],
+    modalidad_servicio:         prestador?.modalidad_servicio || "",
+    duracion_sesion:            prestador?.duracion_sesion || "",
+    precio_sesion:              prestador?.precio_sesion || "",
+    precio_paquete:             prestador?.precio_paquete || "",
+    atiende_domicilio:          prestador?.atiende_domicilio ?? false,
+    requiere_cita:              prestador?.requiere_cita ?? true,
+    certificaciones:            prestador?.certificaciones || "",
   });
   const [saving, setSaving] = useState(false);
   const [seccion, setSeccion] = useState("info");
   const [geoLoading, setGeoLoading] = useState(false);
 
-  const es_alimentos = esAlimentos(prestador?.tipo);
-  const es_bebidas   = esBebidas(prestador?.tipo, form.categoria_gastronomica);
-  const es_hospedaje = esHospedaje(prestador?.tipo);
+  const es_alimentos  = esAlimentos(prestador?.tipo);
+  const es_bebidas    = esBebidas(prestador?.tipo, form.categoria_gastronomica);
+  const es_hospedaje  = esHospedaje(prestador?.tipo);
+  const es_turismo    = esTurismo(prestador?.tipo);
+  const es_transporte = esTransporte(prestador?.tipo);
+  const es_servicios  = esServicios(prestador?.tipo);
 
   const save = async () => {
     setSaving(true);
@@ -403,8 +556,11 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
     { id: "horarios",   label: "Horarios" },
     { id: "ubicacion",  label: "Ubicación" },
     { id: "redes",      label: "Redes" },
-    ...(es_alimentos ? [{ id: "gastronomia", label: "Gastronomía" }] : []),
-    ...(es_hospedaje  ? [{ id: "hospedaje",   label: "Hospedaje" }]  : []),
+    ...(es_alimentos  ? [{ id: "gastronomia",  label: "Gastronomía" }]  : []),
+    ...(es_hospedaje  ? [{ id: "hospedaje",    label: "Hospedaje" }]    : []),
+    ...(es_turismo    ? [{ id: "turismo",      label: "Turismo" }]      : []),
+    ...(es_transporte ? [{ id: "transporte",   label: "Transporte" }]   : []),
+    ...(es_servicios  ? [{ id: "servicios_cfg",label: "Mi Servicio" }]  : []),
     { id: "operacion",  label: "Operación" },
   ];
 
@@ -856,6 +1012,271 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
             ) : (
               <p className="text-xs text-gray-400">Activa esta opción para recibir reservaciones directamente desde la app.</p>
             )}
+          </Card>
+        </div>
+      )}
+
+      {/* ── Turismo ── */}
+      {seccion === "turismo" && es_turismo && (
+        <div className="space-y-5">
+          <Card>
+            <SectionTitle>Categoría del tour / actividad</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Categoría principal">
+                <Sel value={form.categoria_turismo}
+                  onChange={e => setForm({ ...form, categoria_turismo: e.target.value, subcategoria_turismo: "" })}>
+                  <option value="">Selecciona una categoría</option>
+                  {CATEGORIAS_TURISMO.map(c => <option key={c} value={c}>{c}</option>)}
+                </Sel>
+              </Field>
+              <Field label="Subcategoría">
+                <Sel value={form.subcategoria_turismo}
+                  onChange={e => setForm({ ...form, subcategoria_turismo: e.target.value })}
+                  disabled={!form.categoria_turismo}>
+                  <option value="">Selecciona subcategoría</option>
+                  {(SUBCATEGORIAS_TURISMO[form.categoria_turismo] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                </Sel>
+              </Field>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Detalles del tour</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Duración (ej: 3 horas, Día completo)">
+                <Inp value={form.duracion_tour} onChange={e => setForm({ ...form, duracion_tour: e.target.value })} placeholder="4 horas" />
+              </Field>
+              <Field label="Punto de salida / encuentro">
+                <Inp value={form.punto_salida} onChange={e => setForm({ ...form, punto_salida: e.target.value })} placeholder="Plaza central, Hotel X..." />
+              </Field>
+              <Field label="Mín. de personas">
+                <Inp type="number" value={form.min_personas} onChange={e => setForm({ ...form, min_personas: e.target.value })} placeholder="1" />
+              </Field>
+              <Field label="Máx. de personas">
+                <Inp type="number" value={form.max_personas} onChange={e => setForm({ ...form, max_personas: e.target.value })} placeholder="12" />
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Idiomas del guía">
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {["Español","Inglés","Francés","Portugués","Alemán"].map(lang => (
+                      <button key={lang} type="button"
+                        onClick={() => {
+                          const curr = form.idiomas_guia || [];
+                          setForm({ ...form, idiomas_guia: curr.includes(lang) ? curr.filter(x => x !== lang) : [...curr, lang] });
+                        }}
+                        className={"px-3 py-1.5 rounded-full text-xs font-medium border transition-colors " + ((form.idiomas_guia || []).includes(lang) ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]")}>
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">¿Qué incluye?</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "incluye_transporte",   label: "Transporte" },
+                  { key: "incluye_alimentacion", label: "Alimentación" },
+                  { key: "incluye_equipo",       label: "Equipo" },
+                  { key: "incluye_guia",         label: "Guía certificado" },
+                ].map(({ key, label }) => (
+                  <button key={key} type="button"
+                    onClick={() => setForm({ ...form, [key]: !form[key] })}
+                    className={"px-3 py-1.5 rounded-full text-xs font-medium border transition-colors " + (form[key] ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]")}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Equipamiento y servicios del tour</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Selecciona todo lo que incluye / ofrece tu tour.</p>
+            <div className="space-y-4">
+              {AMENIDADES_TOUR.map(({ grupo, opciones }) => (
+                <div key={grupo}>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{grupo}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opciones.map(op => (
+                      <button key={op} type="button"
+                        onClick={() => {
+                          const curr = form.amenidades_tour || [];
+                          setForm({ ...form, amenidades_tour: curr.includes(op) ? curr.filter(v => v !== op) : [...curr, op] });
+                        }}
+                        className={"px-3 py-1.5 rounded-full text-xs font-medium border transition-colors " + ((form.amenidades_tour || []).includes(op) ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]")}>
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Etiquetas del tour</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Ayudan a los turistas a encontrarte por filtros de dificultad, grupo y más.</p>
+            <EtiquetasSelector value={form.etiquetas_turismo} onChange={v => setForm({ ...form, etiquetas_turismo: v })} grupos={ETIQUETAS_TURISMO_GRUPOS} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── Transporte ── */}
+      {seccion === "transporte" && es_transporte && (
+        <div className="space-y-5">
+          <Card>
+            <SectionTitle>Tipo de servicio de transporte</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Categoría">
+                <Sel value={form.categoria_transporte}
+                  onChange={e => setForm({ ...form, categoria_transporte: e.target.value, subcategoria_transporte: "" })}>
+                  <option value="">Selecciona categoría</option>
+                  {CATEGORIAS_TRANSPORTE.map(c => <option key={c} value={c}>{c}</option>)}
+                </Sel>
+              </Field>
+              <Field label="Subcategoría">
+                <Sel value={form.subcategoria_transporte}
+                  onChange={e => setForm({ ...form, subcategoria_transporte: e.target.value })}
+                  disabled={!form.categoria_transporte}>
+                  <option value="">Selecciona subcategoría</option>
+                  {(SUBCATEGORIAS_TRANSPORTE[form.categoria_transporte] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                </Sel>
+              </Field>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Datos del vehículo / flota</SectionTitle>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              <Field label="Marca">
+                <Inp value={form.marca_vehiculo} onChange={e => setForm({ ...form, marca_vehiculo: e.target.value })} placeholder="Toyota" />
+              </Field>
+              <Field label="Modelo">
+                <Inp value={form.modelo_vehiculo} onChange={e => setForm({ ...form, modelo_vehiculo: e.target.value })} placeholder="Hiace" />
+              </Field>
+              <Field label="Año">
+                <Inp type="number" value={form.anio_vehiculo} onChange={e => setForm({ ...form, anio_vehiculo: e.target.value })} placeholder="2022" />
+              </Field>
+              <Field label="Capacidad (personas)">
+                <Inp type="number" value={form.capacidad_vehiculo} onChange={e => setForm({ ...form, capacidad_vehiculo: e.target.value })} placeholder="8" />
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Cobertura / Zonas que atiende">
+                <Inp value={form.cobertura_zonas} onChange={e => setForm({ ...form, cobertura_zonas: e.target.value })} placeholder="Orizaba, Veracruz, CDMX..." />
+              </Field>
+              <div className="flex items-end pb-1">
+                <Toggle value={form.servicio_24h} onChange={v => setForm({ ...form, servicio_24h: v })} labelOn="Servicio 24 hrs" labelOff="Horario limitado" />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Tarifas</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Tarifa base (MXN)">
+                <Inp type="number" value={form.tarifa_base} onChange={e => setForm({ ...form, tarifa_base: e.target.value })} placeholder="300" />
+              </Field>
+              <Field label="Tarifa por km (MXN, si aplica)">
+                <Inp type="number" value={form.tarifa_por_km} onChange={e => setForm({ ...form, tarifa_por_km: e.target.value })} placeholder="5" />
+              </Field>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Amenidades del vehículo</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Selecciona todo lo que incluye tu servicio de transporte.</p>
+            <div className="space-y-4">
+              {AMENIDADES_VEHICULO.map(({ grupo, opciones }) => (
+                <div key={grupo}>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{grupo}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opciones.map(op => (
+                      <button key={op} type="button"
+                        onClick={() => {
+                          const curr = form.amenidades_vehiculo || [];
+                          setForm({ ...form, amenidades_vehiculo: curr.includes(op) ? curr.filter(v => v !== op) : [...curr, op] });
+                        }}
+                        className={"px-3 py-1.5 rounded-full text-xs font-medium border transition-colors " + ((form.amenidades_vehiculo || []).includes(op) ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-[#1B5E20]")}>
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Etiquetas del servicio de transporte</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Ayudan a los turistas a filtrarte por tipo, capacidad y disponibilidad.</p>
+            <EtiquetasSelector value={form.etiquetas_transporte} onChange={v => setForm({ ...form, etiquetas_transporte: v })} grupos={ETIQUETAS_TRANSPORTE_GRUPOS} />
+          </Card>
+        </div>
+      )}
+
+      {/* ── Servicios (genérico) ── */}
+      {seccion === "servicios_cfg" && es_servicios && (
+        <div className="space-y-5">
+          <Card>
+            <SectionTitle>Tipo de servicio</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Categoría">
+                <Sel value={form.categoria_servicio}
+                  onChange={e => setForm({ ...form, categoria_servicio: e.target.value, subcategoria_servicio: "" })}>
+                  <option value="">Selecciona categoría</option>
+                  {CATEGORIAS_SERVICIOS.map(c => <option key={c} value={c}>{c}</option>)}
+                </Sel>
+              </Field>
+              <Field label="Subcategoría">
+                <Sel value={form.subcategoria_servicio}
+                  onChange={e => setForm({ ...form, subcategoria_servicio: e.target.value })}
+                  disabled={!form.categoria_servicio}>
+                  <option value="">Selecciona subcategoría</option>
+                  {(SUBCATEGORIAS_SERVICIOS[form.categoria_servicio] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                </Sel>
+              </Field>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Detalles del servicio</SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Duración de la sesión">
+                <Inp value={form.duracion_sesion} onChange={e => setForm({ ...form, duracion_sesion: e.target.value })} placeholder="1 hora, 90 min..." />
+              </Field>
+              <Field label="Modalidad">
+                <Sel value={form.modalidad_servicio} onChange={e => setForm({ ...form, modalidad_servicio: e.target.value })}>
+                  <option value="">Selecciona modalidad</option>
+                  {["Presencial","A domicilio","En línea","Mixto"].map(m => <option key={m} value={m}>{m}</option>)}
+                </Sel>
+              </Field>
+              <Field label="Precio por sesión (MXN)">
+                <Inp type="number" value={form.precio_sesion} onChange={e => setForm({ ...form, precio_sesion: e.target.value })} placeholder="500" />
+              </Field>
+              <Field label="Precio por paquete (MXN, opcional)">
+                <Inp type="number" value={form.precio_paquete} onChange={e => setForm({ ...form, precio_paquete: e.target.value })} placeholder="2000 (paquete x5)" />
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Certificaciones / Estudios / Experiencia">
+                  <Inp value={form.certificaciones} onChange={e => setForm({ ...form, certificaciones: e.target.value })} placeholder="Ej: Certificado en masajes terapéuticos, 10 años de experiencia..." />
+                </Field>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 mt-4 flex-wrap">
+              <Toggle value={form.atiende_domicilio} onChange={v => setForm({ ...form, atiende_domicilio: v })} labelOn="Atiende a domicilio" labelOff="Solo en local" />
+              <Toggle value={form.requiere_cita} onChange={v => setForm({ ...form, requiere_cita: v })} labelOn="Requiere cita previa" labelOff="Sin cita" />
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle>Etiquetas del servicio</SectionTitle>
+            <p className="text-xs text-gray-500 mb-4">Ayudan a los clientes a encontrarte por tipo de experiencia, modalidad y más.</p>
+            <EtiquetasSelector value={form.etiquetas_servicio} onChange={v => setForm({ ...form, etiquetas_servicio: v })} grupos={ETIQUETAS_SERVICIOS_GRUPOS} />
           </Card>
         </div>
       )}
