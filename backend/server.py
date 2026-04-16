@@ -2740,10 +2740,11 @@ async def upload_file(file: UploadFile = File(...), request: Request = None):
         }
         await db.files.insert_one(file_record)
         
-      return {
-    "path": result["public_id"], # Usamos public_id como identificador
-    "url": result["url"],        # Usamos la URL directa de Cloudinary que ya tienes
-    "size": file_record["size"]
+   return {  # <--- ESTA ES LA LÍNEA 2743
+            "path": result["public_id"],
+            "url": result["url"],
+            "size": len(content)
+        }
 }
     except Exception as e:
         logger.error(f"Upload failed: {e}")
