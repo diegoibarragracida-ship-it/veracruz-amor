@@ -14,14 +14,39 @@ import {
 import { toast } from "sonner";
 
 /* ─── helpers ─────────────────────────────────────────────── */
+const norm = (s) => (s || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 const TIPO_CONFIG = {
   HOSPEDAJE:   { emoji: "🏨", color: "#1565C0", label: "Hospedaje" },
-  GASTRONOMÍA: { emoji: "🍽️", color: "#D32F2F", label: "Restaurante" },
+  HOTEL:       { emoji: "🏨", color: "#1565C0", label: "Hotel" },
+  HOSTAL:      { emoji: "🏨", color: "#1565C0", label: "Hostal" },
+  CABANA:      { emoji: "🏕️", color: "#1565C0", label: "Cabaña" },
+  GLAMPING:    { emoji: "⛺", color: "#1565C0", label: "Glamping" },
+  POSADA:      { emoji: "🏠", color: "#1565C0", label: "Posada" },
+  GASTRONOMIA: { emoji: "🍽️", color: "#D32F2F", label: "Restaurante" },
+  CAFETERIA:   { emoji: "☕", color: "#D32F2F", label: "Cafetería" },
+  BAR:         { emoji: "🍺", color: "#D32F2F", label: "Bar" },
+  BEBIDAS:     { emoji: "🥤", color: "#D32F2F", label: "Bebidas" },
+  RESTAURANTE: { emoji: "🍽️", color: "#D32F2F", label: "Restaurante" },
+  FOOD_TRUCK:  { emoji: "🚚", color: "#D32F2F", label: "Food Truck" },
+  PUESTO:      { emoji: "🌮", color: "#D32F2F", label: "Puesto" },
   TURISMO:     { emoji: "🗺️", color: "#2E7D32", label: "Tour / Actividad" },
+  GUIA:        { emoji: "🧭", color: "#2E7D32", label: "Guía Turístico" },
+  ACTIVIDAD:   { emoji: "⚡", color: "#2E7D32", label: "Actividad" },
   TRANSPORTE:  { emoji: "🚗", color: "#E65100", label: "Transporte" },
+  COMERCIO:    { emoji: "🛍️", color: "#6A1B9A", label: "Comercio" },
+  ECOTURISMO:  { emoji: "🌿", color: "#2E7D32", label: "Ecoturismo" },
+  BIENESTAR:   { emoji: "💆", color: "#AD1457", label: "Bienestar" },
+  CULTURA:     { emoji: "🎭", color: "#4527A0", label: "Cultura" },
   default:     { emoji: "📍", color: "#546E7A", label: "Servicio" },
 };
-const getTipo = (t) => TIPO_CONFIG[t] || TIPO_CONFIG.default;
+
+const TIPOS_ALIMENTOS = ["GASTRONOMIA","CAFETERIA","BAR","BEBIDAS","RESTAURANTE","FOOD_TRUCK","PUESTO"];
+const TIPOS_HOSPEDAJE = ["HOSPEDAJE","HOTEL","HOSTAL","CABANA","GLAMPING","POSADA"];
+const esAlimentos = (t) => TIPOS_ALIMENTOS.includes(norm(t));
+const esHospedaje = (t) => TIPOS_HOSPEDAJE.includes(norm(t));
+
+const getTipo = (t) => TIPO_CONFIG[norm(t)] || TIPO_CONFIG.default;
 
 const CATEGORIAS_GALERIA = ["general","habitaciones","comida","tours","vehiculos","instalaciones"];
 
@@ -191,10 +216,12 @@ const PrestadorPage = () => {
         setServicios(svcRes.data.servicios || []);
 
         // Cargar extras según tipo
-        const tipo = pRes.data.tipo;
+        const tipo = pRes.data.tipo || "";
         const extras = [];
-        if (tipo === "GASTRONOMÍA") extras.push(axios.get(`${API}/prestadores/${prestadorId}/menu`).catch(() => ({ data: { categorias: [] } })));
-        if (tipo === "HOSPEDAJE")   extras.push(axios.get(`${API}/prestadores/${prestadorId}/habitaciones`).catch(() => ({ data: { habitaciones: [] } })));
+        if (esAlimentos(tipo)) extras.push(axios.get(`${API}/prestadores/${prestadorId}/menu`).catch(() => ({ data: { categorias: [] } })));
+        else extras.push(Promise.resolve({ data: { categorias: [] } }));
+        if (esHospedaje(tipo)) extras.push(axios.get(`${API}/prestadores/${prestadorId}/habitaciones`).catch(() => ({ data: { habitaciones: [] } })));
+        else extras.push(Promise.resolve({ data: { habitaciones: [] } }));
 
         const [menuRes, habRes] = await Promise.all(extras);
         if (menuRes) setMenu(menuRes.data.categorias || []);
@@ -461,6 +488,261 @@ const PrestadorPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* ── SECCIÓN GASTRONOMÍA ── */}
+                {esAlimentos(prestador.tipo) && (
+                  <>
+                    {/* Categoría y etiquetas */}
+                    {(prestador.categoria_gastronomica || prestador.subcategoria_gastronomica) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-4">🍽️ Tipo de cocina</h2>
+                        <div className="flex flex-wrap gap-2">
+                          {prestador.categoria_gastronomica && (
+                            <span className="px-3 py-1.5 rounded-full text-sm font-semibold text-white" style={{ backgroundColor: tipoConf.color }}>
+                              {prestador.categoria_gastronomica}
+                            </span>
+                          )}
+                          {prestador.subcategoria_gastronomica && (
+                            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                              {prestador.subcategoria_gastronomica}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Momentos y etiquetas */}
+                    {((prestador.momentos?.length > 0) || (prestador.etiquetas?.length > 0)) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        {prestador.momentos?.length > 0 && (
+                          <div className="mb-4">
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">⏰ Ideal para</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {prestador.momentos.map(m => (
+                                <span key={m} className="px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">{m}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {prestador.etiquetas?.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">🏷️ Características</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {prestador.etiquetas.map(e => (
+                                <span key={e} className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">{e}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Precio por persona */}
+                    {(prestador.precio_min || prestador.precio_max) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-3">💰 Rango de precios</h2>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 text-center p-3 bg-gray-50 rounded-xl">
+                            <p className="text-xs text-gray-500 mb-1">Desde</p>
+                            <p className="text-xl font-bold text-gray-900">${prestador.precio_min}</p>
+                            <p className="text-xs text-gray-400">MXN por persona</p>
+                          </div>
+                          {prestador.precio_max && prestador.precio_max !== prestador.precio_min && (
+                            <>
+                              <span className="text-gray-300 text-2xl">—</span>
+                              <div className="flex-1 text-center p-3 bg-gray-50 rounded-xl">
+                                <p className="text-xs text-gray-500 mb-1">Hasta</p>
+                                <p className="text-xl font-bold text-gray-900">${prestador.precio_max}</p>
+                                <p className="text-xs text-gray-400">MXN por persona</p>
+                              </div>
+                            </>
+                          )}
+                          {prestador.precio_familia && (
+                            <div className="flex-1 text-center p-3 bg-green-50 rounded-xl">
+                              <p className="text-xs text-green-600 mb-1">👨‍👩‍👧 Familia</p>
+                              <p className="text-xl font-bold text-green-700">${prestador.precio_familia}</p>
+                              <p className="text-xs text-green-500">MXN</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Métodos de pago */}
+                    {prestador.metodos_pago?.length > 0 && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-3">💳 Métodos de pago</h2>
+                        <div className="flex flex-wrap gap-2">
+                          {prestador.metodos_pago.map(m => (
+                            <span key={m} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-800 border border-blue-100">{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pedidos por WhatsApp */}
+                    {prestador.pedidos_whatsapp_activo && prestador.whatsapp && (
+                      <a href={`https://wa.me/${prestador.whatsapp.replace(/\D/g,"")}?text=${encodeURIComponent(prestador.pedidos_whatsapp_mensaje || `Hola, quisiera hacer un pedido en ${prestador.nombre}`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-5 bg-green-500 hover:bg-green-600 transition-colors rounded-2xl text-white">
+                        <span className="text-3xl">📱</span>
+                        <div>
+                          <p className="font-bold text-lg">Pedir por WhatsApp</p>
+                          <p className="text-green-100 text-sm">Haz tu pedido directamente al restaurante</p>
+                        </div>
+                      </a>
+                    )}
+
+                    {/* Reservas de mesa */}
+                    {prestador.reservas_mesa_activas && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-2">🪑 Reservas de mesa</h2>
+                        {prestador.reservas_mesa_notas && (
+                          <p className="text-sm text-gray-600 mb-3">{prestador.reservas_mesa_notas}</p>
+                        )}
+                        <button onClick={() => setReservaModal(true)}
+                          className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90"
+                          style={{ backgroundColor: tipoConf.color }}>
+                          Reservar mesa →
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── SECCIÓN HOSPEDAJE ── */}
+                {esHospedaje(prestador.tipo) && (
+                  <>
+                    {/* Check-in / Check-out */}
+                    {(prestador.checkin_desde || prestador.checkout_hasta) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-4">🕐 Check-in / Check-out</h2>
+                        <div className="grid grid-cols-2 gap-4">
+                          {prestador.checkin_desde && (
+                            <div className="text-center p-4 bg-green-50 rounded-xl border border-green-100">
+                              <p className="text-xs text-green-600 font-semibold uppercase tracking-wide mb-1">Check-in desde</p>
+                              <p className="text-2xl font-bold text-green-800">{prestador.checkin_desde}</p>
+                              <p className="text-xs text-green-500 mt-1">hrs</p>
+                            </div>
+                          )}
+                          {prestador.checkout_hasta && (
+                            <div className="text-center p-4 bg-red-50 rounded-xl border border-red-100">
+                              <p className="text-xs text-red-600 font-semibold uppercase tracking-wide mb-1">Check-out hasta</p>
+                              <p className="text-2xl font-bold text-red-800">{prestador.checkout_hasta}</p>
+                              <p className="text-xs text-red-500 mt-1">hrs</p>
+                            </div>
+                          )}
+                        </div>
+                        {prestador.checkin_notas && (
+                          <p className="text-xs text-gray-500 mt-3 p-3 bg-gray-50 rounded-lg">ℹ️ {prestador.checkin_notas}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Precio por noche */}
+                    {(prestador.precio_noche_desde || prestador.precio_noche_hasta) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-3">💰 Precio por noche</h2>
+                        <div className="flex items-center gap-3">
+                          {prestador.precio_noche_desde && (
+                            <div className="flex-1 text-center p-4 bg-blue-50 rounded-xl">
+                              <p className="text-xs text-blue-600 mb-1">Desde</p>
+                              <p className="text-2xl font-bold text-blue-900">${prestador.precio_noche_desde}</p>
+                              <p className="text-xs text-blue-400">MXN / noche</p>
+                            </div>
+                          )}
+                          {prestador.precio_noche_hasta && prestador.precio_noche_hasta !== prestador.precio_noche_desde && (
+                            <>
+                              <span className="text-gray-300 text-2xl">—</span>
+                              <div className="flex-1 text-center p-4 bg-blue-50 rounded-xl">
+                                <p className="text-xs text-blue-600 mb-1">Hasta</p>
+                                <p className="text-2xl font-bold text-blue-900">${prestador.precio_noche_hasta}</p>
+                                <p className="text-xs text-blue-400">MXN / noche</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        {prestador.desayuno_incluido && (
+                          <div className="mt-3 flex items-center gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg">
+                            <span>🍳</span>
+                            <span className="font-medium">Desayuno incluido</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Amenidades */}
+                    {prestador.amenidades_hotel?.length > 0 && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-4">✨ Amenidades</h2>
+                        <div className="flex flex-wrap gap-2">
+                          {prestador.amenidades_hotel.map(a => (
+                            <span key={a} className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-800 border border-blue-100">
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Etiquetas hospedaje */}
+                    {prestador.etiquetas_hospedaje?.length > 0 && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-3">🏷️ Ideal para</h2>
+                        <div className="flex flex-wrap gap-2">
+                          {prestador.etiquetas_hospedaje.map(e => (
+                            <span key={e} className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">{e}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Políticas */}
+                    {(prestador.politica_cancelacion || prestador.politica_mascotas !== undefined || prestador.politica_menores) && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-4">📋 Políticas</h2>
+                        <div className="space-y-2 text-sm">
+                          {prestador.politica_cancelacion && (
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+                              <span>🔄</span>
+                              <div>
+                                <p className="font-medium text-gray-800">Cancelación</p>
+                                <p className="text-gray-600 text-xs mt-0.5">{prestador.politica_cancelacion}</p>
+                              </div>
+                            </div>
+                          )}
+                          {prestador.politica_mascotas !== undefined && (
+                            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                              <span>{prestador.politica_mascotas ? "🐾" : "🚫"}</span>
+                              <p className="text-gray-700">{prestador.politica_mascotas ? "Se aceptan mascotas" : "No se aceptan mascotas"}</p>
+                            </div>
+                          )}
+                          {prestador.politica_menores && (
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+                              <span>👶</span>
+                              <p className="text-gray-700">{prestador.politica_menores}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reservas hospedaje */}
+                    {prestador.reservas_activas && (
+                      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                        <h2 className="font-bold text-gray-900 mb-2">📅 Reservaciones en línea</h2>
+                        {prestador.reservas_notas && (
+                          <p className="text-sm text-gray-600 mb-3">{prestador.reservas_notas}</p>
+                        )}
+                        <button onClick={() => setReservaModal(true)}
+                          className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90"
+                          style={{ backgroundColor: tipoConf.color }}>
+                          Consultar disponibilidad →
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </>
             )}
 
@@ -518,6 +800,18 @@ const PrestadorPage = () => {
             {/* ── TAB MENÚ ── */}
             {tab === "menu" && (
               <div className="space-y-5">
+                {/* Botón pedir por WhatsApp arriba del menú */}
+                {prestador.pedidos_whatsapp_activo && prestador.whatsapp && (
+                  <a href={`https://wa.me/${prestador.whatsapp.replace(/\D/g,"")}?text=${encodeURIComponent(prestador.pedidos_whatsapp_mensaje || `Hola, quisiera hacer un pedido en ${prestador.nombre}`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-green-500 hover:bg-green-600 transition-colors rounded-2xl text-white">
+                    <span className="text-2xl">📱</span>
+                    <div>
+                      <p className="font-bold">Pedir por WhatsApp</p>
+                      <p className="text-green-100 text-xs">Selecciona lo que quieres y manda tu pedido</p>
+                    </div>
+                  </a>
+                )}
                 {menu.length === 0 ? (
                   <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-400">
                     <Utensils className="w-12 h-12 mx-auto mb-2 opacity-20" />
@@ -539,7 +833,16 @@ const PrestadorPage = () => {
                             {item.descripcion && <p className="text-xs text-gray-500 mt-0.5">{item.descripcion}</p>}
                             {!item.disponible && <span className="text-xs text-red-500 font-medium">Agotado</span>}
                           </div>
-                          <p className="font-bold text-gray-900 flex-shrink-0">${item.precio} <span className="text-xs font-normal text-gray-400">MXN</span></p>
+                          <div className="text-right flex-shrink-0">
+                            {item.precio_promocional ? (
+                              <>
+                                <p className="text-xs text-gray-400 line-through">${item.precio}</p>
+                                <p className="font-bold text-green-600 text-sm">${item.precio_promocional} <span className="text-xs font-normal text-gray-400">MXN</span></p>
+                              </>
+                            ) : (
+                              <p className="font-bold text-gray-900">${item.precio} <span className="text-xs font-normal text-gray-400">MXN</span></p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
