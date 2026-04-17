@@ -4238,10 +4238,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=[
-    os.environ.get("FRONTEND_URL", "https://veracruz-amor.vercel.app"),
-    "http://localhost:3000",
-    "http://localhost:3001",
-],
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ],
+    allow_origin_regex=r"https://veracruz-amor.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
