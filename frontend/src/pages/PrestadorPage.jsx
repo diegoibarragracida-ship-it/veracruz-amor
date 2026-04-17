@@ -9,7 +9,8 @@ import {
   MessageCircle, Share2, Heart, ArrowLeft, ChevronLeft,
   ChevronRight, BadgeCheck, Instagram, Facebook, Calendar,
   Tag, Utensils, Hotel, Car, Package, Navigation,
-  CheckCircle, Loader2, X, Camera
+  CheckCircle, Loader2, X, Camera, Send, Sparkles,
+  TrendingUp, Award, ThumbsUp
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -182,6 +183,198 @@ const ReservaModal = ({ prestador, servicio, onClose, onSuccess }) => {
   );
 };
 
+/* ─── Sección de Reseñas ──────────────────────────────────── */
+const StarRating = ({ value, onChange, size = "lg" }) => {
+  const [hovered, setHovered] = useState(0);
+  const s = size === "lg" ? "w-8 h-8" : "w-4 h-4";
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(n => (
+        <button key={n} type="button"
+          onClick={() => onChange && onChange(n)}
+          onMouseEnter={() => onChange && setHovered(n)}
+          onMouseLeave={() => onChange && setHovered(0)}
+          className={`transition-transform ${onChange ? "hover:scale-110 cursor-pointer" : "cursor-default"}`}>
+          <Star className={`${s} transition-colors ${
+            n <= (hovered || value)
+              ? "text-amber-400 fill-amber-400"
+              : "text-gray-200 fill-gray-200"
+          }`} />
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const LABELS = ["", "Malo", "Regular", "Bueno", "Muy bueno", "Excelente"];
+
+const ResenasSection = ({ prestadorId, resenas, setResenas, avgRating, isAuthenticated, tipoConf }) => {
+  const navigate = useNavigate();
+  const [form, setForm]     = useState({ calificacion: 0, texto: "" });
+  const [saving, setSaving] = useState(false);
+  const [sent, setSent]     = useState(false);
+
+  const dist = [5,4,3,2,1].map(n => ({
+    n,
+    count: resenas.filter(r => r.calificacion === n).length,
+    pct: resenas.length ? Math.round(resenas.filter(r => r.calificacion === n).length / resenas.length * 100) : 0,
+  }));
+
+  const submit = async () => {
+    if (!isAuthenticated) { navigate("/login"); return; }
+    if (!form.calificacion) return toast.error("Selecciona una calificación");
+    setSaving(true);
+    try {
+      const res = await axios.post(`${API}/resenas`, { prestador_id: prestadorId, ...form });
+      setResenas(prev => [res.data, ...prev]);
+      setForm({ calificacion: 0, texto: "" });
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+      toast.success("¡Reseña publicada!");
+    } catch { toast.error("Error al publicar. Intenta de nuevo."); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Resumen visual ── */}
+      {resenas.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="p-6 flex flex-col sm:flex-row gap-6 items-center">
+            {/* Score grande */}
+            <div className="text-center flex-shrink-0">
+              <p className="text-7xl font-black tracking-tighter" style={{ color: tipoConf.color, fontFamily: "Georgia, serif" }}>
+                {avgRating}
+              </p>
+              <StarRating value={Math.round(avgRating)} size="sm" />
+              <p className="text-xs text-gray-400 mt-1.5 font-medium">
+                {resenas.length} {resenas.length === 1 ? "reseña" : "reseñas"}
+              </p>
+            </div>
+            {/* Barras */}
+            <div className="flex-1 w-full space-y-2">
+              {dist.map(({ n, count, pct }) => (
+                <div key={n} className="flex items-center gap-2.5 text-xs">
+                  <span className="text-gray-500 w-4 text-right font-medium">{n}</span>
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, backgroundColor: pct > 0 ? tipoConf.color : "transparent" }} />
+                  </div>
+                  <span className="text-gray-400 w-6">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Badges destacados */}
+          {avgRating >= 4 && (
+            <div className="border-t border-gray-50 px-6 py-3 bg-gray-50/50 flex flex-wrap gap-2">
+              {avgRating >= 4.5 && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                  <Award className="w-3.5 h-3.5" /> Top valorado
+                </span>
+              )}
+              <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                <ThumbsUp className="w-3.5 h-3.5" /> {Math.round(resenas.filter(r => r.calificacion >= 4).length / resenas.length * 100)}% recomiendan
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Formulario nueva reseña ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-2">
+          <Sparkles className="w-4 h-4" style={{ color: tipoConf.color }} />
+          <h3 className="font-bold text-gray-900 text-sm">Escribe tu reseña</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          {sent ? (
+            <div className="flex flex-col items-center py-6 gap-3 text-center">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${tipoConf.color}15` }}>
+                <CheckCircle className="w-7 h-7" style={{ color: tipoConf.color }} />
+              </div>
+              <p className="font-bold text-gray-900">¡Gracias por tu reseña!</p>
+              <p className="text-sm text-gray-500">Tu opinión ayuda a otros viajeros</p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Tu calificación</p>
+                <div className="flex items-center gap-4">
+                  <StarRating value={form.calificacion} onChange={v => setForm(f => ({ ...f, calificacion: v }))} />
+                  {form.calificacion > 0 && (
+                    <span className="text-sm font-semibold" style={{ color: tipoConf.color }}>
+                      {LABELS[form.calificacion]}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tu comentario <span className="normal-case font-normal text-gray-400">(opcional)</span></p>
+                <textarea
+                  value={form.texto}
+                  onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
+                  placeholder="Cuéntanos tu experiencia... ¿Qué fue lo que más te gustó?"
+                  rows={3}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 transition-all placeholder-gray-300"
+                  style={{ "--tw-ring-color": tipoConf.color + "40" }}
+                />
+              </div>
+              <button onClick={submit} disabled={saving || !form.calificacion}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: tipoConf.color }}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {saving ? "Publicando..." : isAuthenticated ? "Publicar reseña" : "Inicia sesión para opinar"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Lista de reseñas ── */}
+      {resenas.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+            <Star className="w-7 h-7 text-gray-300" />
+          </div>
+          <p className="font-semibold text-gray-700 mb-1">Sin reseñas todavía</p>
+          <p className="text-sm text-gray-400">¡Sé el primero en compartir tu experiencia!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {resenas.map((r, i) => (
+            <div key={r.id}
+              className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 transition-colors"
+              style={{ animationDelay: `${i * 50}ms` }}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    style={{ backgroundColor: tipoConf.color }}>
+                    {r.turista_nombre?.[0]?.toUpperCase() || "T"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{r.turista_nombre || "Visitante"}</p>
+                    <p className="text-xs text-gray-400">{r.fecha?.slice(0, 10)}</p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <StarRating value={r.calificacion} size="sm" />
+                </div>
+              </div>
+              {r.texto && (
+                <p className="text-sm text-gray-600 leading-relaxed pl-12">{r.texto}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ─── PÁGINA PRINCIPAL ────────────────────────────────────── */
 const PrestadorPage = () => {
   const { prestadorId } = useParams();
@@ -285,12 +478,12 @@ const PrestadorPage = () => {
   const promoActiva = promociones.find(p => p.activa);
   const fotosCat   = catFoto === "general" ? imagenes : imagenes.filter(i => i.categoria === catFoto);
   const tabs       = [
-    { v: "info",        l: "ℹ️ Info" },
-    { v: "servicios",   l: `💰 Servicios (${servicios.length})` },
-    ...(menu.length > 0 ? [{ v: "menu", l: "🍽️ Menú" }] : []),
-    ...(habitaciones.length > 0 ? [{ v: "habitaciones", l: "🛏️ Habitaciones" }] : []),
-    { v: "galeria",     l: `📸 Fotos (${imagenes.length})` },
-    { v: "resenas",     l: `⭐ Reseñas (${resenas.length})` },
+    { v: "info",        l: "Info" },
+    { v: "servicios",   l: `Servicios ${servicios.length > 0 ? `(${servicios.length})` : ""}` },
+    ...(menu.length > 0 ? [{ v: "menu", l: "Menú" }] : []),
+    ...(habitaciones.length > 0 ? [{ v: "habitaciones", l: "Habitaciones" }] : []),
+    { v: "galeria",     l: `Fotos ${imagenes.length > 0 ? `(${imagenes.length})` : ""}` },
+    { v: "resenas",     l: `Reseñas ${resenas.length > 0 ? `(${resenas.length})` : ""}` },
   ];
 
   const avgRating = resenas.length
@@ -925,40 +1118,14 @@ const PrestadorPage = () => {
 
             {/* ── TAB RESEÑAS ── */}
             {tab === "resenas" && (
-              <div className="space-y-4">
-                {avgRating && (
-                  <div className="bg-white rounded-2xl p-5 border border-gray-100 flex items-center gap-5">
-                    <div className="text-center">
-                      <p className="text-5xl font-black text-gray-900">{avgRating}</p>
-                      <div className="flex mt-1">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(avgRating) ? "text-amber-400 fill-current" : "text-gray-200"}`} />
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">{resenas.length} reseñas</p>
-                    </div>
-                  </div>
-                )}
-
-                {resenas.length === 0 ? (
-                  <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-400">
-                    <Star className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm">Sin reseñas aún. ¡Sé el primero en opinar!</p>
-                  </div>
-                ) : resenas.map(r => (
-                  <div key={r.id} className="bg-white rounded-2xl p-5 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-3.5 h-3.5 ${s <= r.calificacion ? "text-amber-400 fill-current" : "text-gray-200"}`} />
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-400">{r.fecha?.slice(0, 10)}</span>
-                    </div>
-                    {r.texto && <p className="text-sm text-gray-700 leading-relaxed">{r.texto}</p>}
-                  </div>
-                ))}
-              </div>
+              <ResenasSection
+                prestadorId={prestadorId}
+                resenas={resenas}
+                setResenas={setResenas}
+                avgRating={avgRating}
+                isAuthenticated={isAuthenticated}
+                tipoConf={tipoConf}
+              />
             )}
           </div>
 
