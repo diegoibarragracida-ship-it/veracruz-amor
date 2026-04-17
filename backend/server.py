@@ -4420,6 +4420,8 @@ async def delete_servicio_municipal(servicio_id: str, request: Request):
 
 
 # Startup event
+app.include_router(api_router)
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting Veracruz Contigo API...")
@@ -4474,6 +4476,3 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     client.close()
-
-
-    app.include_router(api_router)
