@@ -531,17 +531,17 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
   const save = async () => {
   setSaving(true);
   try {
-    // Limpiar campos vacíos para evitar el 422
     const cleanForm = Object.fromEntries(
-      Object.entries(form).filter(([_, v]) => {
-        if (v === "" || v === null || v === undefined) return false;
-        return true;
-      })
+      Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
     );
+    console.log("Enviando:", JSON.stringify(cleanForm, null, 2)); // ← agrega esto
     await axios.put(`${API}/prestadores/me/perfil`, cleanForm);
     toast.success("Perfil actualizado");
     onSave();
-  } catch { toast.error("Error guardando"); }
+  } catch(e) { 
+    console.log("Error detalle:", e.response?.data); // ← y esto
+    toast.error("Error guardando"); 
+  }
   finally { setSaving(false); }
 };
 
