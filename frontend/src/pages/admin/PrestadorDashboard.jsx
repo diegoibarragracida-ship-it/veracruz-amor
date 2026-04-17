@@ -529,14 +529,21 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
   const es_servicios  = esServicios(prestador?.tipo);
 
   const save = async () => {
-    setSaving(true);
-    try {
-      await axios.put(`${API}/prestadores/me/perfil`, form);
-      toast.success("Perfil actualizado");
-      onSave();
-    } catch { toast.error("Error guardando"); }
-    finally { setSaving(false); }
-  };
+  setSaving(true);
+  try {
+    // Limpiar campos vacíos para evitar el 422
+    const cleanForm = Object.fromEntries(
+      Object.entries(form).filter(([_, v]) => {
+        if (v === "" || v === null || v === undefined) return false;
+        return true;
+      })
+    );
+    await axios.put(`${API}/prestadores/me/perfil`, cleanForm);
+    toast.success("Perfil actualizado");
+    onSave();
+  } catch { toast.error("Error guardando"); }
+  finally { setSaving(false); }
+};
 
   const obtenerUbicacion = () => {
     if (!navigator.geolocation) return toast.error("Geolocalización no disponible");
