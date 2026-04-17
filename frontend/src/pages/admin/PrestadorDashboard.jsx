@@ -532,17 +532,32 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
   setSaving(true);
   try {
     const cleanForm = Object.fromEntries(
+  Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+);
+const save = async () => {
+  setSaving(true);
+  try {
+    const cleanForm = Object.fromEntries(
       Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
     );
-    console.log("Enviando:", JSON.stringify(cleanForm, null, 2)); // ← agrega esto
+
+    const numericFloats = ["lat", "lng", "precio_min", "precio_max", "precio_familia", 
+                           "precio_noche_desde", "precio_noche_hasta", "tarifa_base", 
+                           "tarifa_por_km", "precio_sesion", "precio_paquete", "desayuno_precio"];
+    const numericInts   = ["capacidad_personas", "num_habitaciones", "num_pisos", 
+                           "min_personas", "max_personas", "capacidad_vehiculo",
+                           "reservas_mesa_capacidad"];
+
+    numericFloats.forEach(k => { if (cleanForm[k]) cleanForm[k] = parseFloat(cleanForm[k]); });
+    numericInts.forEach(k =>   { if (cleanForm[k]) cleanForm[k] = parseInt(cleanForm[k]); });
+
     await axios.put(`${API}/prestadores/me/perfil`, cleanForm);
     toast.success("Perfil actualizado");
     onSave();
   } catch(e) { 
-    console.log("Error detalle:", e.response?.data); // ← y esto
+    console.log("Error detalle:", e.response?.data);
     toast.error("Error guardando"); 
-  }
-  finally { setSaving(false); }
+  } finally { setSaving(false); }
 };
 
   const obtenerUbicacion = () => {
