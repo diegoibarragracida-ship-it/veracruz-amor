@@ -208,8 +208,7 @@ const StarRating = ({ value, onChange, size = "lg" }) => {
 
 const LABELS = ["", "Malo", "Regular", "Bueno", "Muy bueno", "Excelente"];
 
-const ResenasSection = ({ prestadorId, resenas, setResenas, avgRating, isAuthenticated, tipoConf }) => {
-  const navigate = useNavigate();
+const ResenasSection = ({ prestadorId, resenas, setResenas, avgRating, isAuthenticated, tipoConf, onLoginRequired }) => {
   const [form, setForm]     = useState({ calificacion: 0, texto: "" });
   const [saving, setSaving] = useState(false);
   const [sent, setSent]     = useState(false);
@@ -221,7 +220,7 @@ const ResenasSection = ({ prestadorId, resenas, setResenas, avgRating, isAuthent
   }));
 
   const submit = async () => {
-    if (!isAuthenticated) { navigate("/login"); return; }
+    if (!isAuthenticated) { onLoginRequired(); return; }
     if (!form.calificacion) return toast.error("Selecciona una calificación");
     setSaving(true);
     try {
@@ -1125,6 +1124,7 @@ const PrestadorPage = () => {
                 avgRating={avgRating}
                 isAuthenticated={isAuthenticated}
                 tipoConf={tipoConf}
+                onLoginRequired={() => navigate("/login")}
               />
             )}
           </div>
