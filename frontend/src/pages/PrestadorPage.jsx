@@ -490,124 +490,157 @@ const PrestadorPage = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* ── HERO ── */}
-      <section className="relative h-[55vh] min-h-[360px] overflow-hidden">
-        {portada?.url ? (
-          <img src={portada.url} alt={prestador.nombre} className="w-full h-full object-cover" />
+      {/* ── HERO AIRBNB STYLE ── */}
+      <section className="max-w-6xl mx-auto px-4 pt-6 pb-0">
+        {/* Título encima de fotos */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white"
+              style={{ backgroundColor: tipoConf.color }}>
+              {tipoConf.label}
+            </span>
+            {prestador.verificado && (
+              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                <BadgeCheck className="w-3.5 h-3.5" /> Verificado
+              </span>
+            )}
+            {promoActiva && (
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                🎁 {promoActiva.descuento_pct}% OFF
+              </span>
+            )}
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                {prestador.nombre}
+              </h1>
+              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-gray-500">
+                {avgRating && (
+                  <span className="flex items-center gap-1 font-semibold text-gray-800">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    {avgRating}
+                    <span className="font-normal text-gray-500">({resenas.length} reseñas)</span>
+                  </span>
+                )}
+                {prestador.direccion && (
+                  <span className="flex items-center gap-1 text-gray-500">
+                    <MapPin className="w-3.5 h-3.5" />{prestador.direccion}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
+                <Share2 className="w-4 h-4" /> Compartir
+              </button>
+              <button onClick={handleFav}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${
+                  isFav ? "border-red-200 bg-red-50 text-red-600" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                }`}>
+                <Heart className={`w-4 h-4 ${isFav ? "fill-red-500 text-red-500" : ""}`} />
+                {isFav ? "Guardado" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mosaico de fotos */}
+        {imagenes.length > 0 ? (
+          <div className="relative rounded-2xl overflow-hidden">
+            {imagenes.length === 1 ? (
+              <div className="h-[420px] cursor-pointer" onClick={() => setGaleriaModal({ fotos: imagenes, idx: 0 })}>
+                <img src={imagenes[0].url} alt="" className="w-full h-full object-cover hover:brightness-95 transition-all" />
+              </div>
+            ) : imagenes.length === 2 ? (
+              <div className="grid grid-cols-2 gap-2 h-[420px]">
+                {imagenes.slice(0, 2).map((img, i) => (
+                  <div key={img.id} className="cursor-pointer overflow-hidden" onClick={() => setGaleriaModal({ fotos: imagenes, idx: i })}>
+                    <img src={img.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[420px]">
+                <div className="col-span-2 row-span-2 cursor-pointer overflow-hidden" onClick={() => setGaleriaModal({ fotos: imagenes, idx: 0 })}>
+                  <img src={imagenes[0].url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                </div>
+                {imagenes.slice(1, 5).map((img, i) => (
+                  <div key={img.id} className="cursor-pointer overflow-hidden relative" onClick={() => setGaleriaModal({ fotos: imagenes, idx: i + 1 })}>
+                    <img src={img.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                    {i === 3 && imagenes.length > 5 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">+{imagenes.length - 5}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={() => setGaleriaModal({ fotos: imagenes, idx: 0 })}
+              className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-800 shadow-lg hover:bg-gray-50 transition-colors border border-gray-200">
+              <Camera className="w-4 h-4" /> Ver todas las fotos
+            </button>
+            <Link to="/prestadores" className="absolute top-4 left-4">
+              <button className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl text-sm font-medium text-gray-700 shadow-md hover:bg-gray-50 transition-colors">
+                <ArrowLeft className="w-4 h-4" /> Volver
+              </button>
+            </Link>
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-8xl"
-            style={{ background: `linear-gradient(135deg, ${tipoConf.color}33, ${tipoConf.color}66)` }}>
+          <div className="h-64 rounded-2xl flex items-center justify-center text-6xl relative"
+            style={{ background: `linear-gradient(135deg, ${tipoConf.color}15, ${tipoConf.color}30)` }}>
             {tipoConf.emoji}
+            <Link to="/prestadores" className="absolute top-4 left-4">
+              <button className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl text-sm font-medium text-gray-700 shadow-md">
+                <ArrowLeft className="w-4 h-4" /> Volver
+              </button>
+            </Link>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-        {/* Back */}
-        <div className="absolute top-24 left-4 md:left-8 z-10">
-          <Link to="/prestadores">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white rounded-xl text-sm font-medium text-gray-800 transition-colors backdrop-blur-sm">
-              <ArrowLeft className="w-4 h-4" /> Volver
-            </button>
-          </Link>
-        </div>
-
-        {/* Actions */}
-        <div className="absolute top-24 right-4 md:right-8 z-10 flex gap-2">
-          <button onClick={handleFav}
-            className="w-10 h-10 rounded-xl bg-white/90 hover:bg-white flex items-center justify-center backdrop-blur-sm transition-colors">
-            <Heart className={`w-5 h-5 ${isFav ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
-          </button>
-          <button onClick={handleShare}
-            className="w-10 h-10 rounded-xl bg-white/90 hover:bg-white flex items-center justify-center backdrop-blur-sm transition-colors">
-            <Share2 className="w-5 h-5 text-gray-700" />
-          </button>
-        </div>
-
-        {/* Info sobre imagen */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold px-3 py-1 rounded-full text-white backdrop-blur-sm"
-                style={{ backgroundColor: `${tipoConf.color}cc` }}>
-                {tipoConf.emoji} {tipoConf.label}
-              </span>
-              {prestador.verificado && (
-                <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/30">
-                  <BadgeCheck className="w-3.5 h-3.5" /> Verificado
-                </span>
-              )}
-              {promoActiva && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-amber-900">
-                  🎁 {promoActiva.descuento_pct}% OFF
-                </span>
-              )}
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-2 drop-shadow-lg"
-              style={{ fontFamily: "Playfair Display, serif" }}>
-              {prestador.nombre}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm">
-              {prestador.direccion && (
-                <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{prestador.direccion}</span>
-              )}
-              {avgRating && (
-                <span className="flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-amber-400 fill-current" />
-                  <strong className="text-white">{avgRating}</strong> ({resenas.length} reseñas)
-                </span>
-              )}
-              {prestador.horarios && (
-                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{prestador.horarios}</span>
-              )}
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* ── CTA STICKY ── */}
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex overflow-x-auto scrollbar-hide gap-1">
+      {/* ── TABS ESTILO AIRBNB ── */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-20 mt-6">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex overflow-x-auto scrollbar-hide">
             {tabs.map(t => (
               <button key={t.v} onClick={() => setTab(t.v)}
-                className={`px-4 py-2 rounded-xl text-sm whitespace-nowrap font-medium transition-all flex-shrink-0 ${
-                  tab === t.v ? "text-white" : "text-gray-500 hover:bg-gray-50"
-                }`}
-                style={tab === t.v ? { backgroundColor: tipoConf.color } : {}}>
+                className={`px-5 py-4 text-sm whitespace-nowrap font-medium border-b-2 transition-all flex-shrink-0 ${
+                  tab === t.v
+                    ? "border-gray-900 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}>
                 {t.l}
               </button>
             ))}
           </div>
-          <button onClick={() => setReservaModal(true)}
-            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold transition-all hover:opacity-90"
-            style={{ backgroundColor: tipoConf.color }}>
-            <Calendar className="w-4 h-4" /> Reservar
-          </button>
         </div>
       </div>
 
       {/* ── CONTENIDO ── */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
           {/* Columna principal */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-6">
 
             {/* ── TAB INFO ── */}
             {tab === "info" && (
               <>
                 {/* Descripción */}
                 {prestador.descripcion && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-100">
-                    <h2 className="font-bold text-gray-900 text-xl mb-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                    <h2 className="font-bold text-gray-900 text-xl mb-3">
                       Acerca de {prestador.nombre}
                     </h2>
-                    <p className="text-gray-600 text-sm leading-relaxed">{prestador.descripcion}</p>
+                    <p className="text-gray-600 leading-relaxed">{prestador.descripcion}</p>
                     {prestador.descripcion_larga && (
-                      <p className="text-gray-500 text-sm leading-relaxed mt-3 pl-4 border-l-2" style={{ borderColor: tipoConf.color }}>
+                      <p className="text-gray-500 leading-relaxed mt-3 pl-4 border-l-2" style={{ borderColor: tipoConf.color }}>
                         {prestador.descripcion_larga}
                       </p>
                     )}
@@ -1129,80 +1162,119 @@ const PrestadorPage = () => {
             )}
           </div>
 
-          {/* ── SIDEBAR ── */}
+          {/* ── SIDEBAR AIRBNB STYLE ── */}
           <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-            {/* Contacto */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-4">Contactar</h3>
-              <div className="space-y-3">
+            {/* Card principal de reserva */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6">
+              {/* Precio si aplica */}
+              {(prestador.precio_min || prestador.precio_max) && (
+                <div className="mb-4 pb-4 border-b border-gray-100">
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${prestador.precio_min || prestador.precio_max}
+                    <span className="text-base font-normal text-gray-500"> MXN</span>
+                  </p>
+                  {prestador.precio_min && prestador.precio_max && (
+                    <p className="text-xs text-gray-400 mt-0.5">Desde ${prestador.precio_min} hasta ${prestador.precio_max} MXN</p>
+                  )}
+                </div>
+              )}
+
+              {/* Botón reservar principal */}
+              <button onClick={() => setReservaModal(true)}
+                className="w-full py-4 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-md"
+                style={{ background: `linear-gradient(135deg, ${tipoConf.color}, ${tipoConf.color}cc)` }}>
+                <Calendar className="w-5 h-5" /> Hacer una reserva
+              </button>
+              <p className="text-center text-xs text-gray-400 mt-2">Sin cobro ahora · El prestador confirma</p>
+
+              {/* Divider */}
+              <div className="border-t border-gray-100 my-4" />
+
+              {/* Contacto */}
+              <div className="space-y-2.5">
                 {prestador.whatsapp && (
                   <button onClick={() => handleContact("whatsapp")}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500 text-white font-semibold text-sm hover:bg-green-600 transition-colors">
-                    <MessageCircle className="w-4 h-4" /> WhatsApp
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors">
+                    <MessageCircle className="w-4 h-4" /> Contactar por WhatsApp
                   </button>
                 )}
                 {prestador.telefono && (
                   <button onClick={() => handleContact("phone")}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">
                     <Phone className="w-4 h-4" /> {prestador.telefono}
                   </button>
                 )}
-                <button onClick={() => setReservaModal(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: tipoConf.color }}>
-                  <Calendar className="w-4 h-4" /> Hacer una reserva
-                </button>
               </div>
             </div>
 
             {/* Info rápida */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-4">Información</h3>
-              <div className="space-y-3 text-sm text-gray-600">
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Información</h3>
+              <div className="space-y-3">
                 {prestador.horarios && (
-                  <div className="flex items-start gap-2.5">
-                    <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: tipoConf.color }} />
-                    <span>{prestador.horarios}</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${tipoConf.color}15` }}>
+                      <Clock className="w-4 h-4" style={{ color: tipoConf.color }} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium">Horarios</p>
+                      <p className="text-sm text-gray-700">{prestador.horarios}</p>
+                    </div>
                   </div>
                 )}
                 {prestador.direccion && (
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: tipoConf.color }} />
-                    <span>{prestador.direccion}</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${tipoConf.color}15` }}>
+                      <MapPin className="w-4 h-4" style={{ color: tipoConf.color }} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium">Dirección</p>
+                      <p className="text-sm text-gray-700">{prestador.direccion}</p>
+                    </div>
                   </div>
                 )}
                 {prestador.website && (
-                  <a href={prestador.website.startsWith("http") ? prestador.website : `https://${prestador.website}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 hover:underline" style={{ color: tipoConf.color }}>
-                    <Globe className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">{prestador.website}</span>
-                  </a>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${tipoConf.color}15` }}>
+                      <Globe className="w-4 h-4" style={{ color: tipoConf.color }} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium">Sitio web</p>
+                      <a href={prestador.website.startsWith("http") ? prestador.website : `https://${prestador.website}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-sm hover:underline truncate block" style={{ color: tipoConf.color }}>
+                        {prestador.website}
+                      </a>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Redes sociales */}
             {(prestador.instagram || prestador.facebook || prestador.tiktok) && (
-              <div className="bg-white rounded-2xl p-5 border border-gray-100">
-                <h3 className="font-bold text-gray-900 mb-3">Redes sociales</h3>
-                <div className="flex gap-3">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Síguenos</h3>
+                <div className="flex gap-2">
                   {prestador.instagram && (
                     <a href={`https://instagram.com/${prestador.instagram.replace("@","")}`} target="_blank" rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                      <Instagram className="w-5 h-5" />
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                      <Instagram className="w-4 h-4" /> Instagram
                     </a>
                   )}
                   {prestador.facebook && (
                     <a href={`https://facebook.com/${prestador.facebook}`} target="_blank" rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                      <Facebook className="w-5 h-5" />
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                      <Facebook className="w-4 h-4" /> Facebook
                     </a>
                   )}
                   {prestador.tiktok && (
                     <a href={`https://tiktok.com/@${prestador.tiktok.replace("@","")}`} target="_blank" rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white hover:opacity-90 transition-opacity text-xs font-bold">
-                      TK
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                      TikTok
                     </a>
                   )}
                 </div>
@@ -1213,7 +1285,7 @@ const PrestadorPage = () => {
             {prestador.lat && prestador.lng && (
               <a href={`https://www.google.com/maps/search/?api=1&query=${prestador.lat},${prestador.lng}`}
                 target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-600 text-sm font-medium hover:border-gray-400 hover:bg-gray-50 transition-all">
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-all">
                 <Navigation className="w-4 h-4" /> Ver en Google Maps
               </a>
             )}
