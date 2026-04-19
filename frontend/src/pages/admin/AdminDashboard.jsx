@@ -5,7 +5,7 @@ import { API, useAuth } from "@/App";
 import { 
   LayoutDashboard, MapPin, Users, Calendar, AlertTriangle, ShieldAlert, 
   Settings, LogOut, Menu, X, Plus, Check, XCircle, Eye, ChevronRight,
-  Loader2, UserPlus, Bell, BarChart3
+  Loader2, UserPlus, Bell, BarChart3, EyeOff, Key, Trash2, RefreshCw, Lock, Unlock, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -662,8 +662,15 @@ const UsuariosAdmin = () => {
   const [municipios, setMunicipios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [filtroRol, setFiltroRol] = useState("todos");
+  const [busqueda, setBusqueda] = useState("");
+  const [passwordsVisibles, setPasswordsVisibles] = useState({});
+  const [passwordsData, setPasswordsData] = useState({});
+  const [resettingId, setResettingId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
-  useEffect(() => {
+  const fetchUsuarios = () => {
+    setLoading(true);
     Promise.all([
       axios.get(`${API}/admin/usuarios`),
       axios.get(`${API}/municipios`, { params: { limit: 300 } }),
@@ -672,28 +679,191 @@ const UsuariosAdmin = () => {
       setMunicipios(munRes.data.municipios || []);
     }).catch(e => console.error("Error:", e))
       .finally(() => setLoading(false));
-  }, []);
+  };
 
-  const rolColors = { superadmin: "bg-purple-100 text-purple-800", encargado: "bg-blue-100 text-blue-800", prestador: "bg-orange-100 text-orange-800", turista: "bg-green-100 text-green-800" };
+  useEffect(() => { fetchUsuarios(); }, []);
+
+  const rolColors = {
+    superadmin: "bg-purple-100 text-purple-800",
+    encargado: "bg-blue-100 text-blue-800",
+    prestador: "bg-orange-100 text-orange-800",
+    turista: "bg-green-100 text-green-800"
+  };
+
+  const resetPassword = async (userId, email) => {
+    setResettingId(userId);
+    try {
+      const newPass = `Veracruz${Math.random().toString(36).slice(2, 8)}!`;
+      await axios.put(`${API}/admin/usuarios/${userId}/password`, { password: newPass });
+      setPasswordsData(prev => ({ ...prev, [userId]: newPass }));
+      setPasswordsVisibles(prev => ({ ...prev, [userId]: true }));
+      toast.success("Contraseña reseteada");
+    } catch {
+      toast.error("Error al resetear contraseña");
+    } finally {
+      setResettingId(null);
+    }
+  };
+
+  const toggleActivo = async (usuario) => {
+    setTogglingId(usuario.user_id);
+    try {
+      await axios.put(`${API}/admin/usuarios/${usuario.user_id}/estado`, { activo: !usuario.activo });
+      setUsuarios(prev => prev.map(u => u.user_id === usuario.user_id ? { ...u, activo: !u.activo } : u));
+      toast.success(usuario.activo ? "Usuario desactivado" : "Usuario activado");
+    } catch {
+      toast.error("Error al cambiar estado");
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const copiarAlPortapapeles = (texto) => {
+    navigator.clipboard.writeText(texto);
+    toast.success("Copiado al portapapeles");
+  };
+
+  const usuariosFiltrados = usuarios.filter(u => {
+    const matchRol = filtroRol === "todos" || u.rol === filtroRol;
+    const matchBusqueda = !busqueda || u.nombre?.toLowerCase().includes(busqueda.toLowerCase()) || u.email?.toLowerCase().includes(busqueda.toLowerCase());
+    return matchRol && matchBusqueda;
+  });
+
+  const municipioNombre = (id) => municipios.find(m => m.id === id)?.nombre || "—";
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>
-        <Button onClick={() => setShowDialog(true)} className="bg-[#1B5E20] hover:bg-[#145218]"><UserPlus className="w-4 h-4 mr-2" />Crear Usuario</Button>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{usuarios.length} usuarios registrados</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchUsuarios} size="sm">
+            <RefreshCw className="w-4 h-4 mr-1" /> Actualizar
+          </Button>
+          <Button onClick={() => setShowDialog(true)} className="bg-[#1B5E20] hover:bg-[#145218]">
+            <UserPlus className="w-4 h-4 mr-2" /> Crear Usuario
+          </Button>
+        </div>
       </div>
+
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          placeholder="Buscar por nombre o email..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px] focus:outline-none focus:border-[#1B5E20]"
+        />
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          {["todos","superadmin","encargado","prestador","turista"].map(rol => (
+            <button key={rol} onClick={() => setFiltroRol(rol)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all capitalize ${
+                filtroRol === rol ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+              }`}>
+              {rol}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Resumen por rol */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {["superadmin","encargado","prestador","turista"].map(rol => {
+          const count = usuarios.filter(u => u.rol === rol).length;
+          return (
+            <div key={rol} className="bg-white rounded-xl p-4 border border-gray-100">
+              <p className="text-2xl font-bold text-gray-900">{count}</p>
+              <p className="text-xs text-gray-500 capitalize mt-0.5">{rol}s</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Tabla */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <Table>
-          <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Email</TableHead><TableHead>Rol</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Usuario</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Municipio</TableHead>
+              <TableHead>Contraseña</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-10"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></TableCell></TableRow>
-            ) : usuarios.map((u) => (
-              <TableRow key={u.user_id}>
-                <TableCell className="font-medium">{u.nombre}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell><Badge className={rolColors[u.rol] || "bg-gray-100"}>{u.rol}</Badge></TableCell>
-                <TableCell><Badge className={u.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>{u.activo ? "Activo" : "Inactivo"}</Badge></TableCell>
+              <TableRow><TableCell colSpan={6} className="text-center py-10">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+              </TableCell></TableRow>
+            ) : usuariosFiltrados.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center py-10 text-gray-400">
+                No hay usuarios con estos filtros
+              </TableCell></TableRow>
+            ) : usuariosFiltrados.map((u) => (
+              <TableRow key={u.user_id} className={!u.activo ? "opacity-50" : ""}>
+                <TableCell>
+                  <div>
+                    <p className="font-medium text-gray-900">{u.nombre}</p>
+                    <p className="text-xs text-gray-400">{u.email}</p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge className={rolColors[u.rol] || "bg-gray-100"}>{u.rol}</Badge>
+                </TableCell>
+                <TableCell className="text-sm text-gray-600">
+                  {u.municipio_id ? municipioNombre(u.municipio_id) : "—"}
+                </TableCell>
+                <TableCell>
+                  {passwordsData[u.user_id] ? (
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                        {passwordsVisibles[u.user_id] ? passwordsData[u.user_id] : "••••••••"}
+                      </code>
+                      <button onClick={() => setPasswordsVisibles(prev => ({ ...prev, [u.user_id]: !prev[u.user_id] }))}
+                        className="text-gray-400 hover:text-gray-600">
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => copiarAlPortapapeles(passwordsData[u.user_id])}
+                        className="text-gray-400 hover:text-gray-600">
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-mono">••••••••</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge className={u.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}>
+                    {u.activo ? "Activo" : "Inactivo"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {/* Reset contraseña */}
+                    <button
+                      onClick={() => resetPassword(u.user_id, u.email)}
+                      disabled={resettingId === u.user_id || u.rol === "superadmin"}
+                      title="Resetear contraseña"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-amber-600 hover:bg-amber-50 disabled:opacity-30 transition-colors">
+                      {resettingId === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
+                    </button>
+                    {/* Activar/Desactivar */}
+                    <button
+                      onClick={() => toggleActivo(u)}
+                      disabled={togglingId === u.user_id || u.rol === "superadmin"}
+                      title={u.activo ? "Desactivar" : "Activar"}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 ${
+                        u.activo ? "text-red-500 hover:bg-red-50" : "text-green-600 hover:bg-green-50"
+                      }`}>
+                      {togglingId === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : u.activo ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -705,7 +875,13 @@ const UsuariosAdmin = () => {
           {showDialog && (
             <CreateUserDialogForm
               municipios={municipios}
-              onUserCreated={(newUserData) => setUsuarios((prev) => [newUserData, ...prev])}
+              onUserCreated={(newUserData) => {
+                setUsuarios((prev) => [newUserData, ...prev]);
+                if (newUserData.password) {
+                  setPasswordsData(prev => ({ ...prev, [newUserData.user_id]: newUserData.password }));
+                  setPasswordsVisibles(prev => ({ ...prev, [newUserData.user_id]: true }));
+                }
+              }}
               onClose={() => setShowDialog(false)}
             />
           )}
