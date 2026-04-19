@@ -8,6 +8,9 @@ import MunicipioCard from "@/components/MunicipioCard";
 import EventoCard from "@/components/EventoCard";
 import PanicButton from "@/components/PanicButton";
 import AlertBanner from "@/components/AlertBanner";
+import WidgetClima from "@/components/WidgetClima";
+import WidgetEmergencia from "@/components/WidgetEmergencia";
+import WidgetPrestadoresDestacados from "@/components/WidgetPrestadoresDestacados";
 import { Link } from "react-router-dom";
 import {
   MapPin, Calendar, Users, ShieldAlert, BookOpen,
@@ -235,6 +238,17 @@ const HomePage = () => {
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 text-xs animate-bounce">
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center pt-1.5">
             <div className="w-1 h-2.5 bg-white/50 rounded-full" />
+          </div>
+        </div>
+      </section>
+
+      {/* ══ WIDGETS ═══════════════════════════════════════════ */}
+      <section className="py-10 px-4 bg-[#F8F8F6]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <WidgetClima />
+            <WidgetEmergencia />
+            <WidgetPrestadoresDestacados />
           </div>
         </div>
       </section>
