@@ -334,7 +334,9 @@ class ServicioPrestadorCreate(BaseModel):
 class ReservaCreate(BaseModel):
     prestador_id: str
     servicio_id: Optional[str] = None
+    habitacion_id: Optional[str] = None
     fecha_reserva: str                     # ISO date
+    fecha_salida: Optional[str] = None     # ISO date para hospedaje
     num_personas: int = 1
     nota_turista: Optional[str] = None
 
@@ -2709,6 +2711,45 @@ async def get_usuarios(rol: Optional[str] = None, request: Request = None):
     usuarios = await db.usuarios.find(query, {"_id": 0, "password_hash": 0}).to_list(500)
     return usuarios
 
+
+@api_router.put("/admin/usuarios/{user_id}/password")
+async def reset_user_password(user_id: str, request: Request):
+    """Resetea la contraseña de un usuario (Solo Super Admin)."""
+    admin = await get_current_user(request)
+    if admin["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    body = await request.json()
+    new_password = body.get("password", "")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Contraseña muy corta (mínimo 6 caracteres)")
+    hashed = hash_password(new_password)
+    result = await db.usuarios.update_one(
+        {"user_id": user_id},
+        {"$set": {"password_hash": hashed}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    logger.info(f"Password reset for user {user_id} by admin {admin['user_id']}")
+    return {"ok": True}
+
+
+@api_router.put("/admin/usuarios/{user_id}/estado")
+async def toggle_user_estado(user_id: str, request: Request):
+    """Activa o desactiva un usuario (Solo Super Admin)."""
+    admin = await get_current_user(request)
+    if admin["rol"] != "superadmin":
+        raise HTTPException(status_code=403, detail="Solo Super Admin")
+    body = await request.json()
+    activo = body.get("activo", True)
+    result = await db.usuarios.update_one(
+        {"user_id": user_id},
+        {"$set": {"activo": activo}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"ok": True, "activo": activo}
+
+
 # ============== FILE UPLOAD ENDPOINTS ==============
 
 @api_router.post("/upload")
@@ -3945,6 +3986,135 @@ async def delete_habitacion(hab_id: str, current_user: dict = Depends(get_curren
     return {"message": "Habitación eliminada"}
 
 
+# ============== DISPONIBILIDAD HABITACIONES ==============
+
+@api_router.get("/habitaciones/{hab_id}/disponibilidad")
+async def get_disponibilidad(hab_id: str):
+    """Retorna fechas bloqueadas para una habitación"""
+    doc = await db.disponibilidad.find_one({"habitacion_id": hab_id}, {"_id": 0})
+    return {"fechas_bloqueadas": doc.get("fechas_bloqueadas", []) if doc else []}
+
+
+@api_router.post("/habitaciones/{hab_id}/disponibilidad")
+async def set_disponibilidad(
+    hab_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Prestador bloquea o desbloquea fechas"""
+    body = await request.json()
+    fechas = body.get("fechas_bloqueadas", [])
+    await db.disponibilidad.update_one(
+        {"habitacion_id": hab_id},
+        {"$set": {"habitacion_id": hab_id, "fechas_bloqueadas": fechas, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"ok": True, "fechas_bloqueadas": fechas}
+
+
+@api_router.get("/habitaciones/{hab_id}/reservas-fechas")
+async def get_reservas_fechas(hab_id: str):
+    """Retorna fechas ya reservadas (aceptadas) para una habitación"""
+    reservas = await db.reservas.find(
+        {"servicio_id": hab_id, "estado": {"$in": ["aceptada", "pendiente"]}},
+        {"fecha_reserva": 1, "fecha_salida": 1, "_id": 0}
+    ).to_list(200)
+    fechas = []
+    for r in reservas:
+        fechas.append(r.get("fecha_reserva"))
+        if r.get("fecha_salida"):
+            fechas.append(r.get("fecha_salida"))
+    return {"fechas_ocupadas": [f for f in fechas if f]}
+
+
+# ============== CHAT DIRECTO TURISTA ↔ PRESTADOR ==============
+
+@api_router.get("/mensajes/{prestador_id}")
+async def get_mensajes(
+    prestador_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Turista ve sus mensajes con un prestador. Prestador ve todos."""
+    if current_user["rol"] == "prestador":
+        cursor = db.mensajes.find(
+            {"prestador_id": prestador_id},
+            {"_id": 0}
+        ).sort("created_at", 1)
+    else:
+        cursor = db.mensajes.find(
+            {"prestador_id": prestador_id, "turista_id": current_user["user_id"]},
+            {"_id": 0}
+        ).sort("created_at", 1)
+    mensajes = await cursor.to_list(200)
+    return {"mensajes": mensajes}
+
+
+@api_router.post("/mensajes/{prestador_id}")
+async def send_mensaje(
+    prestador_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Envía un mensaje entre turista y prestador"""
+    body = await request.json()
+    texto = body.get("texto", "").strip()
+    if not texto:
+        raise HTTPException(status_code=400, detail="Mensaje vacío")
+
+    # Determinar turista_id
+    if current_user["rol"] == "prestador":
+        turista_id = body.get("turista_id")
+        remitente = "prestador"
+    else:
+        turista_id = current_user["user_id"]
+        remitente = "turista"
+
+    mensaje = {
+        "id": str(uuid.uuid4()),
+        "prestador_id": prestador_id,
+        "turista_id": turista_id,
+        "turista_nombre": body.get("turista_nombre", current_user.get("nombre", "")),
+        "texto": texto,
+        "remitente": remitente,
+        "leido": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.mensajes.insert_one(mensaje)
+    mensaje.pop("_id", None)
+    return mensaje
+
+
+@api_router.put("/mensajes/{prestador_id}/leer")
+async def marcar_leidos(
+    prestador_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Marca mensajes como leídos"""
+    body = await request.json()
+    turista_id = body.get("turista_id", current_user["user_id"])
+    await db.mensajes.update_many(
+        {"prestador_id": prestador_id, "turista_id": turista_id, "remitente": {"$ne": current_user["rol"]}},
+        {"$set": {"leido": True}}
+    )
+    return {"ok": True}
+
+
+@api_router.get("/mensajes/{prestador_id}/no-leidos")
+async def count_no_leidos(
+    prestador_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Cuenta mensajes no leídos"""
+    count = await db.mensajes.count_documents({
+        "prestador_id": prestador_id,
+        "turista_id": current_user["user_id"],
+        "remitente": "prestador",
+        "leido": False
+    })
+    return {"count": count}
+
+
 # ============== FLOTAS / EQUIPO (transporte/tours) ==============
 
 @api_router.get("/prestadores/{prestador_id}/flota")
@@ -4470,6 +4640,9 @@ async def startup_event():
     await db.servicios_municipales.create_index("municipio_id")
     await db.favoritos.create_index("user_id")
     await db.resenas.create_index("prestador_id")
+    await db.mensajes.create_index("prestador_id")
+    await db.mensajes.create_index("turista_id")
+    await db.disponibilidad.create_index("habitacion_id")
     
     logger.info("Veracruz Contigo API ready!")
 
