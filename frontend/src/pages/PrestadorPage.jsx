@@ -4,6 +4,8 @@ import axios from "axios";
 import { API, useAuth } from "@/App";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CalendarioDisponibilidad from "@/components/CalendarioDisponibilidad";
+import ChatPrestador from "@/components/ChatPrestador";
 import {
   MapPin, Star, Phone, Globe, Clock, Users, DollarSign,
   MessageCircle, Share2, Heart, ArrowLeft, ChevronLeft,
@@ -370,6 +372,131 @@ const ResenasSection = ({ prestadorId, resenas, setResenas, avgRating, isAuthent
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+/* ─── Habitación Card con Calendario ──────────────────────── */
+const HabitacionCard = ({ hab, tipoConf, onReservar }) => {
+  const [expanded,  setExpanded]  = useState(false);
+  const [fotoIdx,   setFotoIdx]   = useState(0);
+  const [entrada,   setEntrada]   = useState(null);
+  const [salida,    setSalida]    = useState(null);
+
+  const noches = entrada && salida
+    ? Math.round((new Date(salida) - new Date(entrada)) / 86400000)
+    : 0;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Galería de fotos */}
+      {hab.fotos?.length > 0 && (
+        <div className="relative h-52 overflow-hidden group">
+          <img src={hab.fotos[fotoIdx]} alt={hab.nombre}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {hab.fotos.length > 1 && (
+            <>
+              <button onClick={() => setFotoIdx(i => (i - 1 + hab.fotos.length) % hab.fotos.length)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition-colors">
+                <ChevronLeft className="w-4 h-4 text-gray-700" />
+              </button>
+              <button onClick={() => setFotoIdx(i => (i + 1) % hab.fotos.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center shadow hover:bg-white transition-colors">
+                <ChevronRight className="w-4 h-4 text-gray-700" />
+              </button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                {hab.fotos.map((_, i) => (
+                  <button key={i} onClick={() => setFotoIdx(i)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all ${i === fotoIdx ? "bg-white scale-125" : "bg-white/50"}`} />
+                ))}
+              </div>
+            </>
+          )}
+          {/* Badge disponibilidad */}
+          <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold ${
+            hab.disponible ? "bg-green-500 text-white" : "bg-gray-500 text-white"
+          }`}>
+            {hab.disponible ? "Disponible" : "No disponible"}
+          </div>
+        </div>
+      )}
+
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg">{hab.nombre}</h3>
+            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5" /> {hab.capacidad} {hab.capacidad === 1 ? "persona" : "personas"}
+              </span>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xl font-black" style={{ color: tipoConf.color }}>
+              ${hab.precio_noche.toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-400">MXN / noche</p>
+            {noches > 0 && (
+              <p className="text-xs font-semibold mt-1" style={{ color: tipoConf.color }}>
+                ${(hab.precio_noche * noches).toLocaleString()} total ({noches}n)
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Descripción */}
+        {hab.descripcion && (
+          <p className="text-sm text-gray-600 leading-relaxed mb-4">{hab.descripcion}</p>
+        )}
+
+        {/* Amenidades */}
+        {hab.amenidades?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {hab.amenidades.slice(0, expanded ? hab.amenidades.length : 6).map(a => (
+              <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">{a}</span>
+            ))}
+            {!expanded && hab.amenidades.length > 6 && (
+              <button onClick={() => setExpanded(true)}
+                className="text-xs font-semibold px-2.5 py-1 rounded-full border border-dashed border-gray-300 text-gray-500 hover:bg-gray-50">
+                +{hab.amenidades.length - 6} más
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Calendario */}
+        {hab.disponible && (
+          <div className="mb-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              Selecciona tus fechas
+            </p>
+            <CalendarioDisponibilidad
+              habitacionId={hab.id}
+              color={tipoConf.color}
+              onRangoSelect={({ entrada: e, salida: s }) => { setEntrada(e); setSalida(s); }}
+            />
+          </div>
+        )}
+
+        {/* Botón reservar */}
+        {hab.disponible ? (
+          <button
+            onClick={() => onReservar(hab, entrada, salida)}
+            disabled={!entrada || !salida}
+            className="w-full py-3.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            style={{ background: `linear-gradient(135deg, ${tipoConf.color}, ${tipoConf.color}cc)` }}>
+            <Calendar className="w-4 h-4" />
+            {entrada && salida
+              ? `Reservar · ${noches} noche${noches !== 1 ? "s" : ""}`
+              : "Selecciona tus fechas para reservar"}
+          </button>
+        ) : (
+          <div className="w-full py-3.5 rounded-xl bg-gray-100 text-gray-400 text-sm font-semibold text-center">
+            No disponible por el momento
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -1078,42 +1205,59 @@ const PrestadorPage = () => {
 
             {/* ── TAB HABITACIONES ── */}
             {tab === "habitaciones" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-5">
+                {/* Header info */}
+                {prestador.checkin_desde && (
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                    <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Políticas de estadía</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                      {prestador.checkin_desde && (
+                        <div className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50">
+                          <span className="text-xl mb-1">🔑</span>
+                          <p className="text-xs text-gray-400 font-medium">Check-in</p>
+                          <p className="font-bold text-gray-900">Desde {prestador.checkin_desde}</p>
+                        </div>
+                      )}
+                      {prestador.checkout_hasta && (
+                        <div className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50">
+                          <span className="text-xl mb-1">🚪</span>
+                          <p className="text-xs text-gray-400 font-medium">Check-out</p>
+                          <p className="font-bold text-gray-900">Hasta {prestador.checkout_hasta}</p>
+                        </div>
+                      )}
+                      {prestador.politica_mascotas !== undefined && (
+                        <div className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50">
+                          <span className="text-xl mb-1">{prestador.politica_mascotas ? "🐾" : "🚫"}</span>
+                          <p className="text-xs text-gray-400 font-medium">Mascotas</p>
+                          <p className="font-bold text-gray-900">{prestador.politica_mascotas ? "Permitidas" : "No permitidas"}</p>
+                        </div>
+                      )}
+                      {prestador.desayuno_incluido !== undefined && (
+                        <div className="flex flex-col items-center text-center p-3 rounded-xl bg-gray-50">
+                          <span className="text-xl mb-1">{prestador.desayuno_incluido ? "☕" : "—"}</span>
+                          <p className="text-xs text-gray-400 font-medium">Desayuno</p>
+                          <p className="font-bold text-gray-900">{prestador.desayuno_incluido ? "Incluido" : "No incluido"}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lista de habitaciones */}
                 {habitaciones.length === 0 ? (
-                  <div className="col-span-2 text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-400">
+                  <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 text-gray-400">
                     <Hotel className="w-12 h-12 mx-auto mb-2 opacity-20" />
                     <p className="text-sm">Sin habitaciones publicadas aún</p>
                   </div>
                 ) : habitaciones.map(h => (
-                  <div key={h.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                    {h.fotos?.[0] && (
-                      <img src={h.fotos[0]} alt={h.nombre} className="w-full h-40 object-cover" />
-                    )}
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-bold text-gray-900">🛏️ {h.nombre}</h3>
-                        <div className="text-right flex-shrink-0">
-                          <p className="font-bold" style={{ color: tipoConf.color }}>${h.precio_noche} <span className="text-xs font-normal text-gray-400">MXN/noche</span></p>
-                        </div>
-                      </div>
-                      {h.descripcion && <p className="text-xs text-gray-500 mb-3">{h.descripcion}</p>}
-                      <div className="flex items-center gap-2 mb-3 text-xs text-gray-500">
-                        <span className="flex items-center gap-1"><Users className="w-3 h-3" />{h.capacidad} personas</span>
-                      </div>
-                      {h.amenidades?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {h.amenidades.map(a => <span key={a} className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{a}</span>)}
-                        </div>
-                      )}
-                      {h.disponible && (
-                        <button onClick={() => setReservaModal({ nombre: h.nombre, precio: h.precio_noche, id: h.id })}
-                          className="w-full py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
-                          style={{ backgroundColor: tipoConf.color }}>
-                          Reservar habitación
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  <HabitacionCard
+                    key={h.id}
+                    hab={h}
+                    tipoConf={tipoConf}
+                    onReservar={(hab, entrada, salida) =>
+                      setReservaModal({ nombre: hab.nombre, precio: hab.precio_noche, id: hab.id, fecha_entrada: entrada, fecha_salida: salida })
+                    }
+                  />
                 ))}
               </div>
             )}
@@ -1305,6 +1449,15 @@ const PrestadorPage = () => {
           servicio={reservaModal === true ? null : reservaModal}
           onClose={() => setReservaModal(null)}
           onSuccess={() => {}}
+        />
+      )}
+
+      {/* Chat flotante */}
+      {esHospedaje(prestador.tipo) && (
+        <ChatPrestador
+          prestadorId={prestadorId}
+          prestadorNombre={prestador.nombre}
+          color={tipoConf.color}
         />
       )}
 
