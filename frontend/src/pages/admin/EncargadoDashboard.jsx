@@ -590,30 +590,63 @@ const ServiciosMunicipalesTab = ({ municipioId }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// TAB: PRESTADORES (existing logic preserved)
+// TAB: PRESTADORES — igual que Admin pero solo del municipio del encargado
 // ══════════════════════════════════════════════════════════════════════════════
+const FORM_VACIO = {
+  nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "",
+  whatsapp: "", horarios: "", direccion: "", foto_url: "",
+  lat: "", lng: "", website: "", instagram: "", facebook: "",
+  precio_min: "", precio_max: "",
+};
+
 const PrestadoresTab = ({ municipioId, municipioNombre }) => {
-  const [prestadores, setPrestadores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showDialog, setShowDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [filtroTipo, setFiltroTipo] = useState("todos");
-  const [form, setForm] = useState({ nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "", whatsapp: "", horarios: "", direccion: "", foto_url: "", lat: "", lng: "" });
+  const [prestadores, setPrestadores]   = useState([]);
+  const [loading,     setLoading]       = useState(true);
+  const [showDialog,  setShowDialog]    = useState(false);
+  const [editando,    setEditando]      = useState(null); // prestador completo
+  const [saving,      setSaving]        = useState(false);
+  const [uploading,   setUploading]     = useState(false);
+  const [filtroTipo,  setFiltroTipo]    = useState("todos");
+  const [filtroBusq,  setFiltroBusq]    = useState("");
+  const [vistaGrid,   setVistaGrid]     = useState(true);
+  const [form,        setForm]          = useState(FORM_VACIO);
 
   useEffect(() => { fetchPrestadores(); }, [municipioId]);
 
   const fetchPrestadores = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${API}/prestadores`, { params: { municipio_id: municipioId, limit: 100 } });
+      const res = await axios.get(`${API}/prestadores`, { params: { municipio_id: municipioId, limit: 200 } });
       setPrestadores(res.data.prestadores || []);
     } finally { setLoading(false); }
+  };
+
+  const abrirCrear = () => {
+    setEditando(null);
+    setForm(FORM_VACIO);
+    setShowDialog(true);
+  };
+
+  const abrirEditar = (p) => {
+    setEditando(p);
+    setForm({
+      nombre: p.nombre || "", tipo: p.tipo || "", subtipo: p.subtipo || "",
+      descripcion: p.descripcion || "", telefono: p.telefono || "",
+      whatsapp: p.whatsapp || "", horarios: p.horarios || "",
+      direccion: p.direccion || "", foto_url: p.foto_url || "",
+      lat: p.lat || "", lng: p.lng || "",
+      website: p.website || "", instagram: p.instagram || "",
+      facebook: p.facebook || "", precio_min: p.precio_min || "",
+      precio_max: p.precio_max || "",
+    });
+    setShowDialog(true);
   };
 
   const handleVerificar = async (id, verificar) => {
     try {
       await axios.post(`${API}/prestadores/${id}/${verificar ? "verificar" : "desverificar"}`);
       setPrestadores(prev => prev.map(p => p.id === id ? { ...p, verificado: verificar } : p));
-      toast.success(verificar ? "✅ Prestador verificado" : "Prestador desverificado");
+      toast.success(verificar ? "✅ Prestador verificado" : "Verificación removida");
     } catch { toast.error("Error al actualizar"); }
   };
 
@@ -625,62 +658,123 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
     } catch { toast.error("Error al actualizar"); }
   };
 
+  const handleFoto = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      setForm(f => ({ ...f, foto_url: url }));
+      toast.success("Foto subida");
+    } catch { toast.error("Error subiendo foto"); }
+    finally { setUploading(false); }
+  };
+
   const handleSubmit = async () => {
     if (!form.nombre || !form.tipo) { toast.error("Nombre y tipo son obligatorios"); return; }
     setSaving(true);
     try {
-      await axios.post(`${API}/prestadores`, { ...form, municipio_id: municipioId, lat: form.lat ? parseFloat(form.lat) : undefined, lng: form.lng ? parseFloat(form.lng) : undefined });
-      toast.success("Prestador agregado");
+      const payload = {
+        ...form,
+        municipio_id: municipioId,
+        lat: form.lat ? parseFloat(form.lat) : undefined,
+        lng: form.lng ? parseFloat(form.lng) : undefined,
+        precio_min: form.precio_min ? parseFloat(form.precio_min) : undefined,
+        precio_max: form.precio_max ? parseFloat(form.precio_max) : undefined,
+      };
+      if (editando) {
+        await axios.put(`${API}/prestadores/${editando.id}`, payload);
+        toast.success("✅ Prestador actualizado");
+      } else {
+        await axios.post(`${API}/prestadores`, payload);
+        toast.success("✅ Prestador creado");
+      }
       setShowDialog(false);
-      setForm({ nombre: "", tipo: "", subtipo: "", descripcion: "", telefono: "", whatsapp: "", horarios: "", direccion: "", foto_url: "", lat: "", lng: "" });
       fetchPrestadores();
     } catch (e) { toast.error(e.response?.data?.detail || "Error al guardar"); }
     finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("¿Eliminar este prestador?")) return;
-    await axios.delete(`${API}/prestadores/${id}`);
-    setPrestadores(prev => prev.filter(p => p.id !== id));
-    toast.success("Prestador eliminado");
+  const handleDelete = async (id, nombre) => {
+    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await axios.delete(`${API}/prestadores/${id}`);
+      setPrestadores(prev => prev.filter(p => p.id !== id));
+      toast.success("Prestador eliminado");
+    } catch { toast.error("Error al eliminar"); }
   };
 
-  const tipoActual = TIPOS_PRESTADOR.find(t => t.tipo === form.tipo);
-  const pendientes = prestadores.filter(p => !p.verificado);
+  const tipoActual  = TIPOS_PRESTADOR.find(t => t.tipo === form.tipo);
+  const pendientes  = prestadores.filter(p => !p.verificado);
   const verificados = prestadores.filter(p => p.verificado);
-  const filtrados = filtroTipo === "todos" ? verificados : verificados.filter(p => p.tipo === filtroTipo);
+
+  const filtrados = prestadores
+    .filter(p => filtroTipo === "todos" || p.tipo === filtroTipo)
+    .filter(p => !filtroBusq || p.nombre.toLowerCase().includes(filtroBusq.toLowerCase()));
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* ── Header con stats ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Prestadores de Servicios</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{municipioNombre} · <span className="text-green-600 font-medium">{verificados.length} verificados</span>{pendientes.length > 0 && <span className="text-amber-600 font-medium"> · {pendientes.length} pendientes</span>}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{municipioNombre}</p>
         </div>
-        <Button onClick={() => setShowDialog(true)} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Agregar prestador</Button>
+        <Button onClick={abrirCrear} className="bg-[#1B5E20] hover:bg-[#145218] self-start sm:self-auto">
+          <Plus className="w-4 h-4 mr-2" />Agregar prestador
+        </Button>
       </div>
 
-      {pendientes.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-            <h3 className="font-semibold text-amber-800">Pendientes de verificación ({pendientes.length})</h3>
+      {/* Stats rápidos */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total",       value: prestadores.length,  color: "bg-blue-50 text-blue-700",   emoji: "🏢" },
+          { label: "Verificados", value: verificados.length,  color: "bg-green-50 text-green-700", emoji: "✅" },
+          { label: "Pendientes",  value: pendientes.length,   color: pendientes.length > 0 ? "bg-amber-50 text-amber-700" : "bg-gray-50 text-gray-500", emoji: "⏳" },
+          { label: "Destacados",  value: prestadores.filter(p => p.destacado).length, color: "bg-orange-50 text-orange-700", emoji: "🔥" },
+        ].map(s => (
+          <div key={s.label} className={`rounded-xl p-4 ${s.color} border border-current/10`}>
+            <p className="text-2xl font-black">{s.value}</p>
+            <p className="text-xs font-semibold mt-0.5 opacity-70">{s.emoji} {s.label}</p>
           </div>
-          <div className="space-y-3">
+        ))}
+      </div>
+
+      {/* ── Pendientes de verificación ── */}
+      {pendientes.length > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+            <h3 className="font-bold text-amber-900">
+              {pendientes.length} prestador{pendientes.length !== 1 ? "es" : ""} pendiente{pendientes.length !== 1 ? "s" : ""} de verificación
+            </h3>
+          </div>
+          <div className="space-y-2">
             {pendientes.map(p => {
               const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
               return (
-                <div key={p.id} className="bg-white rounded-lg p-4 flex items-center justify-between gap-4 border border-amber-100">
+                <div key={p.id} className="bg-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-amber-100 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{cat?.grupo.split(" ")[0] || "🏢"}</span>
+                    {p.foto_url
+                      ? <img src={p.foto_url} alt="" className="w-12 h-12 rounded-xl object-cover border border-amber-100" />
+                      : <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${cat?.color || "bg-gray-50"}`}>{cat?.grupo.split(" ")[0] || "🏢"}</div>
+                    }
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{p.nombre}</p>
-                      <p className="text-xs text-gray-500">{p.subtipo || p.tipo} {p.telefono && `· ${p.telefono}`}</p>
+                      <p className="font-bold text-gray-900 text-sm">{p.nombre}</p>
+                      <p className="text-xs text-gray-500">{p.subtipo || p.tipo}{p.telefono && ` · ${p.telefono}`}</p>
+                      {p.descripcion && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{p.descripcion}</p>}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" onClick={() => handleVerificar(p.id, true)}><Check className="w-3.5 h-3.5 mr-1" />Verificar</Button>
-                    <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-8 text-xs" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5 mr-1" />Rechazar</Button>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button size="sm" variant="outline" className="text-xs h-8 px-3" onClick={() => abrirEditar(p)}>
+                      ✏️ Editar
+                    </Button>
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 h-8 text-xs" onClick={() => handleVerificar(p.id, true)}>
+                      <Check className="w-3.5 h-3.5 mr-1" />Verificar
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50 h-8 text-xs" onClick={() => handleDelete(p.id, p.nombre)}>
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />Rechazar
+                    </Button>
                   </div>
                 </div>
               );
@@ -689,66 +783,178 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        <button onClick={() => setFiltroTipo("todos")} className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === "todos" ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-          <span className="text-xl">🗂️</span><p className="text-xs font-semibold text-gray-700 mt-1">Todos</p><p className="text-lg font-bold text-gray-900">{prestadores.length}</p>
-        </button>
-        {TIPOS_PRESTADOR.map(cat => (
-          <button key={cat.tipo} onClick={() => setFiltroTipo(cat.tipo)} className={`p-3 rounded-xl border-2 text-left transition-all ${filtroTipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-            <span className="text-xl">{cat.grupo.split(" ")[0]}</span>
-            <p className="text-xs font-semibold text-gray-700 mt-1 truncate">{cat.grupo.slice(3)}</p>
-            <p className="text-lg font-bold text-gray-900">{verificados.filter(p => p.tipo === cat.tipo).length}</p>
+      {/* ── Filtros + búsqueda ── */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <div className="flex gap-2">
+          <Input
+            placeholder="🔍 Buscar prestador..."
+            value={filtroBusq}
+            onChange={e => setFiltroBusq(e.target.value)}
+            className="flex-1"
+          />
+          <Button variant="outline" size="icon" onClick={() => setVistaGrid(v => !v)} title="Cambiar vista">
+            {vistaGrid ? "☰" : "⊞"}
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setFiltroTipo("todos")}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+              filtroTipo === "todos" ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+            }`}>
+            🗂️ Todos ({prestadores.length})
           </button>
-        ))}
+          {TIPOS_PRESTADOR.map(cat => {
+            const count = prestadores.filter(p => p.tipo === cat.tipo).length;
+            if (count === 0) return null;
+            return (
+              <button key={cat.tipo} onClick={() => setFiltroTipo(cat.tipo)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                  filtroTipo === cat.tipo ? "bg-[#1B5E20] text-white border-[#1B5E20]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                }`}>
+                {cat.grupo.split(" ")[0]} {cat.grupo.slice(3)} ({count})
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
-        : filtrados.length === 0 ? <EmptyState icon={Users} title="No hay prestadores en esta categoría" sub='Haz clic en "Agregar prestador" para comenzar' onAdd={() => setShowDialog(true)} label="Agregar primero" />
-        : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtrados.map(p => {
-              const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
-              return (
-                <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                  {p.foto_url ? <img src={p.foto_url} alt={p.nombre} className="w-full h-36 object-cover" />
-                    : <div className={`w-full h-36 flex items-center justify-center text-5xl ${cat?.color || "bg-gray-50"}`}>{cat?.grupo.split(" ")[0] || "🏢"}</div>}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">{p.nombre}</h3>
-                        <span className="text-xs text-gray-500">{p.subtipo || p.tipo}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {p.verificado && <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-green-600" /></span>}
-                        {p.destacado && <span className="text-sm">🔥</span>}
-                      </div>
+      {/* ── Lista de prestadores ── */}
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+      ) : filtrados.length === 0 ? (
+        <EmptyState icon={Users} title="No hay prestadores" sub='Haz clic en "Agregar prestador" para comenzar' onAdd={abrirCrear} label="Agregar prestador" />
+      ) : vistaGrid ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtrados.map(p => {
+            const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
+            return (
+              <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all group">
+                {/* Imagen */}
+                <div className="relative h-40">
+                  {p.foto_url
+                    ? <img src={p.foto_url} alt={p.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    : <div className={`w-full h-full flex items-center justify-center text-5xl ${cat?.color || "bg-gray-50"}`}>{cat?.grupo.split(" ")[0] || "🏢"}</div>
+                  }
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex gap-1">
+                    {p.verificado && <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">✓ Verificado</span>}
+                    {p.destacado  && <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 Destacado</span>}
+                  </div>
+                  {/* Rating */}
+                  {p.calificacion_promedio > 0 && (
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      <span className="text-xs font-bold">{p.calificacion_promedio.toFixed(1)}</span>
                     </div>
-                    {p.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-3">{p.descripcion}</p>}
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 flex-wrap">
-                      <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => handleVerificar(p.id, !p.verificado)}>
-                        {p.verificado ? "✅ Verificado" : "Verificar"}
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => handleDestacado(p.id, !p.destacado)} title="Destacar">
-                        {p.destacado ? "🔥" : "⭐"}
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(p.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 text-sm truncate">{p.nombre}</h3>
+                      <p className="text-xs text-gray-400">{p.subtipo || p.tipo}</p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  {p.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mt-1 mb-3">{p.descripcion}</p>}
+                  {(p.telefono || p.precio_min) && (
+                    <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
+                      {p.telefono  && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.telefono}</span>}
+                      {p.precio_min && <span className="flex items-center gap-1"><Tag className="w-3 h-3" />Desde ${p.precio_min}</span>}
+                    </div>
+                  )}
 
+                  {/* Acciones */}
+                  <div className="flex gap-1.5 pt-3 border-t border-gray-100 flex-wrap">
+                    <Button size="sm" variant="outline" className="text-xs h-7 px-2.5 flex-1" onClick={() => abrirEditar(p)}>
+                      ✏️ Editar
+                    </Button>
+                    <Button size="sm" variant="outline"
+                      className={`text-xs h-7 px-2.5 ${p.verificado ? "text-green-600 border-green-200 bg-green-50" : "text-gray-600"}`}
+                      onClick={() => handleVerificar(p.id, !p.verificado)}>
+                      {p.verificado ? "✅" : "Verificar"}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-xs h-7 px-2" title="Destacar"
+                      onClick={() => handleDestacado(p.id, !p.destacado)}>
+                      {p.destacado ? "🔥" : "⭐"}
+                    </Button>
+                    <a href={`/prestador/${p.id}`} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="outline" className="text-xs h-7 px-2" title="Ver perfil público">
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
+                    </a>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2"
+                      onClick={() => handleDelete(p.id, p.nombre)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Vista lista */
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+          {filtrados.map(p => {
+            const cat = TIPOS_PRESTADOR.find(t => t.tipo === p.tipo);
+            return (
+              <div key={p.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                  {p.foto_url
+                    ? <img src={p.foto_url} alt="" className="w-full h-full object-cover" />
+                    : <div className={`w-full h-full flex items-center justify-center text-xl ${cat?.color || "bg-gray-50"}`}>{cat?.grupo.split(" ")[0] || "🏢"}</div>
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900 text-sm truncate">{p.nombre}</p>
+                    {p.verificado && <span className="text-[10px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">✓</span>}
+                    {p.destacado  && <span className="text-sm flex-shrink-0">🔥</span>}
+                  </div>
+                  <p className="text-xs text-gray-400">{p.subtipo || p.tipo}{p.telefono && ` · ${p.telefono}`}</p>
+                </div>
+                {p.calificacion_promedio > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-amber-600 font-bold flex-shrink-0">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />{p.calificacion_promedio.toFixed(1)}
+                  </div>
+                )}
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <Button size="sm" variant="outline" className="text-xs h-7 px-2.5" onClick={() => abrirEditar(p)}>✏️</Button>
+                  <Button size="sm" variant="outline" className={`text-xs h-7 px-2.5 ${p.verificado ? "text-green-600 border-green-200" : ""}`}
+                    onClick={() => handleVerificar(p.id, !p.verificado)}>
+                    {p.verificado ? "✅" : "Verificar"}
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => handleDestacado(p.id, !p.destacado)}>
+                    {p.destacado ? "🔥" : "⭐"}
+                  </Button>
+                  <a href={`/prestador/${p.id}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="text-xs h-7 px-2"><Eye className="w-3.5 h-3.5" /></Button>
+                  </a>
+                  <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(p.id, p.nombre)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Dialog crear / editar ── */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Agregar Prestador de Servicio</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editando ? `Editar: ${editando.nombre}` : "Agregar Prestador de Servicio"}</DialogTitle>
+          </DialogHeader>
+
           <div className="space-y-5 py-2">
+            {/* Categoría */}
             <div>
               <Label className="text-sm font-semibold mb-3 block">Categoría *</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {TIPOS_PRESTADOR.map(cat => (
-                  <button key={cat.tipo} type="button" onClick={() => setForm({ ...form, tipo: cat.tipo, subtipo: "" })}
+                  <button key={cat.tipo} type="button" onClick={() => setForm(f => ({ ...f, tipo: cat.tipo, subtipo: "" }))}
                     className={`p-3 rounded-xl border-2 text-left transition-all ${form.tipo === cat.tipo ? "border-[#1B5E20] bg-[#1B5E20]/5" : "border-gray-200 hover:border-gray-300 bg-white"}`}>
                     <span className="text-2xl">{cat.grupo.split(" ")[0]}</span>
                     <p className="text-xs font-medium text-gray-700 mt-1 leading-tight">{cat.grupo.slice(3)}</p>
@@ -756,32 +962,72 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
                 ))}
               </div>
             </div>
+
             {form.tipo && (
-              <div><Label>Tipo específico *</Label>
-                <Select value={form.subtipo} onValueChange={v => setForm({ ...form, subtipo: v })}>
+              <div>
+                <Label>Tipo específico *</Label>
+                <Select value={form.subtipo} onValueChange={v => setForm(f => ({ ...f, subtipo: v }))}>
                   <SelectTrigger><SelectValue placeholder="Selecciona el tipo exacto..." /></SelectTrigger>
                   <SelectContent>{tipoActual?.subtipos.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             )}
-            <div><Label>Nombre *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Hotel Paraíso Verde, Marisquería El Puerto..." /></div>
-            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={3} /></div>
+
+            <div><Label>Nombre del negocio *</Label><Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Nombre del prestador..." /></div>
+            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} rows={3} placeholder="Describe brevemente el servicio..." /></div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Teléfono</Label><Input value={form.telefono} onChange={e => setForm({ ...form, telefono: e.target.value })} /></div>
-              <div><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e => setForm({ ...form, whatsapp: e.target.value })} /></div>
+              <div><Label>Teléfono</Label><Input value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} placeholder="272 123 4567" /></div>
+              <div><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="52272 123 4567" /></div>
             </div>
-            <div><Label>Horarios</Label><Input value={form.horarios} onChange={e => setForm({ ...form, horarios: e.target.value })} placeholder="Lun–Dom 9:00–20:00" /></div>
-            <div><Label>Dirección</Label><Textarea value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} rows={2} /></div>
-            <div><Label>URL de foto</Label><Input value={form.foto_url} onChange={e => setForm({ ...form, foto_url: e.target.value })} placeholder="https://..." /></div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} /></div>
-              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} /></div>
+              <div><Label>Precio mínimo (MXN)</Label><Input type="number" value={form.precio_min} onChange={e => setForm(f => ({ ...f, precio_min: e.target.value }))} placeholder="0" /></div>
+              <div><Label>Precio máximo (MXN)</Label><Input type="number" value={form.precio_max} onChange={e => setForm(f => ({ ...f, precio_max: e.target.value }))} placeholder="0" /></div>
+            </div>
+
+            <div><Label>Horarios</Label><Input value={form.horarios} onChange={e => setForm(f => ({ ...f, horarios: e.target.value }))} placeholder="Lun–Dom 9:00–20:00" /></div>
+            <div><Label>Dirección</Label><Textarea value={form.direccion} onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))} rows={2} placeholder="Calle, colonia, municipio..." /></div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm(f => ({ ...f, lat: e.target.value }))} placeholder="19.1813" /></div>
+              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm(f => ({ ...f, lng: e.target.value }))} placeholder="-96.1429" /></div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-3 sm:col-span-1"><Label>Sitio web</Label><Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." /></div>
+              <div><Label>Instagram</Label><Input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} placeholder="@usuario" /></div>
+              <div><Label>Facebook</Label><Input value={form.facebook} onChange={e => setForm(f => ({ ...f, facebook: e.target.value }))} placeholder="página" /></div>
+            </div>
+
+            {/* Foto */}
+            <div>
+              <Label className="mb-2 block">Foto del negocio</Label>
+              <div className="flex gap-3 items-start">
+                {form.foto_url && (
+                  <img src={form.foto_url} alt="" className="w-20 h-20 rounded-xl object-cover border border-gray-200 flex-shrink-0" />
+                )}
+                <div className="flex-1 space-y-2">
+                  <label className="cursor-pointer">
+                    <Button type="button" variant="outline" className="w-full" disabled={uploading} asChild>
+                      <span>
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                        {uploading ? "Subiendo..." : "Subir foto"}
+                      </span>
+                    </Button>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleFoto} />
+                  </label>
+                  <Input value={form.foto_url} onChange={e => setForm(f => ({ ...f, foto_url: e.target.value }))} placeholder="O pega una URL de imagen..." />
+                </div>
+              </div>
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}Agregar prestador
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : editando ? <Save className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {editando ? "Guardar cambios" : "Crear prestador"}
             </Button>
           </DialogFooter>
         </DialogContent>
