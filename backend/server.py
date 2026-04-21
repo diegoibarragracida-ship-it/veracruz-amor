@@ -1,3 +1,4 @@
+
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -2102,9 +2103,17 @@ async def update_prestador(prestador_id: str, request: Request):
 @api_router.post("/prestadores/{prestador_id}/verificar")
 async def verificar_prestador(prestador_id: str, request: Request):
     user = await get_current_user(request)
-    if user["rol"] != "superadmin":
-        raise HTTPException(status_code=403, detail="Solo el Super Admin puede verificar")
-    
+    if user["rol"] not in ["superadmin", "encargado"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso para verificar prestadores")
+
+    prestador = await db.prestadores.find_one({"id": prestador_id}, {"_id": 0})
+    if not prestador:
+        raise HTTPException(status_code=404, detail="Prestador no encontrado")
+
+    # Encargado solo puede verificar prestadores de su municipio
+    if user["rol"] == "encargado" and prestador.get("municipio_id") != user.get("municipio_id"):
+        raise HTTPException(status_code=403, detail="Solo puedes verificar prestadores de tu municipio")
+
     await db.prestadores.update_one(
         {"id": prestador_id},
         {"$set": {"verificado": True, "aprobado_por_id": user["user_id"]}}
@@ -4472,6 +4481,12 @@ async def desverificar_prestador(prestador_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
+
+    if user["rol"] == "encargado":
+        prestador = await db.prestadores.find_one({"id": prestador_id}, {"municipio_id": 1})
+        if not prestador or prestador.get("municipio_id") != user.get("municipio_id"):
+            raise HTTPException(status_code=403, detail="Solo puedes gestionar prestadores de tu municipio")
+
     await db.prestadores.update_one({"id": prestador_id}, {"$set": {"verificado": False}})
     return {"ok": True}
 
