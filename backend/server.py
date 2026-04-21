@@ -585,6 +585,11 @@ async def get_optional_user(request: Request) -> Optional[dict]:
     except HTTPException:
         return None
 
+async def check_municipio_encargado(user: dict, municipio_id: str):
+    """Lanza 403 si el encargado intenta operar en un municipio que no es el suyo."""
+    if user["rol"] == "encargado" and user.get("municipio_id") != municipio_id:
+        raise HTTPException(status_code=403, detail="Solo puedes gestionar contenido de tu municipio")
+
 def require_role(*roles):
     async def role_checker(request: Request):
         user = await get_current_user(request)
@@ -2056,16 +2061,19 @@ async def get_prestador(prestador_id: str):
 @api_router.post("/prestadores")
 async def create_prestador(data: PrestadorCreate, request: Request):
     user = await get_current_user(request)
+    if user["rol"] not in ["superadmin", "encargado"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso")
+    await check_municipio_encargado(user, data.municipio_id)
     
     prestador = {
         "id": str(uuid.uuid4()),
         **data.model_dump(),
         "calificacion_promedio": 0.0,
         "total_resenas": 0,
-        "verificado": user["rol"] in ["superadmin", "encargado"],
+        "verificado": user["rol"] == "superadmin",
         "activo": True,
         "propuesto_por_id": user["user_id"] if user["rol"] == "encargado" else None,
-        "aprobado_por_id": user["user_id"] if user["rol"] in ["superadmin", "encargado"] else None,
+        "aprobado_por_id": user["user_id"] if user["rol"] == "superadmin" else None,
         "user_id": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -2088,6 +2096,7 @@ async def update_prestador(prestador_id: str, request: Request):
         raise HTTPException(status_code=403, detail="No tienes permiso")
     elif user["rol"] not in ["superadmin", "encargado", "prestador"]:
         raise HTTPException(status_code=403, detail="No tienes permiso")
+    await check_municipio_encargado(user, prestador.get("municipio_id", ""))
     
     allowed_fields = ["nombre", "descripcion", "foto_url", "telefono", "whatsapp", "horarios", "direccion", "destacado", "featured"]
     if user["rol"] in ["superadmin", "encargado"]:
@@ -2149,6 +2158,7 @@ async def create_evento(data: EventoCreate, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="No tienes permiso")
+    await check_municipio_encargado(user, data.municipio_id)
     
     evento = {
         "id": str(uuid.uuid4()),
@@ -2174,6 +2184,7 @@ async def update_evento(evento_id: str, request: Request):
         raise HTTPException(status_code=403, detail="No tienes permiso")
     elif user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="No tienes permiso")
+    await check_municipio_encargado(user, evento.get("municipio_id", ""))
     
     allowed_fields = ["nombre", "descripcion", "foto_url", "fecha_inicio", "fecha_fin", "tipo", "lugar", "link_externo", "publicado"]
     update_data = {k: v for k, v in body.items() if k in allowed_fields}
@@ -2186,7 +2197,9 @@ async def delete_evento(evento_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="No tienes permiso")
-    
+    evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0, "municipio_id": 1})
+    if evento:
+        await check_municipio_encargado(user, evento.get("municipio_id", ""))
     await db.eventos.delete_one({"id": evento_id})
     return {"message": "Evento eliminado"}
 
@@ -4502,6 +4515,7 @@ async def create_noticia(request: Request):
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
     body = await request.json()
+    await check_municipio_encargado(user, body.get("municipio_id", ""))
     noticia = {
         "id": str(uuid.uuid4()),
         **body,
@@ -4520,6 +4534,9 @@ async def update_noticia(noticia_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
+    noticia = await db.noticias.find_one({"id": noticia_id}, {"_id": 0, "municipio_id": 1})
+    if noticia:
+        await check_municipio_encargado(user, noticia.get("municipio_id", ""))
     body = await request.json()
     body.pop("id", None)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -4532,6 +4549,9 @@ async def delete_noticia(noticia_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
+    noticia = await db.noticias.find_one({"id": noticia_id}, {"_id": 0, "municipio_id": 1})
+    if noticia:
+        await check_municipio_encargado(user, noticia.get("municipio_id", ""))
     await db.noticias.delete_one({"id": noticia_id})
     return {"ok": True}
 
@@ -4558,6 +4578,7 @@ async def create_servicio_municipal(request: Request):
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
     body = await request.json()
+    await check_municipio_encargado(user, body.get("municipio_id", ""))
     servicio = {
         "id": str(uuid.uuid4()),
         **body,
@@ -4573,6 +4594,9 @@ async def update_servicio_municipal(servicio_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
+    servicio = await db.servicios_municipales.find_one({"id": servicio_id}, {"_id": 0, "municipio_id": 1})
+    if servicio:
+        await check_municipio_encargado(user, servicio.get("municipio_id", ""))
     body = await request.json()
     body.pop("id", None)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -4585,6 +4609,9 @@ async def delete_servicio_municipal(servicio_id: str, request: Request):
     user = await get_current_user(request)
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="Sin permiso")
+    servicio = await db.servicios_municipales.find_one({"id": servicio_id}, {"_id": 0, "municipio_id": 1})
+    if servicio:
+        await check_municipio_encargado(user, servicio.get("municipio_id", ""))
     await db.servicios_municipales.delete_one({"id": servicio_id})
     return {"ok": True}
 
