@@ -241,120 +241,284 @@ const EventosTab = ({ municipioId, municipioNombre }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 const AtraccionesTab = ({ municipioId, municipioNombre }) => {
   const [atracciones, setAtracciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showDialog, setShowDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const empty = { nombre: "", descripcion: "", tipo: "Natural", horarios: "", costo: "Gratis", costo_min: 0, costo_max: 0, direccion: "", lat: "", lng: "", foto_portada: "", recomendaciones: "", destacado: false };
+  const [loading,     setLoading]     = useState(true);
+  const [showDialog,  setShowDialog]  = useState(false);
+  const [saving,      setSaving]      = useState(false);
+  const [uploading,   setUploading]   = useState(false);
+  const [editId,      setEditId]      = useState(null);
+  const [geoLoading,  setGeoLoading]  = useState(false);
+
+  const empty = {
+    nombre: "", descripcion: "", tipo: "Natural", horarios: "",
+    costo: "Gratis", costo_min: 0, costo_max: 0,
+    direccion: "", lat: "", lng: "",
+    foto_portada: "", fotos: [], video_url: "",
+    telefono: "", whatsapp: "", website: "",
+    recomendaciones: "", destacado: false,
+  };
   const [form, setForm] = useState(empty);
 
   useEffect(() => { fetchAtracciones(); }, [municipioId]);
 
   const fetchAtracciones = async () => {
+    setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/lugares`, { params: { municipio_id: municipioId } });
-      setAtracciones(data.lugares || []);
+      const { data } = await axios.get(`${API}/lugares`, { params: { municipio_id: municipioId, limit: 200 } });
+      setAtracciones(data.lugares || data.atracciones || data.data || (Array.isArray(data) ? data : []));
+    } catch (e) {
+      console.error("Error cargando atracciones:", e);
+      setAtracciones([]);
     } finally { setLoading(false); }
   };
 
-  const handleUpload = async (file) => {
+  const handleUploadPortada = async (file) => {
     setUploading(true);
-    try { const url = await uploadFile(file); setForm(f => ({ ...f, foto_portada: url })); }
-    catch { toast.error("Error subiendo imagen"); }
+    try {
+      const url = await uploadFile(file);
+      setForm(f => ({ ...f, foto_portada: url, fotos: [url, ...f.fotos.filter(u => u !== f.foto_portada)] }));
+      toast.success("Foto principal subida");
+    } catch { toast.error("Error subiendo foto"); }
     finally { setUploading(false); }
+  };
+
+  const handleUploadExtra = async (files) => {
+    setUploading(true);
+    try {
+      const urls = await Promise.all(Array.from(files).map(f => uploadFile(f)));
+      setForm(f => ({ ...f, fotos: [...f.fotos, ...urls] }));
+      toast.success(`${urls.length} foto(s) agregada(s)`);
+    } catch { toast.error("Error subiendo fotos"); }
+    finally { setUploading(false); }
+  };
+
+  const removePhoto = (url) => setForm(f => ({
+    ...f,
+    fotos: f.fotos.filter(u => u !== url),
+    foto_portada: f.foto_portada === url ? (f.fotos.find(u => u !== url) || "") : f.foto_portada,
+  }));
+
+  const obtenerUbicacion = () => {
+    if (!navigator.geolocation) return toast.error("Geolocalización no disponible");
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm(f => ({ ...f, lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }));
+        toast.success("Ubicación obtenida");
+        setGeoLoading(false);
+      },
+      () => { toast.error("No se pudo obtener ubicación"); setGeoLoading(false); }
+    );
   };
 
   const handleSave = async () => {
     if (!form.nombre) return toast.error("Nombre requerido");
     setSaving(true);
     try {
-      const payload = { ...form, municipio_id: municipioId, municipio: municipioNombre, region: "centro", slug: form.nombre.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), costo_min: parseFloat(form.costo_min || 0), costo_max: parseFloat(form.costo_max || 0), lat: form.lat ? parseFloat(form.lat) : null, lng: form.lng ? parseFloat(form.lng) : null, fotos: form.foto_portada ? [form.foto_portada] : [] };
+      const payload = {
+        ...form,
+        municipio_id: municipioId,
+        municipio: municipioNombre,
+        region: "centro",
+        slug: form.nombre.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        costo_min: parseFloat(form.costo_min || 0),
+        costo_max: parseFloat(form.costo_max || 0),
+        lat: form.lat ? parseFloat(form.lat) : null,
+        lng: form.lng ? parseFloat(form.lng) : null,
+        fotos: form.fotos.length > 0 ? form.fotos : (form.foto_portada ? [form.foto_portada] : []),
+      };
       if (editId) await axios.put(`${API}/lugares/${editId}`, payload);
       else await axios.post(`${API}/lugares`, payload);
       toast.success(editId ? "Atracción actualizada" : "Atracción creada");
-      setShowDialog(false); setForm(empty); setEditId(null); fetchAtracciones();
-    } catch { toast.error("Error guardando"); }
-    finally { setSaving(false); }
+      setShowDialog(false); setForm(empty); setEditId(null);
+      fetchAtracciones();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Error guardando");
+    } finally { setSaving(false); }
   };
 
-  const ICONOS = { Natural: "🌿", Cultural: "🎭", Histórico: "🏛️", Familiar: "👨‍👩‍👧", Aventura: "🧗", Gastronomía: "🍽️", Religioso: "⛪", Arqueológico: "🏺" };
+  const handleDelete = async (id, nombre) => {
+    if (!confirm(`¿Eliminar "${nombre}"?`)) return;
+    try {
+      await axios.delete(`${API}/lugares/${id}`);
+      setAtracciones(prev => prev.filter(a => a.id !== id));
+      toast.success("Atracción eliminada");
+    } catch { toast.error("Error al eliminar"); }
+  };
+
+  const ICONOS = {
+    Natural: "🌿", Cultural: "🎭", Histórico: "🏛️", Familiar: "👨‍👩‍👧",
+    Aventura: "🧗", Gastronomía: "🍽️", Religioso: "⛪", Arqueológico: "🏺"
+  };
 
   return (
     <div className="space-y-5">
       <SectionHeader
         title="Atracciones Turísticas"
-        action={<Button onClick={() => { setForm(empty); setEditId(null); setShowDialog(true); }} className="bg-[#1B5E20] hover:bg-[#145218]"><Plus className="w-4 h-4 mr-2" />Nueva atracción</Button>}
+        action={
+          <Button onClick={() => { setForm(empty); setEditId(null); setShowDialog(true); }}
+            className="bg-[#1B5E20] hover:bg-[#145218]">
+            <Plus className="w-4 h-4 mr-2" />Nueva atracción
+          </Button>
+        }
       />
 
-      {loading ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
-        : atracciones.length === 0 ? <EmptyState icon={MapPin} title="No hay atracciones registradas" sub="Agrega los lugares más importantes de tu municipio" onAdd={() => setShowDialog(true)} label="Agregar primera atracción" />
-        : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {atracciones.map(a => (
-              <div key={a.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                {a.foto_portada ? <img src={a.foto_portada} alt={a.nombre} className="w-full h-36 object-cover" />
-                  : <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-5xl">{ICONOS[a.tipo] || "📍"}</div>}
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-semibold text-gray-900 text-sm">{a.nombre}</h3>
-                    <Badge className="bg-emerald-100 text-emerald-800 text-xs flex-shrink-0">{a.tipo}</Badge>
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" /></div>
+      ) : atracciones.length === 0 ? (
+        <EmptyState icon={MapPin} title="No hay atracciones registradas"
+          sub="Agrega los lugares más importantes de tu municipio"
+          onAdd={() => setShowDialog(true)} label="Agregar primera atracción" />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {atracciones.map(a => (
+            <div key={a.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
+              <div className="relative h-40 overflow-hidden">
+                {a.video_url ? (
+                  <div className="w-full h-full bg-gray-900 flex items-center justify-center relative">
+                    {a.foto_portada && <img src={a.foto_portada} alt="" className="w-full h-full object-cover opacity-60 absolute inset-0" />}
+                    <div className="relative z-10 flex flex-col items-center gap-1 text-white">
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-2xl">▶</span>
+                      </div>
+                      <span className="text-xs font-semibold">Ver video</span>
+                    </div>
                   </div>
-                  {a.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{a.descripcion}</p>}
-                  <div className="text-xs text-gray-400 space-y-0.5">
-                    {a.horarios && <p>⏰ {a.horarios}</p>}
-                    <p>💰 {a.costo || "Gratis"}</p>
-                    {a.calificacion > 0 && <p>⭐ {a.calificacion}</p>}
+                ) : a.foto_portada ? (
+                  <img src={a.foto_portada} alt={a.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : (
+                  <div className="w-full h-full bg-gray-50 flex items-center justify-center text-5xl">{ICONOS[a.tipo] || "📍"}</div>
+                )}
+                <div className="absolute top-2 left-2 flex gap-1">
+                  <span className="bg-white/90 backdrop-blur-sm text-xs font-bold px-2 py-0.5 rounded-full text-gray-700">{ICONOS[a.tipo]} {a.tipo}</span>
+                </div>
+                {a.fotos?.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">📷 {a.fotos.length}</div>
+                )}
+                {a.destacado && (
+                  <div className="absolute top-2 right-2">
+                    <span className="bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full">⭐ Destacado</span>
                   </div>
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                    <Button size="sm" variant="outline" className="flex-1 text-xs h-7" onClick={() => { setForm({ ...a, lat: a.lat || "", lng: a.lng || "" }); setEditId(a.id); setShowDialog(true); }}>✏️ Editar</Button>
-                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={async () => { if (!confirm("¿Eliminar?")) return; await axios.delete(`${API}/lugares/${a.id}`); fetchAtracciones(); }}><Trash2 className="w-3.5 h-3.5" /></Button>
-                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-900 text-sm mb-1">{a.nombre}</h3>
+                {a.descripcion && <p className="text-xs text-gray-500 line-clamp-2 mb-2">{a.descripcion}</p>}
+                <div className="space-y-0.5 text-xs text-gray-400 mb-3">
+                  {a.horarios  && <p className="flex items-center gap-1"><Clock className="w-3 h-3" />{a.horarios}</p>}
+                  {a.costo     && <p className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{a.costo}</p>}
+                  {a.telefono  && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{a.telefono}</p>}
+                  {a.lat && a.lng && (
+                    <a href={`https://www.google.com/maps?q=${a.lat},${a.lng}`} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-blue-500 hover:underline">
+                      <MapPin className="w-3 h-3" />Ver en mapa
+                    </a>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-3 border-t border-gray-100">
+                  <Button size="sm" variant="outline" className="flex-1 text-xs h-7"
+                    onClick={() => { setForm({ ...empty, ...a, lat: a.lat || "", lng: a.lng || "", fotos: a.fotos || [] }); setEditId(a.id); setShowDialog(true); }}>
+                    ✏️ Editar
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2" onClick={() => handleDelete(a.id, a.nombre)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editId ? "Editar atracción" : "Nueva atracción turística"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div><Label>Nombre *</Label><Input value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} placeholder="Cascada El Salto, Zona arqueológica..." /></div>
+            <div><Label>Nombre *</Label>
+              <Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Cascada El Salto, Zona arqueológica..." />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Categoría</Label>
-                <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+                <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{CATEGORIAS_ATRACCION.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <SelectContent>{CATEGORIAS_ATRACCION.map(c => <SelectItem key={c} value={c}>{ICONOS[c]} {c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Horario</Label><Input value={form.horarios} onChange={e => setForm({ ...form, horarios: e.target.value })} placeholder="8:00–18:00" /></div>
-            </div>
-            <div><Label>Descripción</Label><Textarea value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} rows={3} /></div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1"><Label>Costo (texto)</Label><Input value={form.costo} onChange={e => setForm({ ...form, costo: e.target.value })} placeholder="Gratis / $50 MXN" /></div>
-              <div><Label>Precio mín</Label><Input type="number" value={form.costo_min} onChange={e => setForm({ ...form, costo_min: e.target.value })} /></div>
-              <div><Label>Precio máx</Label><Input type="number" value={form.costo_max} onChange={e => setForm({ ...form, costo_max: e.target.value })} /></div>
-            </div>
-            <div><Label>Dirección / Referencias</Label><Input value={form.direccion} onChange={e => setForm({ ...form, direccion: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Latitud</Label><Input value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} placeholder="19.18" /></div>
-              <div><Label>Longitud</Label><Input value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} placeholder="-96.14" /></div>
-            </div>
-            <div><Label>Recomendaciones</Label><Textarea value={form.recomendaciones} onChange={e => setForm({ ...form, recomendaciones: e.target.value })} rows={2} placeholder="Llevar repelente, mejor época para visitar..." /></div>
-            <div>
-              <Label>Foto principal</Label>
-              <div className="flex items-center gap-3 mt-1">
-                {form.foto_portada && <img src={form.foto_portada} className="w-16 h-16 rounded-lg object-cover" alt="" />}
-                <label className="cursor-pointer flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {uploading ? "Subiendo..." : "Subir foto"}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => handleUpload(e.target.files[0])} disabled={uploading} />
-                </label>
+              <div><Label>Horarios</Label>
+                <Input value={form.horarios} onChange={e => setForm(f => ({ ...f, horarios: e.target.value }))} placeholder="8:00–18:00 / Lun–Dom" />
               </div>
             </div>
+            <div><Label>Descripción</Label>
+              <Textarea value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} rows={3}
+                placeholder="Describe la atracción, qué ofrece, por qué visitar..." />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1"><Label>Costo (texto)</Label>
+                <Input value={form.costo} onChange={e => setForm(f => ({ ...f, costo: e.target.value }))} placeholder="Gratis / $50 MXN" />
+              </div>
+              <div><Label>Precio mín ($)</Label><Input type="number" value={form.costo_min} onChange={e => setForm(f => ({ ...f, costo_min: e.target.value }))} /></div>
+              <div><Label>Precio máx ($)</Label><Input type="number" value={form.costo_max} onChange={e => setForm(f => ({ ...f, costo_max: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><Label>Teléfono</Label><Input value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} placeholder="272 123 4567" /></div>
+              <div><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="52272..." /></div>
+              <div><Label>Sitio web</Label><Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." /></div>
+            </div>
+            <div>
+              <Label className="mb-2 block">Ubicación precisa</Label>
+              <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-2"><Input value={form.lat} onChange={e => setForm(f => ({ ...f, lat: e.target.value }))} placeholder="Latitud: 19.18..." /></div>
+                <div className="col-span-2"><Input value={form.lng} onChange={e => setForm(f => ({ ...f, lng: e.target.value }))} placeholder="Longitud: -96.14..." /></div>
+                <Button type="button" variant="outline" onClick={obtenerUbicacion} disabled={geoLoading} title="Usar mi ubicación actual">
+                  {geoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                </Button>
+              </div>
+              <Input className="mt-2" value={form.direccion} onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))} placeholder="Dirección o referencias para llegar..." />
+            </div>
+            <div>
+              <Label className="mb-2 block">Fotos <span className="text-gray-400 font-normal">(puedes subir varias)</span></Label>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="relative flex-shrink-0">
+                  {form.foto_portada
+                    ? <img src={form.foto_portada} className="w-20 h-20 rounded-xl object-cover border-2 border-[#1B5E20]" alt="Portada" />
+                    : <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center text-3xl border-2 border-dashed border-gray-200">{ICONOS[form.tipo] || "📍"}</div>
+                  }
+                  <span className="absolute -bottom-1 -right-1 bg-[#1B5E20] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">PORTADA</span>
+                </div>
+                <label className="cursor-pointer flex-1">
+                  <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {uploading ? "Subiendo..." : "Subir foto principal"}
+                  </div>
+                  <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files[0] && handleUploadPortada(e.target.files[0])} />
+                </label>
+              </div>
+              {form.fotos.filter(u => u !== form.foto_portada).length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {form.fotos.filter(u => u !== form.foto_portada).map(url => (
+                    <div key={url} className="relative">
+                      <img src={url} className="w-16 h-16 rounded-lg object-cover border border-gray-200" alt="" />
+                      <button onClick={() => removePhoto(url)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className="cursor-pointer">
+                <div className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+                  <Upload className="w-4 h-4" />Agregar más fotos
+                </div>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={e => e.target.files.length > 0 && handleUploadExtra(e.target.files)} />
+              </label>
+            </div>
+            <div>
+              <Label>Video <span className="text-gray-400 font-normal">(URL de YouTube o enlace directo)</span></Label>
+              <Input value={form.video_url} onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))} placeholder="https://youtube.com/watch?v=..." />
+            </div>
+            <div><Label>Recomendaciones para visitantes</Label>
+              <Textarea value={form.recomendaciones} onChange={e => setForm(f => ({ ...f, recomendaciones: e.target.value }))} rows={2}
+                placeholder="Llevar repelente, mejor época, calzado recomendado..." />
+            </div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setForm({ ...form, destacado: !form.destacado })}
+              <button type="button" onClick={() => setForm(f => ({ ...f, destacado: !f.destacado }))}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${form.destacado ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
                 {form.destacado ? "⭐ Destacado" : "Marcar como destacado"}
               </button>
@@ -363,13 +527,16 @@ const AtraccionesTab = ({ municipioId, municipioNombre }) => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}{editId ? "Actualizar" : "Crear atracción"}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {editId ? "Actualizar atracción" : "Crear atracción"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
+};
+
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
