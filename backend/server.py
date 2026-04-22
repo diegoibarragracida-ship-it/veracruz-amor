@@ -2064,23 +2064,58 @@ async def create_prestador(data: PrestadorCreate, request: Request):
     if user["rol"] not in ["superadmin", "encargado"]:
         raise HTTPException(status_code=403, detail="No tienes permiso")
     await check_municipio_encargado(user, data.municipio_id)
-    
+
+    # Generar contraseña temporal para el prestador
+    import secrets, string
+    alphabet = string.ascii_letters + string.digits
+    temp_password = "".join(secrets.choice(alphabet) for _ in range(10))
+
+    # Crear cuenta de usuario para el prestador
+    email_prestador = data.model_dump().get("email") or f"prestador_{str(uuid.uuid4())[:8]}@veracruzcontigo.mx"
+    existing_user = await db.users.find_one({"email": email_prestador})
+    user_id_prestador = None
+
+    if not existing_user:
+        user_id_prestador = str(uuid.uuid4())
+        nuevo_usuario = {
+            "user_id": user_id_prestador,
+            "nombre": data.model_dump().get("nombre", "Prestador"),
+            "email": email_prestador,
+            "password_hash": hash_password(temp_password),
+            "rol": "prestador",
+            "municipio_id": data.municipio_id,
+            "activo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one(nuevo_usuario)
+
     prestador = {
         "id": str(uuid.uuid4()),
         **data.model_dump(),
         "calificacion_promedio": 0.0,
         "total_resenas": 0,
-        "verificado": user["rol"] == "superadmin",
+        "verificado": user["rol"] in ["superadmin", "encargado"],
         "activo": True,
         "propuesto_por_id": user["user_id"] if user["rol"] == "encargado" else None,
-        "aprobado_por_id": user["user_id"] if user["rol"] == "superadmin" else None,
-        "user_id": None,
+        "aprobado_por_id": user["user_id"] if user["rol"] in ["superadmin", "encargado"] else None,
+        "user_id": user_id_prestador,
+        "email_acceso": email_prestador,
+        "password_temp": temp_password,  # Solo se guarda temporalmente para mostrarlo
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
+
     await db.prestadores.insert_one(prestador)
     prestador.pop("_id", None)
-    return prestador
+
+    # Retornar con credenciales para que el encargado/admin las comparta
+    return {
+        **prestador,
+        "credenciales": {
+            "email": email_prestador,
+            "password": temp_password,
+            "mensaje": "Comparte estas credenciales con el prestador para que acceda al panel"
+        }
+    }
 
 @api_router.put("/prestadores/{prestador_id}")
 async def update_prestador(prestador_id: str, request: Request):
@@ -2100,7 +2135,7 @@ async def update_prestador(prestador_id: str, request: Request):
     
     allowed_fields = ["nombre", "descripcion", "foto_url", "telefono", "whatsapp", "horarios", "direccion", "destacado", "featured"]
     if user["rol"] in ["superadmin", "encargado"]:
-        allowed_fields.extend(["verificado", "activo", "tipo", "subtipo", "municipio_id", "lat", "lng", "logo_url", "instagram", "facebook", "tiktok", "website"])
+        allowed_fields.extend(["verificado", "activo", "tipo", "subtipo", "municipio_id", "lat", "lng", "logo_url", "instagram", "facebook", "tiktok", "website", "precio_min", "precio_max", "email_acceso"])
     
     update_data = {k: v for k, v in body.items() if k in allowed_fields}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()

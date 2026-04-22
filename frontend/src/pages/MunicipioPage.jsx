@@ -662,7 +662,7 @@ const MunicipioPage = () => {
 
 // ── Componente AtraccionCard ──────────────────────────────────
 const AtraccionCard = ({ lugar }) => (
-  <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+  <Link to={`/atraccion/${lugar.id}`} className="block bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group">
     <div className="relative h-48 bg-gray-100 overflow-hidden">
       {lugar.foto_portada || lugar.fotos?.[0]
         ? <img src={lugar.foto_portada || lugar.fotos[0]} alt={lugar.nombre}
@@ -701,12 +701,13 @@ const AtraccionCard = ({ lugar }) => (
       {lugar.lat && lugar.lng && (
         <a href={`https://www.google.com/maps/search/?api=1&query=${lugar.lat},${lugar.lng}`}
           target="_blank" rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1B5E20] hover:underline mt-1">
           <Navigation className="w-3.5 h-3.5" /> Cómo llegar
         </a>
       )}
     </div>
-  </div>
+  </Link>
 );
 
 export default MunicipioPage;
