@@ -788,6 +788,8 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
     } finally { setLoading(false); }
   };
 
+  const [credenciales, setCredenciales] = useState(null); // Modal de credenciales
+
   const abrirCrear = () => {
     setEditando(null);
     setForm(FORM_VACIO);
@@ -851,11 +853,17 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
       if (editando) {
         await axios.put(`${API}/prestadores/${editando.id}`, payload);
         toast.success("✅ Prestador actualizado");
+        setShowDialog(false);
       } else {
-        await axios.post(`${API}/prestadores`, payload);
-        toast.success("✅ Prestador creado");
+        const { data } = await axios.post(`${API}/prestadores`, payload);
+        setShowDialog(false);
+        // Mostrar credenciales si el backend las devuelve
+        if (data.credenciales) {
+          setCredenciales({ nombre: data.nombre, ...data.credenciales });
+        } else {
+          toast.success("✅ Prestador creado");
+        }
       }
-      setShowDialog(false);
       fetchPrestadores();
     } catch (e) { toast.error(e.response?.data?.detail || "Error al guardar"); }
     finally { setSaving(false); }
@@ -1195,6 +1203,68 @@ const PrestadoresTab = ({ municipioId, municipioNombre }) => {
             <Button onClick={handleSubmit} disabled={saving} className="bg-[#1B5E20] hover:bg-[#145218]">
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : editando ? <Save className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
               {editando ? "Guardar cambios" : "Crear prestador"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal de credenciales ── */}
+      <Dialog open={!!credenciales} onOpenChange={() => setCredenciales(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              ✅ Prestador creado exitosamente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <p className="text-sm text-green-800 font-semibold mb-1">
+                🏢 {credenciales?.nombre}
+              </p>
+              <p className="text-xs text-green-700">
+                Se creó la cuenta de acceso al panel del prestador.
+                <strong> Comparte estas credenciales</strong> con el propietario del negocio.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Email de acceso</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-mono text-sm font-bold text-gray-900 break-all">{credenciales?.email}</p>
+                  <button onClick={() => { navigator.clipboard.writeText(credenciales?.email || ""); toast.success("Email copiado"); }}
+                    className="text-xs text-blue-600 hover:underline flex-shrink-0">Copiar</button>
+                </div>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Contraseña temporal</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-mono text-lg font-black text-gray-900 tracking-widest">{credenciales?.password}</p>
+                  <button onClick={() => { navigator.clipboard.writeText(credenciales?.password || ""); toast.success("Contraseña copiada"); }}
+                    className="text-xs text-blue-600 hover:underline flex-shrink-0">Copiar</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <p className="text-xs text-amber-800">
+                ⚠️ <strong>Guarda estas credenciales ahora.</strong> No se volverán a mostrar. El prestador puede cambiar su contraseña desde su panel.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                const texto = `Credenciales de acceso a Veracruz Contigo:\n\nNegocio: ${credenciales?.nombre}\nEmail: ${credenciales?.email}\nContraseña: ${credenciales?.password}\n\nInicia sesión en: https://veracruz-amor.vercel.app/login`;
+                navigator.clipboard.writeText(texto);
+                toast.success("Credenciales copiadas al portapapeles");
+              }}
+              className="w-full py-3 rounded-xl bg-[#1B5E20] text-white font-bold text-sm hover:bg-[#145218] transition-colors">
+              📋 Copiar todo para compartir por WhatsApp
+            </button>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setCredenciales(null)} className="bg-[#1B5E20] hover:bg-[#145218] w-full">
+              Entendido
             </Button>
           </DialogFooter>
         </DialogContent>

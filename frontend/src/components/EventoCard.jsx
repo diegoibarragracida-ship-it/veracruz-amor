@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -23,8 +24,9 @@ const EventoCard = ({ evento, municipioNombre }) => {
   };
 
   return (
-    <div 
-      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden card-hover"
+    <Link
+      to={`/evento/${evento.id}`}
+      className="block bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden card-hover"
       data-testid={`evento-card-${evento.id}`}
     >
       {/* Image */}
@@ -92,13 +94,14 @@ const EventoCard = ({ evento, municipioNombre }) => {
             href={evento.link_externo}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
             className="inline-block mt-4 text-[#0277BD] hover:text-[#01579B] font-medium text-sm"
           >
             Más información →
           </a>
         )}
       </div>
-    </div>
+    </Link>
   );
 };
 
