@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API, useAuth } from "@/App";
 import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck, Plus, Trash2, Save, Edit3,
   Calendar, CheckCircle, XCircle, AlertCircle,
-  Loader2,
+  Loader2, MessageCircle, Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,30 +75,31 @@ const MOMENTOS = ["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"];
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
 const TIPOS_PRESTADOR = {
-  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
-  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
-  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
-  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
+  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
+  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","mensajes","promociones","resenas","analiticas"] },
+  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","mensajes","promociones","resenas","analiticas"] },
+  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
 };
 
 const TAB_LABELS = {
   perfil: "Perfil", galeria: "Galería", servicios: "Servicios",
   reservas: "Reservas", menu: "Menú", habitaciones: "Habitaciones",
-  flota: "Flota", promociones: "Promociones", resenas: "Reseñas", analiticas: "Analíticas",
+  flota: "Flota", promociones: "Promociones", resenas: "Reseñas",
+  mensajes: "Mensajes", analiticas: "Analíticas",
 };
 
 const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
@@ -2058,6 +2059,272 @@ const ModuloHabitaciones = ({ prestadorId }) => {
   );
 };
 
+// ── MÓDULO MENSAJES ───────────────────────────────────────────
+const ModuloMensajes = ({ prestadorId }) => {
+  const [conversaciones, setConversaciones] = useState([]);
+  const [activa,         setActiva]         = useState(null); // { turista_id, turista_nombre }
+  const [mensajes,       setMensajes]       = useState([]);
+  const [texto,          setTexto]          = useState("");
+  const [loading,        setLoading]        = useState(true);
+  const [loadingMsgs,    setLoadingMsgs]    = useState(false);
+  const [sending,        setSending]        = useState(false);
+  const [noLeidos,       setNoLeidos]       = useState(0);
+  const bottomRef = useRef(null);
+  const inputRef  = useRef(null);
+
+  // Cargar lista de conversaciones
+  const fetchConversaciones = async () => {
+    try {
+      const { data } = await axios.get(`${API}/prestadores/${prestadorId}/conversaciones`);
+      setConversaciones(data.conversaciones || []);
+      setNoLeidos((data.conversaciones || []).reduce((s, c) => s + (c.no_leidos || 0), 0));
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchConversaciones(); }, [prestadorId]);
+
+  // Polling de conversaciones cada 15s
+  useEffect(() => {
+    const t = setInterval(fetchConversaciones, 15000);
+    return () => clearInterval(t);
+  }, [prestadorId]);
+
+  // Cargar mensajes de la conversación activa
+  const abrirConversacion = async (conv) => {
+    setActiva(conv);
+    setLoadingMsgs(true);
+    try {
+      // El prestador ve los mensajes del turista con su prestadorId
+      const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
+        params: { turista_id: conv.turista_id }
+      });
+      setMensajes(data.mensajes || []);
+      // Marcar como leídos desde el lado del prestador
+      await axios.put(`${API}/mensajes/${prestadorId}/leer`, {
+        turista_id: conv.turista_id,
+        lector: "prestador",
+      }).catch(() => {});
+      // Actualizar contador
+      setConversaciones(prev => prev.map(c =>
+        c.turista_id === conv.turista_id ? { ...c, no_leidos: 0 } : c
+      ));
+      setNoLeidos(prev => Math.max(0, prev - (conv.no_leidos || 0)));
+    } catch (e) { console.error(e); }
+    finally { setLoadingMsgs(false); }
+  };
+
+  // Polling mensajes cuando hay conversación activa
+  useEffect(() => {
+    if (!activa) return;
+    const t = setInterval(async () => {
+      try {
+        const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
+          params: { turista_id: activa.turista_id }
+        });
+        setMensajes(data.mensajes || []);
+      } catch {}
+    }, 8000);
+    return () => clearInterval(t);
+  }, [activa, prestadorId]);
+
+  // Auto-scroll
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajes]);
+
+  useEffect(() => {
+    if (activa) inputRef.current?.focus();
+  }, [activa]);
+
+  const enviar = async () => {
+    if (!texto.trim() || sending || !activa) return;
+    const textoEnviar = texto.trim();
+    setTexto("");
+    setSending(true);
+    try {
+      const { data } = await axios.post(`${API}/mensajes/${prestadorId}`, {
+        texto:          textoEnviar,
+        turista_id:     activa.turista_id,
+        remitente:      "prestador",
+        turista_nombre: activa.turista_nombre,
+      });
+      setMensajes(prev => [...prev, data]);
+    } catch {
+      setTexto(textoEnviar);
+    } finally { setSending(false); }
+  };
+
+  const handleKey = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); }
+  };
+
+  const formatHora = (iso) => {
+    if (!iso) return "";
+    return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatFechaRelativa = (iso) => {
+    if (!iso) return "";
+    const d  = new Date(iso);
+    const hoy = new Date();
+    const diff = Math.floor((hoy - d) / 86400000);
+    if (diff === 0) return `Hoy ${formatHora(iso)}`;
+    if (diff === 1) return `Ayer ${formatHora(iso)}`;
+    return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+          Mensajes de clientes
+          {noLeidos > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{noLeidos}</span>
+          )}
+        </h3>
+        <button type="button" onClick={fetchConversaciones}
+          className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+          Actualizar
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex"
+        style={{ height: "560px" }}>
+
+        {/* ── Lista de conversaciones (columna izq) ── */}
+        <div className={`flex-shrink-0 border-r border-gray-100 flex flex-col ${activa ? "hidden sm:flex w-64" : "w-full sm:w-64"}`}>
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Conversaciones</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : conversaciones.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-2">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-sm font-medium text-gray-500">Sin mensajes aún</p>
+                <p className="text-xs text-gray-400">Cuando un visitante te escriba, aparecerá aquí</p>
+              </div>
+            ) : (
+              conversaciones.map(conv => (
+                <button key={conv.turista_id} type="button"
+                  onClick={() => abrirConversacion(conv)}
+                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 ${
+                    activa?.turista_id === conv.turista_id ? "bg-green-50 border-l-2 border-l-[#1B5E20]" : ""
+                  }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      {conv.turista_nombre?.[0]?.toUpperCase() || "T"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{conv.turista_nombre || "Visitante"}</p>
+                        {conv.no_leidos > 0 && (
+                          <span className="bg-[#1B5E20] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            {conv.no_leidos}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 truncate">{conv.ultimo_mensaje || "..."}</p>
+                      <p className="text-[10px] text-gray-300 mt-0.5">{formatFechaRelativa(conv.updated_at)}</p>
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* ── Panel de chat (columna der) ── */}
+        <div className={`flex-1 flex flex-col ${!activa ? "hidden sm:flex" : "flex"}`}>
+          {!activa ? (
+            <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-8">
+              <MessageCircle className="w-12 h-12 text-gray-200" />
+              <p className="text-sm font-semibold text-gray-400">Selecciona una conversación</p>
+              <p className="text-xs text-gray-300">Haz clic en un cliente para ver y responder sus mensajes</p>
+            </div>
+          ) : (
+            <>
+              {/* Header del chat */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
+                <button type="button" onClick={() => setActiva(null)}
+                  className="sm:hidden w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 mr-1">
+                  ←
+                </button>
+                <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  {activa.turista_nombre?.[0]?.toUpperCase() || "T"}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{activa.turista_nombre || "Visitante"}</p>
+                  <p className="text-xs text-gray-400">{activa.turista_email || ""}</p>
+                </div>
+              </div>
+
+              {/* Mensajes */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+                {loadingMsgs ? (
+                  <div className="flex justify-center items-center h-full">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  </div>
+                ) : mensajes.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center gap-2">
+                    <p className="text-sm text-gray-400">Sin mensajes en esta conversación</p>
+                  </div>
+                ) : (
+                  mensajes.map(m => {
+                    const esPrestador = m.remitente === "prestador";
+                    return (
+                      <div key={m.id} className={`flex ${esPrestador ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          esPrestador
+                            ? "bg-[#1B5E20] text-white rounded-br-sm"
+                            : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-sm"
+                        }`}>
+                          <p>{m.texto}</p>
+                          <p className={`text-[10px] mt-1 ${esPrestador ? "text-white/60 text-right" : "text-gray-400"}`}>
+                            {formatHora(m.created_at)}
+                            {esPrestador && (m.leido ? " ✓✓" : " ✓")}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input respuesta */}
+              <div className="flex items-end gap-2 px-3 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+                <textarea
+                  ref={inputRef}
+                  value={texto}
+                  onChange={e => setTexto(e.target.value)}
+                  onKeyDown={handleKey}
+                  placeholder={`Responder a ${activa.turista_nombre || "el visitante"}...`}
+                  rows={1}
+                  className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-[#1B5E20] max-h-24"
+                  style={{ minHeight: "40px" }}
+                />
+                <button type="button" onClick={enviar} disabled={!texto.trim() || sending}
+                  className="w-10 h-10 rounded-xl bg-[#1B5E20] flex items-center justify-center text-white flex-shrink-0 hover:bg-[#145218] disabled:opacity-40 transition-all">
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── MÓDULO ANALÍTICAS ─────────────────────────────────────────
 const ModuloAnaliticas = ({ prestadorId }) => {
   const [data, setData] = useState(null);
@@ -2232,6 +2499,7 @@ const PrestadorDashboard = () => {
           </div>
         )}
         {tab === "promociones"  && <ModuloPromociones prestadorId={prestador.id} />}
+        {tab === "mensajes"     && <ModuloMensajes prestadorId={prestador.id} />}
         {tab === "resenas" && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm font-medium mb-1">Reseñas de clientes</p>
