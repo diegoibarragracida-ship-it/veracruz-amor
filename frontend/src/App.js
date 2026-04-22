@@ -21,6 +21,8 @@ import DiarioViajero from "@/pages/DiarioViajero";
 import MapaPrestadores from "@/components/MapaPrestadores";
 import PrestadorPage from "@/pages/PrestadorPage";
 import ConstructorPaquete from "@/components/ConstructorPaquete";
+import AtraccionPage from "@/pages/AtraccionPage";
+import EventoPage from "@/pages/EventoPage";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -224,6 +226,8 @@ function AppRouter() {
       <Route path="/mi-diario" element={<ProtectedRoute><DiarioViajero /></ProtectedRoute>} />
       <Route path="/mi-diario/:itinerarioId" element={<ProtectedRoute><DiarioViajero /></ProtectedRoute>} />
       <Route path="/prestador/:prestadorId" element={<PrestadorPage />} />
+      <Route path="/atraccion/:id" element={<AtraccionPage />} />
+      <Route path="/evento/:id"    element={<EventoPage />} />
 
       <Route path="/perfil" element={
         <ProtectedRoute allowedRoles={["turista", "superadmin", "encargado", "prestador"]}>
