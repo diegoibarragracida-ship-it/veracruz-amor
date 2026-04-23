@@ -4082,8 +4082,8 @@ async def get_mensajes(
     prestador_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Turista ve sus mensajes con un prestador. Prestador ve todos."""
-    if current_user["rol"] == "prestador":
+    """Turista ve sus mensajes con un prestador. Prestador/Encargado/Admin ven todos."""
+    if current_user["rol"] in ["prestador", "encargado", "superadmin"]:
         cursor = db.mensajes.find(
             {"prestador_id": prestador_id},
             {"_id": 0}

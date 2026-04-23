@@ -2062,24 +2062,39 @@ const ModuloHabitaciones = ({ prestadorId }) => {
 // ── MÓDULO MENSAJES ───────────────────────────────────────────
 const ModuloMensajes = ({ prestadorId }) => {
   const [conversaciones, setConversaciones] = useState([]);
-  const [activa,         setActiva]         = useState(null); // { turista_id, turista_nombre }
+  const [activa,         setActiva]         = useState(null);
   const [mensajes,       setMensajes]       = useState([]);
   const [texto,          setTexto]          = useState("");
   const [loading,        setLoading]        = useState(true);
   const [loadingMsgs,    setLoadingMsgs]    = useState(false);
   const [sending,        setSending]        = useState(false);
   const [noLeidos,       setNoLeidos]       = useState(0);
+  const [backendError,   setBackendError]   = useState(null);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
-  // Cargar lista de conversaciones
+  // ── Cargar lista de conversaciones ──
+  // Intenta primero el endpoint específico del prestador.
+  // Si no existe (404/500), cae al endpoint de mensajes genérico.
   const fetchConversaciones = async () => {
+    setBackendError(null);
     try {
-      const { data } = await axios.get(`${API}/prestadores/${prestadorId}/conversaciones`);
+      // Endpoint 1: el más limpio — devuelve bandeja del prestador autenticado
+      const { data } = await axios.get(`${API}/prestadores/me/conversaciones`);
       setConversaciones(data.conversaciones || []);
       setNoLeidos((data.conversaciones || []).reduce((s, c) => s + (c.no_leidos || 0), 0));
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (err1) {
+      // Endpoint 2: fallback — algunos backends lo tienen bajo /mensajes/bandeja
+      try {
+        const { data } = await axios.get(`${API}/mensajes/bandeja`);
+        setConversaciones(data.conversaciones || data.mensajes || []);
+      } catch (err2) {
+        // Ningún endpoint existe todavía → mostrar instrucción al prestador
+        const status = err2?.response?.status || err1?.response?.status;
+        setBackendError(status);
+        setConversaciones([]);
+      }
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchConversaciones(); }, [prestadorId]);
@@ -2094,24 +2109,36 @@ const ModuloMensajes = ({ prestadorId }) => {
   const abrirConversacion = async (conv) => {
     setActiva(conv);
     setLoadingMsgs(true);
+    setMensajes([]);
     try {
-      // El prestador ve los mensajes del turista con su prestadorId
-      const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
-        params: { turista_id: conv.turista_id }
-      });
-      setMensajes(data.mensajes || []);
-      // Marcar como leídos desde el lado del prestador
-      await axios.put(`${API}/mensajes/${prestadorId}/leer`, {
+      // Endpoint 1: endpoint específico de conversación
+      let msgs = [];
+      try {
+        const { data } = await axios.get(
+          `${API}/mensajes/conversacion/${conv.turista_id}`
+        );
+        msgs = data.mensajes || [];
+      } catch {
+        // Endpoint 2: el mismo que usa el turista pero con param extra
+        const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
+          params: { turista_id: conv.turista_id, modo: "prestador" }
+        });
+        msgs = data.mensajes || [];
+      }
+      setMensajes(msgs);
+      // Marcar leídos (falla silenciosamente si no existe)
+      axios.put(`${API}/mensajes/${prestadorId}/leer`, {
         turista_id: conv.turista_id,
         lector: "prestador",
       }).catch(() => {});
-      // Actualizar contador
-      setConversaciones(prev => prev.map(c =>
-        c.turista_id === conv.turista_id ? { ...c, no_leidos: 0 } : c
-      ));
+      setConversaciones(prev =>
+        prev.map(c => c.turista_id === conv.turista_id ? { ...c, no_leidos: 0 } : c)
+      );
       setNoLeidos(prev => Math.max(0, prev - (conv.no_leidos || 0)));
-    } catch (e) { console.error(e); }
-    finally { setLoadingMsgs(false); }
+    } catch (e) {
+      console.error("Error cargando mensajes:", e);
+      setMensajes([]);
+    } finally { setLoadingMsgs(false); }
   };
 
   // Polling mensajes cuando hay conversación activa
@@ -2203,6 +2230,30 @@ const ModuloMensajes = ({ prestadorId }) => {
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : backendError ? (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3 py-8">
+                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-amber-500" />
+                </div>
+                <p className="text-sm font-semibold text-gray-700">Falta un endpoint en el backend</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Pídele a tu dev que agregue:
+                </p>
+                <code className="text-[11px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-left leading-relaxed block w-full">
+                  GET /api/prestadores/me/conversaciones<br />
+                  → {'{'} conversaciones: [{'{'}<br />
+                  &nbsp;&nbsp;turista_id,<br />
+                  &nbsp;&nbsp;turista_nombre,<br />
+                  &nbsp;&nbsp;ultimo_mensaje,<br />
+                  &nbsp;&nbsp;no_leidos,<br />
+                  &nbsp;&nbsp;updated_at<br />
+                  {'}'}] {'}'}
+                </code>
+                <button type="button" onClick={fetchConversaciones}
+                  className="text-xs text-[#1B5E20] font-semibold hover:underline mt-1">
+                  Reintentar
+                </button>
               </div>
             ) : conversaciones.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-2">
