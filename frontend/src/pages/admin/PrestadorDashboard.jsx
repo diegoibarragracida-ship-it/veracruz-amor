@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { API, useAuth } from "@/App";
 import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck, Plus, Trash2, Save, Edit3,
   Calendar, CheckCircle, XCircle, AlertCircle,
-  Loader2, MessageCircle, Send,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,31 +75,30 @@ const MOMENTOS = ["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"];
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
 const TIPOS_PRESTADOR = {
-  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","mensajes","promociones","resenas","analiticas"] },
-  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","mensajes","promociones","resenas","analiticas"] },
-  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","mensajes","promociones","resenas","analiticas"] },
-  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
-  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","mensajes","promociones","resenas","analiticas"] },
+  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
+  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
+  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
+  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
+  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
+  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
 };
 
 const TAB_LABELS = {
   perfil: "Perfil", galeria: "Galería", servicios: "Servicios",
   reservas: "Reservas", menu: "Menú", habitaciones: "Habitaciones",
-  flota: "Flota", promociones: "Promociones", resenas: "Reseñas",
-  mensajes: "Mensajes", analiticas: "Analíticas",
+  flota: "Flota", promociones: "Promociones", resenas: "Reseñas", analiticas: "Analíticas",
 };
 
 const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
@@ -530,29 +529,36 @@ const ModuloPerfil = ({ prestador, onSave, uploading, onUploadFoto, onUploadLogo
   const es_servicios  = esServicios(prestador?.tipo);
 
   const save = async () => {
-    setSaving(true);
-    try {
-      const cleanForm = Object.fromEntries(
-        Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
-      );
+  setSaving(true);
+  try {
+    const cleanForm = Object.fromEntries(
+  Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+);
+const save = async () => {
+  setSaving(true);
+  try {
+    const cleanForm = Object.fromEntries(
+      Object.entries(form).filter(([_, v]) => v !== "" && v !== null && v !== undefined)
+    );
 
-      const numericFloats = ["lat", "lng", "precio_min", "precio_max", "precio_familia", 
-                             "precio_noche_desde", "precio_noche_hasta", "tarifa_base", 
-                             "tarifa_por_km", "precio_sesion", "precio_paquete", "desayuno_precio"];
-      const numericInts   = ["capacidad_personas", "num_habitaciones", "num_pisos", 
-                             "min_personas", "max_personas", "capacidad_vehiculo",
-                             "reservas_mesa_capacidad"];
+    const numericFloats = ["lat", "lng", "precio_min", "precio_max", "precio_familia", 
+                           "precio_noche_desde", "precio_noche_hasta", "tarifa_base", 
+                           "tarifa_por_km", "precio_sesion", "precio_paquete", "desayuno_precio"];
+    const numericInts   = ["capacidad_personas", "num_habitaciones", "num_pisos", 
+                           "min_personas", "max_personas", "capacidad_vehiculo",
+                           "reservas_mesa_capacidad"];
 
-      numericFloats.forEach(k => { if (cleanForm[k]) cleanForm[k] = parseFloat(cleanForm[k]); });
-      numericInts.forEach(k =>   { if (cleanForm[k]) cleanForm[k] = parseInt(cleanForm[k]); });
+    numericFloats.forEach(k => { if (cleanForm[k]) cleanForm[k] = parseFloat(cleanForm[k]); });
+    numericInts.forEach(k =>   { if (cleanForm[k]) cleanForm[k] = parseInt(cleanForm[k]); });
 
-      await axios.put(`${API}/prestadores/me/perfil`, cleanForm);
-      toast.success("Perfil actualizado");
-      onSave();
-    } catch(e) { 
-      toast.error("Error guardando"); 
-    } finally { setSaving(false); }
-  };
+    await axios.put(`${API}/prestadores/me/perfil`, cleanForm);
+    toast.success("Perfil actualizado");
+    onSave();
+  } catch(e) { 
+    console.log("Error detalle:", e.response?.data);
+    toast.error("Error guardando"); 
+  } finally { setSaving(false); }
+};
 
   const obtenerUbicacion = () => {
     if (!navigator.geolocation) return toast.error("Geolocalización no disponible");
@@ -2055,322 +2061,324 @@ const ModuloHabitaciones = ({ prestadorId }) => {
           ))}
         </div>
       )}
+
+      {/* ── PANEL DE OCUPACIÓN ── */}
+      {habitaciones.length > 0 && (
+        <OcupacionPanel habitaciones={habitaciones} prestadorId={prestadorId} />
+      )}
     </div>
   );
 };
 
-// ── MÓDULO MENSAJES ───────────────────────────────────────────
-const ModuloMensajes = ({ prestadorId }) => {
-  const [conversaciones, setConversaciones] = useState([]);
-  const [activa,         setActiva]         = useState(null);
-  const [mensajes,       setMensajes]       = useState([]);
-  const [texto,          setTexto]          = useState("");
-  const [loading,        setLoading]        = useState(true);
-  const [loadingMsgs,    setLoadingMsgs]    = useState(false);
-  const [sending,        setSending]        = useState(false);
-  const [noLeidos,       setNoLeidos]       = useState(0);
-  const [backendError,   setBackendError]   = useState(null);
-  const bottomRef = useRef(null);
-  const inputRef  = useRef(null);
+// ── PANEL DE OCUPACIÓN DE HABITACIONES ───────────────────────────
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DIAS_SEMANA = ["Do","Lu","Ma","Mi","Ju","Vi","Sá"];
 
-  // ── Cargar lista de conversaciones ──
-  // Intenta primero el endpoint específico del prestador.
-  // Si no existe (404/500), cae al endpoint de mensajes genérico.
-  const fetchConversaciones = async () => {
-    setBackendError(null);
+const OcupacionPanel = ({ habitaciones, prestadorId }) => {
+  const [año,      setAño]      = useState(new Date().getFullYear());
+  const [mes,      setMes]      = useState(new Date().getMonth());
+  const [reservas, setReservas] = useState([]);
+  const [bloqueos, setBloqueos] = useState({});
+  const [loading,  setLoading]  = useState(true);
+  const [selHab,   setSelHab]   = useState(null); // hab seleccionada para bloquear
+  const [saving,   setSaving]   = useState(false);
+
+  useEffect(() => { fetchData(); }, [prestadorId, mes, año]);
+
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      // Endpoint 1: el más limpio — devuelve bandeja del prestador autenticado
-      const { data } = await axios.get(`${API}/prestadores/me/conversaciones`);
-      setConversaciones(data.conversaciones || []);
-      setNoLeidos((data.conversaciones || []).reduce((s, c) => s + (c.no_leidos || 0), 0));
-    } catch (err1) {
-      // Endpoint 2: fallback — algunos backends lo tienen bajo /mensajes/bandeja
-      try {
-        const { data } = await axios.get(`${API}/mensajes/bandeja`);
-        setConversaciones(data.conversaciones || data.mensajes || []);
-      } catch (err2) {
-        // Ningún endpoint existe todavía → mostrar instrucción al prestador
-        const status = err2?.response?.status || err1?.response?.status;
-        setBackendError(status);
-        setConversaciones([]);
-      }
+      const { data } = await axios.get(`${API}/prestadores/${prestadorId}/reservas`, { params: { limit: 500 } });
+      setReservas(data.reservas || []);
+
+      // Cargar bloqueos de cada habitación
+      const bloqueosPorHab = {};
+      await Promise.all(habitaciones.map(async h => {
+        try {
+          const { data: d } = await axios.get(`${API}/habitaciones/${h.id}/disponibilidad`);
+          bloqueosPorHab[h.id] = new Set(d.fechas_bloqueadas || []);
+        } catch { bloqueosPorHab[h.id] = new Set(); }
+      }));
+      setBloqueos(bloqueosPorHab);
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchConversaciones(); }, [prestadorId]);
+  const primerDia = new Date(año, mes, 1).getDay();
+  const diasEnMes = new Date(año, mes + 1, 0).getDate();
 
-  // Polling de conversaciones cada 15s
-  useEffect(() => {
-    const t = setInterval(fetchConversaciones, 15000);
-    return () => clearInterval(t);
-  }, [prestadorId]);
+  const getFechaStr = (dia) =>
+    `${año}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 
-  // Cargar mensajes de la conversación activa
-  const abrirConversacion = async (conv) => {
-    setActiva(conv);
-    setLoadingMsgs(true);
-    setMensajes([]);
-    try {
-      // Endpoint 1: endpoint específico de conversación
-      let msgs = [];
-      try {
-        const { data } = await axios.get(
-          `${API}/mensajes/conversacion/${conv.turista_id}`
-        );
-        msgs = data.mensajes || [];
-      } catch {
-        // Endpoint 2: el mismo que usa el turista pero con param extra
-        const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
-          params: { turista_id: conv.turista_id, modo: "prestador" }
-        });
-        msgs = data.mensajes || [];
-      }
-      setMensajes(msgs);
-      // Marcar leídos (falla silenciosamente si no existe)
-      axios.put(`${API}/mensajes/${prestadorId}/leer`, {
-        turista_id: conv.turista_id,
-        lector: "prestador",
-      }).catch(() => {});
-      setConversaciones(prev =>
-        prev.map(c => c.turista_id === conv.turista_id ? { ...c, no_leidos: 0 } : c)
-      );
-      setNoLeidos(prev => Math.max(0, prev - (conv.no_leidos || 0)));
-    } catch (e) {
-      console.error("Error cargando mensajes:", e);
-      setMensajes([]);
-    } finally { setLoadingMsgs(false); }
+  const esHoy = (dia) => {
+    const h = new Date();
+    return dia === h.getDate() && mes === h.getMonth() && año === h.getFullYear();
   };
 
-  // Polling mensajes cuando hay conversación activa
-  useEffect(() => {
-    if (!activa) return;
-    const t = setInterval(async () => {
-      try {
-        const { data } = await axios.get(`${API}/mensajes/${prestadorId}`, {
-          params: { turista_id: activa.turista_id }
-        });
-        setMensajes(data.mensajes || []);
-      } catch {}
-    }, 8000);
-    return () => clearInterval(t);
-  }, [activa, prestadorId]);
+  // Para cada día, qué habitaciones tienen reserva activa
+  const reservasPorDia = (dia) => {
+    const f = getFechaStr(dia);
+    return reservas.filter(r => {
+      if (!["pendiente","aceptada"].includes(r.estado)) return false;
+      const entrada = r.fecha_reserva || r.fecha_entrada;
+      const salida  = r.fecha_salida  || r.fecha_reserva;
+      return entrada <= f && salida >= f;
+    });
+  };
 
-  // Auto-scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes]);
+  const esBloqueada = (habId, dia) => bloqueos[habId]?.has(getFechaStr(dia));
 
-  useEffect(() => {
-    if (activa) inputRef.current?.focus();
-  }, [activa]);
+  const toggleBloqueo = async (habId, dia) => {
+    const f = getFechaStr(dia);
+    const current = new Set(bloqueos[habId] || []);
+    if (current.has(f)) current.delete(f);
+    else current.add(f);
 
-  const enviar = async () => {
-    if (!texto.trim() || sending || !activa) return;
-    const textoEnviar = texto.trim();
-    setTexto("");
-    setSending(true);
+    setBloqueos(prev => ({ ...prev, [habId]: current }));
+    setSaving(true);
     try {
-      const { data } = await axios.post(`${API}/mensajes/${prestadorId}`, {
-        texto:          textoEnviar,
-        turista_id:     activa.turista_id,
-        remitente:      "prestador",
-        turista_nombre: activa.turista_nombre,
+      await axios.post(`${API}/habitaciones/${habId}/disponibilidad`, {
+        fechas_bloqueadas: Array.from(current),
       });
-      setMensajes(prev => [...prev, data]);
-    } catch {
-      setTexto(textoEnviar);
-    } finally { setSending(false); }
+    } catch { toast.error("Error al guardar bloqueo"); }
+    finally { setSaving(false); }
   };
 
-  const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); }
+  // Calcular % ocupación del mes
+  const ocupacionMes = () => {
+    const totalCeldas = habitaciones.length * diasEnMes;
+    let ocupadas = 0;
+    for (let d = 1; d <= diasEnMes; d++) {
+      const resHoy = reservasPorDia(d);
+      habitaciones.forEach(h => {
+        if (resHoy.some(r => r.habitacion_id === h.id || r.servicio_id === h.id)) ocupadas++;
+        else if (esBloqueada(h.id, d)) ocupadas++;
+      });
+    }
+    return totalCeldas > 0 ? Math.round(ocupadas / totalCeldas * 100) : 0;
   };
 
-  const formatHora = (iso) => {
-    if (!iso) return "";
-    return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const formatFechaRelativa = (iso) => {
-    if (!iso) return "";
-    const d  = new Date(iso);
-    const hoy = new Date();
-    const diff = Math.floor((hoy - d) / 86400000);
-    if (diff === 0) return `Hoy ${formatHora(iso)}`;
-    if (diff === 1) return `Ayer ${formatHora(iso)}`;
-    return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
-  };
+  const mesAnterior = () => { if (mes === 0) { setMes(11); setAño(y => y-1); } else setMes(m => m-1); };
+  const mesSiguiente = () => { if (mes === 11) { setMes(0); setAño(y => y+1); } else setMes(m => m+1); };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-gray-900 flex items-center gap-2">
-          Mensajes de clientes
-          {noLeidos > 0 && (
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{noLeidos}</span>
-          )}
-        </h3>
-        <button type="button" onClick={fetchConversaciones}
-          className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
-          Actualizar
-        </button>
+        <div>
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            📊 Panel de Ocupación
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Visualiza y bloquea fechas por habitación
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={mesAnterior} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
+            ‹
+          </button>
+          <span className="font-bold text-gray-900 text-sm min-w-[130px] text-center">
+            {MESES[mes]} {año}
+          </span>
+          <button onClick={mesSiguiente} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
+            ›
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex"
-        style={{ height: "560px" }}>
+      {/* Stats rápidos */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-blue-50 rounded-xl p-3 text-center border border-blue-100">
+          <p className="text-2xl font-black text-blue-700">{habitaciones.length}</p>
+          <p className="text-xs text-blue-600 font-medium mt-0.5">Habitaciones</p>
+        </div>
+        <div className="bg-amber-50 rounded-xl p-3 text-center border border-amber-100">
+          <p className="text-2xl font-black text-amber-700">{ocupacionMes()}%</p>
+          <p className="text-xs text-amber-600 font-medium mt-0.5">Ocupación del mes</p>
+        </div>
+        <div className="bg-green-50 rounded-xl p-3 text-center border border-green-100">
+          <p className="text-2xl font-black text-green-700">
+            {reservas.filter(r => r.estado === "pendiente").length}
+          </p>
+          <p className="text-xs text-green-600 font-medium mt-0.5">Pendientes</p>
+        </div>
+      </div>
 
-        {/* ── Lista de conversaciones (columna izq) ── */}
-        <div className={`flex-shrink-0 border-r border-gray-100 flex flex-col ${activa ? "hidden sm:flex w-64" : "w-full sm:w-64"}`}>
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Conversaciones</p>
-          </div>
+      {/* Leyenda */}
+      <div className="flex flex-wrap gap-3 text-xs">
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-500" />Disponible</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-500" />Reservada</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-400" />Bloqueada</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" />Pendiente</span>
+        {saving && <span className="text-gray-400 ml-auto flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" />Guardando...</span>}
+      </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              </div>
-            ) : backendError ? (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3 py-8">
-                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-amber-500" />
-                </div>
-                <p className="text-sm font-semibold text-gray-700">Falta un endpoint en el backend</p>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Pídele a tu dev que agregue:
-                </p>
-                <code className="text-[11px] bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-left leading-relaxed block w-full">
-                  GET /api/prestadores/me/conversaciones<br />
-                  → {'{'} conversaciones: [{'{'}<br />
-                  &nbsp;&nbsp;turista_id,<br />
-                  &nbsp;&nbsp;turista_nombre,<br />
-                  &nbsp;&nbsp;ultimo_mensaje,<br />
-                  &nbsp;&nbsp;no_leidos,<br />
-                  &nbsp;&nbsp;updated_at<br />
-                  {'}'}] {'}'}
-                </code>
-                <button type="button" onClick={fetchConversaciones}
-                  className="text-xs text-[#1B5E20] font-semibold hover:underline mt-1">
-                  Reintentar
-                </button>
-              </div>
-            ) : conversaciones.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-2">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6 text-gray-300" />
-                </div>
-                <p className="text-sm font-medium text-gray-500">Sin mensajes aún</p>
-                <p className="text-xs text-gray-400">Cuando un visitante te escriba, aparecerá aquí</p>
-              </div>
-            ) : (
-              conversaciones.map(conv => (
-                <button key={conv.turista_id} type="button"
-                  onClick={() => abrirConversacion(conv)}
-                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 ${
-                    activa?.turista_id === conv.turista_id ? "bg-green-50 border-l-2 border-l-[#1B5E20]" : ""
-                  }`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                      {conv.turista_nombre?.[0]?.toUpperCase() || "T"}
+      {/* Selector de habitación para bloquear */}
+      <div className="flex flex-wrap gap-2">
+        <span className="text-xs text-gray-500 self-center font-medium">Bloquear fechas de:</span>
+        {habitaciones.map(h => (
+          <button key={h.id} onClick={() => setSelHab(selHab?.id === h.id ? null : h)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+              selHab?.id === h.id
+                ? "bg-red-500 text-white border-red-500"
+                : "bg-white text-gray-600 border-gray-200 hover:border-red-300"
+            }`}>
+            🛏 {h.nombre}
+          </button>
+        ))}
+        {selHab && (
+          <span className="text-xs text-red-600 self-center font-medium animate-pulse">
+            Click en los días para bloquear/desbloquear
+          </span>
+        )}
+      </div>
+
+      {/* Grid de habitaciones × días */}
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-gray-300" /></div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-auto shadow-sm">
+          <table className="w-full text-xs border-collapse" style={{ minWidth: 600 }}>
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="sticky left-0 bg-gray-50 px-3 py-2.5 text-left font-bold text-gray-700 min-w-[120px] z-10 border-r border-gray-100">
+                  Habitación
+                </th>
+                {Array.from({ length: diasEnMes }, (_, i) => i + 1).map(dia => (
+                  <th key={dia} className={`px-1 py-2 text-center font-semibold min-w-[32px] ${esHoy(dia) ? "text-[#1B5E20] bg-green-50" : "text-gray-500"}`}>
+                    <div>{dia}</div>
+                    <div className="text-[9px] text-gray-400">{DIAS_SEMANA[new Date(año, mes, dia).getDay()]}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {habitaciones.map((h, hi) => (
+                <tr key={h.id} className={hi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
+                  <td className="sticky left-0 px-3 py-2 font-semibold text-gray-800 border-r border-gray-100 z-10"
+                    style={{ backgroundColor: hi % 2 === 0 ? "white" : "#fafafa" }}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${h.disponible ? "bg-green-400" : "bg-gray-300"}`} />
+                      <span className="truncate max-w-[90px]">{h.nombre}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{conv.turista_nombre || "Visitante"}</p>
-                        {conv.no_leidos > 0 && (
-                          <span className="bg-[#1B5E20] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
-                            {conv.no_leidos}
-                          </span>
+                    <div className="text-[10px] text-gray-400 mt-0.5">${h.precio_noche?.toLocaleString()}/noche</div>
+                  </td>
+                  {Array.from({ length: diasEnMes }, (_, i) => i + 1).map(dia => {
+                    const f = getFechaStr(dia);
+                    const reservasDia = reservasPorDia(dia);
+                    const tieneReserva = reservasDia.some(r =>
+                      r.habitacion_id === h.id || r.servicio_id === h.id
+                    );
+                    const reservaDia = reservasDia.find(r =>
+                      r.habitacion_id === h.id || r.servicio_id === h.id
+                    );
+                    const bloqueada  = esBloqueada(h.id, dia);
+                    const esPasado   = new Date(f) < new Date(new Date().toISOString().split("T")[0]);
+
+                    let bg = "bg-green-100 hover:bg-green-200";
+                    let title = "Disponible";
+                    if (tieneReserva) {
+                      bg = reservaDia?.estado === "pendiente" ? "bg-amber-400" : "bg-blue-500";
+                      title = `${reservaDia?.turista_nombre || "Reservado"} · ${reservaDia?.estado}`;
+                    } else if (bloqueada) {
+                      bg = "bg-red-300 hover:bg-red-400";
+                      title = "Bloqueada manualmente";
+                    } else if (esPasado) {
+                      bg = "bg-gray-100";
+                      title = "Pasado";
+                    }
+
+                    return (
+                      <td key={dia} className="p-0.5 text-center">
+                        <div
+                          className={`w-full h-7 rounded-md cursor-pointer transition-all flex items-center justify-center text-[9px] font-bold ${bg} ${esPasado && !tieneReserva && !bloqueada ? "opacity-40 cursor-default" : ""}`}
+                          title={title}
+                          onClick={() => {
+                            if (tieneReserva || esPasado) return;
+                            if (selHab?.id === h.id) toggleBloqueo(h.id, dia);
+                          }}
+                        >
+                          {tieneReserva ? (
+                            <span className="text-white text-[8px]">
+                              {reservaDia?.estado === "pendiente" ? "⏳" : "✓"}
+                            </span>
+                          ) : bloqueada ? "✕" : ""}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Lista de reservas del mes */}
+      <div className="space-y-3">
+        <h4 className="font-bold text-gray-900 text-sm">Reservas de {MESES[mes]}</h4>
+        {reservas
+          .filter(r => {
+            const entrada = r.fecha_reserva || r.fecha_entrada || "";
+            const d = new Date(entrada + "T12:00:00");
+            return d.getMonth() === mes && d.getFullYear() === año;
+          })
+          .length === 0 ? (
+          <div className="text-center py-6 text-gray-400 bg-gray-50 rounded-xl">
+            <p className="text-sm">Sin reservas este mes</p>
+          </div>
+        ) : (
+          reservas
+            .filter(r => {
+              const entrada = r.fecha_reserva || r.fecha_entrada || "";
+              const d = new Date(entrada + "T12:00:00");
+              return d.getMonth() === mes && d.getFullYear() === año;
+            })
+            .map(r => {
+              const hab = habitaciones.find(h => h.id === r.habitacion_id || h.id === r.servicio_id);
+              return (
+                <Card key={r.id} className="!p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#1B5E20] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {r.turista_nombre?.[0]?.toUpperCase() || "T"}
+                      </div>
+                      <div>
+                        <p className="font-bold text-gray-900 text-sm">{r.turista_nombre || "Turista"}</p>
+                        <p className="text-xs text-gray-500">
+                          {hab ? `🛏 ${hab.nombre}` : "Habitación"} ·{" "}
+                          {r.num_personas} persona{r.num_personas !== 1 ? "s" : ""}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                          <span>📅 {r.fecha_reserva || r.fecha_entrada}</span>
+                          {r.fecha_salida && r.fecha_salida !== r.fecha_reserva && (
+                            <span>→ {r.fecha_salida}</span>
+                          )}
+                        </div>
+                        {r.nota_turista && (
+                          <p className="text-xs text-gray-500 mt-1 bg-gray-50 px-2 py-1 rounded-lg italic">
+                            "{r.nota_turista}"
+                          </p>
                         )}
                       </div>
-                      <p className="text-xs text-gray-400 truncate">{conv.ultimo_mensaje || "..."}</p>
-                      <p className="text-[10px] text-gray-300 mt-0.5">{formatFechaRelativa(conv.updated_at)}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                        r.estado === "pendiente"  ? "bg-amber-100 text-amber-800" :
+                        r.estado === "aceptada"   ? "bg-blue-100 text-blue-800" :
+                        r.estado === "completada" ? "bg-green-100 text-green-800" :
+                        "bg-red-100 text-red-800"
+                      }`}>{r.estado}</span>
+                      {hab && (
+                        <p className="text-xs font-black text-[#1B5E20]">
+                          ${(hab.precio_noche || 0).toLocaleString()}/noche
+                        </p>
+                      )}
                     </div>
                   </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* ── Panel de chat (columna der) ── */}
-        <div className={`flex-1 flex flex-col ${!activa ? "hidden sm:flex" : "flex"}`}>
-          {!activa ? (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-8">
-              <MessageCircle className="w-12 h-12 text-gray-200" />
-              <p className="text-sm font-semibold text-gray-400">Selecciona una conversación</p>
-              <p className="text-xs text-gray-300">Haz clic en un cliente para ver y responder sus mensajes</p>
-            </div>
-          ) : (
-            <>
-              {/* Header del chat */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
-                <button type="button" onClick={() => setActiva(null)}
-                  className="sm:hidden w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 mr-1">
-                  ←
-                </button>
-                <div className="w-9 h-9 rounded-full bg-[#1B5E20] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  {activa.turista_nombre?.[0]?.toUpperCase() || "T"}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">{activa.turista_nombre || "Visitante"}</p>
-                  <p className="text-xs text-gray-400">{activa.turista_email || ""}</p>
-                </div>
-              </div>
-
-              {/* Mensajes */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
-                {loadingMsgs ? (
-                  <div className="flex justify-center items-center h-full">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                  </div>
-                ) : mensajes.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center gap-2">
-                    <p className="text-sm text-gray-400">Sin mensajes en esta conversación</p>
-                  </div>
-                ) : (
-                  mensajes.map(m => {
-                    const esPrestador = m.remitente === "prestador";
-                    return (
-                      <div key={m.id} className={`flex ${esPrestador ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                          esPrestador
-                            ? "bg-[#1B5E20] text-white rounded-br-sm"
-                            : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-sm"
-                        }`}>
-                          <p>{m.texto}</p>
-                          <p className={`text-[10px] mt-1 ${esPrestador ? "text-white/60 text-right" : "text-gray-400"}`}>
-                            {formatHora(m.created_at)}
-                            {esPrestador && (m.leido ? " ✓✓" : " ✓")}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-                <div ref={bottomRef} />
-              </div>
-
-              {/* Input respuesta */}
-              <div className="flex items-end gap-2 px-3 py-3 border-t border-gray-100 bg-white flex-shrink-0">
-                <textarea
-                  ref={inputRef}
-                  value={texto}
-                  onChange={e => setTexto(e.target.value)}
-                  onKeyDown={handleKey}
-                  placeholder={`Responder a ${activa.turista_nombre || "el visitante"}...`}
-                  rows={1}
-                  className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-[#1B5E20] max-h-24"
-                  style={{ minHeight: "40px" }}
-                />
-                <button type="button" onClick={enviar} disabled={!texto.trim() || sending}
-                  className="w-10 h-10 rounded-xl bg-[#1B5E20] flex items-center justify-center text-white flex-shrink-0 hover:bg-[#145218] disabled:opacity-40 transition-all">
-                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+                </Card>
+              );
+            })
+        )}
       </div>
     </div>
   );
@@ -2550,7 +2558,6 @@ const PrestadorDashboard = () => {
           </div>
         )}
         {tab === "promociones"  && <ModuloPromociones prestadorId={prestador.id} />}
-        {tab === "mensajes"     && <ModuloMensajes prestadorId={prestador.id} />}
         {tab === "resenas" && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm font-medium mb-1">Reseñas de clientes</p>
