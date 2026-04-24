@@ -65,10 +65,10 @@ const SearchBar = ({ onClose, variant = "default" }) => {
         navigate(`/municipio/${item.slug}`);
         break;
       case "evento":
-        navigate(`/eventos?id=${item.id}`);
+        navigate(`/evento/${item.id}`);
         break;
       case "prestador":
-        navigate(`/prestadores?id=${item.id}`);
+        navigate(`/prestador/${item.id}`);
         break;
       default:
         break;

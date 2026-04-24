@@ -3901,10 +3901,123 @@ async def create_reserva(data: ReservaCreate, current_user: dict = Depends(get_c
     }
     await db.reservas.insert_one(reserva)
     reserva.pop("_id", None)
+
+    # ── Notificación WhatsApp al prestador ──
+    try:
+        prestador = await db.prestadores.find_one({"id": data.prestador_id}, {"_id": 0, "nombre": 1, "whatsapp": 1})
+        if prestador and prestador.get("whatsapp"):
+            wa_num = prestador["whatsapp"].replace("+", "").replace("-", "").replace(" ", "")
+            if not wa_num.startswith("52"): wa_num = f"52{wa_num}"
+            fecha    = data.fecha_reserva
+            personas = data.num_personas
+            turista  = current_user["nombre"]
+            nota     = data.nota_turista or "Sin nota"
+            mensaje  = (
+                f"🔔 *Nueva reserva en {prestador['nombre']}*\n\n"
+                f"👤 Turista: {turista}\n"
+                f"📅 Fecha: {fecha}\n"
+                f"👥 Personas: {personas}\n"
+                f"📝 Nota: {nota}\n\n"
+                f"Responde a esta reserva en tu panel: https://veracruz-amor.vercel.app/prestador-panel"
+            )
+            # Guardar el link de WhatsApp en la reserva para referencia
+            wa_link = f"https://wa.me/{wa_num}?text={mensaje.replace(' ', '%20').replace('\n', '%0A').replace('*', '')}"
+            await db.reservas.update_one(
+                {"id": reserva["id"]},
+                {"$set": {"whatsapp_notif_link": wa_link, "prestador_whatsapp": prestador.get("whatsapp")}}
+            )
+            # Log para verificar
+            logger.info(f"WhatsApp notif generado para reserva {reserva['id']} → {wa_num}")
+    except Exception as e:
+        logger.warning(f"No se pudo generar notif WhatsApp: {e}")
+
     return reserva
 
 
-@api_router.put("/reservas/{reserva_id}/estado")
+@api_router.get("/reservas/mis-reservas")
+async def get_mis_reservas(current_user: dict = Depends(get_current_user)):
+    """Turista ve sus propias reservas con info del prestador"""
+    reservas = await db.reservas.find(
+        {"turista_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+
+    # Enriquecer con datos del prestador
+    for r in reservas:
+        if r.get("prestador_id"):
+            p = await db.prestadores.find_one(
+                {"id": r["prestador_id"]},
+                {"_id": 0, "nombre": 1, "foto_url": 1, "whatsapp": 1}
+            )
+            if p:
+                r["prestador_nombre"]   = p.get("nombre")
+                r["prestador_foto"]     = p.get("foto_url")
+                r["prestador_whatsapp"] = p.get("whatsapp")
+        # Enriquecer con nombre del servicio/habitación
+        if r.get("habitacion_id"):
+            h = await db.habitaciones.find_one({"id": r["habitacion_id"]}, {"_id": 0, "nombre": 1})
+            if h: r["servicio_nombre"] = h.get("nombre")
+        elif r.get("servicio_id"):
+            s = await db.servicios.find_one({"id": r["servicio_id"]}, {"_id": 0, "nombre": 1})
+            if s: r["servicio_nombre"] = s.get("nombre")
+
+    return {"reservas": reservas}
+
+
+@api_router.get("/resenas/mis-resenas")
+async def get_mis_resenas(current_user: dict = Depends(get_current_user)):
+    """Turista ve sus propias reseñas"""
+    resenas = await db.resenas.find(
+        {"turista_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+
+    # Enriquecer con nombre del prestador
+    for r in resenas:
+        if r.get("prestador_id"):
+            p = await db.prestadores.find_one({"id": r["prestador_id"]}, {"_id": 0, "nombre": 1})
+            if p: r["prestador_nombre"] = p.get("nombre")
+
+    return {"resenas": resenas}
+
+
+@api_router.put("/auth/perfil")
+async def update_perfil(request: Request, current_user: dict = Depends(get_current_user)):
+    """Turista actualiza su perfil"""
+    body = await request.json()
+    allowed = {k: v for k, v in body.items() if k in ["nombre", "telefono", "foto_url"]}
+    if not allowed:
+        raise HTTPException(status_code=400, detail="Sin campos válidos")
+    allowed["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one({"user_id": current_user["user_id"]}, {"$set": allowed})
+    updated = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0, "password_hash": 0})
+    return updated
+
+
+@api_router.post("/reservas/{reserva_id}/notificar-whatsapp")
+async def notificar_whatsapp(reserva_id: str, current_user: dict = Depends(get_current_user)):
+    """Genera link de WhatsApp para notificar al prestador manualmente"""
+    reserva = await db.reservas.find_one({"id": reserva_id}, {"_id": 0})
+    if not reserva:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    prestador = await db.prestadores.find_one({"id": reserva["prestador_id"]}, {"_id": 0})
+    if not prestador or not prestador.get("whatsapp"):
+        raise HTTPException(status_code=404, detail="Prestador sin WhatsApp")
+
+    wa_num = prestador["whatsapp"].replace("+","").replace("-","").replace(" ","")
+    if not wa_num.startswith("52"): wa_num = f"52{wa_num}"
+    mensaje = (
+        f"🔔 Nueva reserva en {prestador['nombre']}%0A%0A"
+        f"👤 Turista: {reserva.get('turista_nombre','—')}%0A"
+        f"📅 Fecha: {reserva.get('fecha_reserva','—')}%0A"
+        f"👥 Personas: {reserva.get('num_personas',1)}%0A"
+        f"📝 Nota: {reserva.get('nota_turista','Sin nota')}%0A%0A"
+        f"Panel: https://veracruz-amor.vercel.app/prestador-panel"
+    )
+    return {"whatsapp_url": f"https://wa.me/{wa_num}?text={mensaje}"}
+
+
+
 async def update_reserva_estado(
     reserva_id: str,
     request: Request,
@@ -4082,8 +4195,8 @@ async def get_mensajes(
     prestador_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Turista ve sus mensajes con un prestador. Prestador/Encargado/Admin ven todos."""
-    if current_user["rol"] in ["prestador", "encargado", "superadmin"]:
+    """Turista ve sus mensajes con un prestador. Prestador ve todos."""
+    if current_user["rol"] == "prestador":
         cursor = db.mensajes.find(
             {"prestador_id": prestador_id},
             {"_id": 0}
