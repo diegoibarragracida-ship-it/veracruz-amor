@@ -32,8 +32,10 @@ const AtraccionPage = () => {
 
   useEffect(() => {
     const fetch_ = async () => {
+      console.log('AtraccionPage fetching id:', id);
       try {
         const { data } = await axios.get(`${API}/lugares/${id}`);
+        console.log('Lugar data:', data);
         setLugar(data);
       } catch {
         // Try getting from list
