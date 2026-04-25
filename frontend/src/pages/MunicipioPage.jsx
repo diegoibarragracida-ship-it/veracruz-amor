@@ -398,15 +398,15 @@ const MunicipioPage = () => {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {atracciones.filter(a => a.destacado).slice(0, 3).concat(atracciones.filter(a => !a.destacado)).slice(0, 3).map((a, i) => (
-                      <div key={a.id} className="relative rounded-xl overflow-hidden aspect-square cursor-pointer group"
-                        onClick={() => setTab("atracciones")}>
+                      <Link key={a.id} to={`/atraccion/${a.id}`}
+                        className="relative rounded-xl overflow-hidden aspect-square cursor-pointer group block">
                         {(a.foto_portada || a.fotos?.[0])
                           ? <img src={a.foto_portada || a.fotos[0]} alt={a.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           : <div className="w-full h-full bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center text-3xl">🏛️</div>}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                         <p className="absolute bottom-2 left-2 right-2 text-white text-xs font-semibold line-clamp-2">{a.nombre}</p>
                         {a.destacado && <span className="absolute top-2 right-2 text-[10px] bg-amber-400 text-amber-900 font-bold px-1.5 py-0.5 rounded-full">⭐</span>}
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
