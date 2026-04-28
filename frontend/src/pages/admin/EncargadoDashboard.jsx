@@ -537,7 +537,6 @@ const AtraccionesTab = ({ municipioId, municipioNombre }) => {
   );
 };
 
-};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB: NOTICIAS
