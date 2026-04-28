@@ -22,9 +22,9 @@ const EMOJIS_TIPO = {
 
 const EventoPage = () => {
   const { id } = useParams();
-  const [evento,   setEvento]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [isFav,    setIsFav]    = useState(false);
+  const [evento, setEvento] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
     const fetch_ = async () => {
@@ -66,8 +66,8 @@ const EventoPage = () => {
   };
 
   const esMultidia = evento.fecha_fin && evento.fecha_fin !== evento.fecha_inicio;
-  const esFuturo   = evento.fecha_inicio >= new Date().toISOString().split("T")[0];
-  const esHoy      = evento.fecha_inicio === new Date().toISOString().split("T")[0];
+  const esFuturo = evento.fecha_inicio >= new Date().toISOString().split("T")[0];
+  const esHoy = evento.fecha_inicio === new Date().toISOString().split("T")[0];
 
   const handleShare = () => {
     if (navigator.share) navigator.share({ title: evento.nombre, text: evento.descripcion, url: window.location.href });
@@ -106,7 +106,6 @@ const EventoPage = () => {
           </div>
         </div>
 
-        {/* Imagen principal */}
         {evento.foto_url ? (
           <div className="rounded-2xl overflow-hidden h-72 sm:h-96">
             <img src={evento.foto_url} alt={evento.nombre} className="w-full h-full object-cover" />
@@ -119,11 +118,10 @@ const EventoPage = () => {
         )}
       </section>
 
-      {/* Contenido */}
+      {/* Contenido Principal */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Columna principal */}
+          
           <div className="lg:col-span-2 space-y-6">
             {evento.descripcion && (
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -132,7 +130,6 @@ const EventoPage = () => {
               </div>
             )}
 
-            {/* Info */}
             <div className="bg-white rounded-2xl border border-gray-200 p-6">
               <h2 className="font-bold text-gray-900 text-lg mb-4">Detalles</h2>
               <div className="space-y-4">
@@ -144,6 +141,7 @@ const EventoPage = () => {
                     {esMultidia && <p className="text-xs text-gray-500 mt-0.5">Hasta: {formatFecha(evento.fecha_fin)}</p>}
                   </div>
                 </div>
+
                 {evento.lugar && (
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
                     <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color }} />
@@ -153,6 +151,7 @@ const EventoPage = () => {
                     </div>
                   </div>
                 )}
+
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50">
                   <DollarSign className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color }} />
                   <div>
@@ -163,14 +162,13 @@ const EventoPage = () => {
                         : `$${evento.precio_min}${evento.precio_max && evento.precio_max !== evento.precio_min ? `–$${evento.precio_max}` : ""} MXN`}
                     </p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-            {/* CTA principal */}
             {esFuturo && (
               <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xl">
                 <div className="text-center mb-4">
@@ -185,7 +183,6 @@ const EventoPage = () => {
               </div>
             )}
 
-            {/* Fecha destacada */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0"
@@ -201,7 +198,6 @@ const EventoPage = () => {
               </div>
             </div>
 
-            {/* Municipio */}
             {evento.municipio_nombre && (
               <Link to={`/municipio/${evento.municipio_slug || ""}`}
                 className="flex items-center gap-3 bg-white rounded-2xl border border-gray-200 p-4 hover:bg-gray-50 transition-colors">
@@ -213,15 +209,13 @@ const EventoPage = () => {
               </Link>
             )}
 
-            {/* Compartir */}
             <button onClick={handleShare}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
               <Share2 className="w-4 h-4" /> Compartir evento
             </button>
           </div>
+
         </div>
-      </div>
-      </div>
       </main>
 
       <Footer />
