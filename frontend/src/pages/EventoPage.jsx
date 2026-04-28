@@ -220,6 +220,8 @@ const EventoPage = () => {
             </button>
           </div>
         </div>
+      </div>
+      </div>
       </main>
 
       <Footer />
