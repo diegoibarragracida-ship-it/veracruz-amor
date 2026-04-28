@@ -163,7 +163,7 @@ const EventoPage = () => {
                         : `$${evento.precio_min}${evento.precio_max && evento.precio_max !== evento.precio_min ? `–$${evento.precio_max}` : ""} MXN`}
                     </p>
                   </div>
-                )}
+                
               </div>
             </div>
           </div>
@@ -220,7 +220,6 @@ const EventoPage = () => {
             </button>
           </div>
         </div>
-      </div>
       </div>
       </main>
 
