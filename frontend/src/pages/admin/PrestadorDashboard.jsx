@@ -75,30 +75,31 @@ const MOMENTOS = ["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"];
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
 const TIPOS_PRESTADOR = {
-  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","analiticas"] },
-  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","promociones","resenas","analiticas"] },
-  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
-  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","analiticas"] },
-  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
-  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","analiticas"] },
+  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  BAR:          { label: "Bar",          tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  BEBIDAS:      { label: "Bebidas",      tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  RESTAURANTE:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  FOOD_TRUCK:   { label: "Food Truck",   tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  PUESTO:       { label: "Puesto",       tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
+  TURISMO:      { label: "Tour",         tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","mensajes","analiticas"] },
+  TRANSPORTE:   { label: "Transporte",   tabs: ["perfil","galeria","servicios","flota","reservas","promociones","resenas","mensajes","analiticas"] },
+  SERVICIOS:    { label: "Servicios",    tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","mensajes","analiticas"] },
+  default:      { label: "Negocio",      tabs: ["perfil","galeria","servicios","reservas","promociones","resenas","mensajes","analiticas"] },
 };
 
 const TAB_LABELS = {
   perfil: "Perfil", galeria: "Galería", servicios: "Servicios",
   reservas: "Reservas", menu: "Menú", habitaciones: "Habitaciones",
-  flota: "Flota", promociones: "Promociones", resenas: "Reseñas", analiticas: "Analíticas",
+  flota: "Flota", promociones: "Promociones", resenas: "Reseñas",
+  mensajes: "💬 Mensajes", analiticas: "Analíticas",
 };
 
 const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
@@ -2395,6 +2396,193 @@ const OcupacionPanel = ({ habitaciones, prestadorId }) => {
 };
 
 // ── MÓDULO ANALÍTICAS ─────────────────────────────────────────
+const ModuloMensajes = ({ prestadorId, prestadorNombre }) => {
+  const { user } = useAuth();
+  const [mensajes,  setMensajes]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [texto,     setTexto]     = useState("");
+  const [sending,   setSending]   = useState(false);
+  const [turistas,  setTuristas]  = useState([]);
+  const [selTurista,setSelTurista]= useState(null);
+  const bottomRef = useRef(null);
+
+  useEffect(() => { fetchMensajes(); }, [prestadorId]);
+
+  const fetchMensajes = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/mensajes/${prestadorId}`);
+      const msgs = data.mensajes || [];
+      setMensajes(msgs);
+
+      // Agrupar turistas únicos
+      const turistasMap = {};
+      msgs.forEach(m => {
+        if (m.turista_id && !turistasMap[m.turista_id]) {
+          turistasMap[m.turista_id] = {
+            id: m.turista_id,
+            nombre: m.turista_nombre || "Turista",
+            ultimo: m.created_at,
+            noLeidos: 0,
+          };
+        }
+        if (m.turista_id && m.remitente === "turista" && !m.leido) {
+          turistasMap[m.turista_id].noLeidos = (turistasMap[m.turista_id].noLeidos || 0) + 1;
+        }
+      });
+      const lista = Object.values(turistasMap).sort((a, b) => (b.ultimo > a.ultimo ? 1 : -1));
+      setTuristas(lista);
+      if (lista.length > 0 && !selTurista) setSelTurista(lista[0]);
+    } catch {}
+    finally { setLoading(false); }
+  };
+
+  // Polling cada 8s
+  useEffect(() => {
+    const interval = setInterval(fetchMensajes, 8000);
+    return () => clearInterval(interval);
+  }, [prestadorId]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [mensajes, selTurista]);
+
+  const msgsDeTurista = selTurista
+    ? mensajes.filter(m => m.turista_id === selTurista.id)
+    : [];
+
+  const enviar = async () => {
+    if (!texto.trim() || !selTurista) return;
+    setSending(true);
+    const t = texto.trim();
+    setTexto("");
+    try {
+      const { data } = await axios.post(`${API}/mensajes/${prestadorId}`, {
+        texto: t,
+        turista_id: selTurista.id,
+        remitente: "prestador",
+      });
+      setMensajes(prev => [...prev, data]);
+    } catch { toast.error("Error enviando mensaje"); setTexto(t); }
+    finally { setSending(false); }
+  };
+
+  const formatHora = (iso) => iso ? new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">Mensajes de turistas</h2>
+        <button onClick={fetchMensajes} className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+          <Loader2 className="w-3 h-3" /> Actualizar
+        </button>
+      </div>
+
+      {turistas.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+          <div className="text-5xl mb-3">💬</div>
+          <p className="font-semibold text-gray-700">Sin mensajes aún</p>
+          <p className="text-sm text-gray-400 mt-1">Los turistas te escribirán desde tu página de perfil</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ minHeight: 500 }}>
+          {/* Lista de turistas */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50 bg-gray-50">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Conversaciones ({turistas.length})</p>
+            </div>
+            <div className="divide-y divide-gray-50 overflow-y-auto" style={{ maxHeight: 460 }}>
+              {turistas.map(t => (
+                <button key={t.id} onClick={() => setSelTurista(t)}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 transition-colors ${selTurista?.id === t.id ? "bg-green-50 border-r-2 border-[#1B5E20]" : ""}`}>
+                  <div className="w-10 h-10 rounded-full bg-[#1B5E20] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {t.nombre?.[0]?.toUpperCase() || "T"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{t.nombre}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {mensajes.filter(m => m.turista_id === t.id).slice(-1)[0]?.texto?.slice(0, 30) || "Sin mensajes"}
+                    </p>
+                  </div>
+                  {t.noLeidos > 0 && (
+                    <span className="w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                      {t.noLeidos}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel de chat */}
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 flex flex-col overflow-hidden">
+            {selTurista ? (
+              <>
+                {/* Header */}
+                <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                  <div className="w-9 h-9 rounded-full bg-[#1B5E20] text-white flex items-center justify-center font-bold text-sm">
+                    {selTurista.nombre?.[0]?.toUpperCase() || "T"}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">{selTurista.nombre}</p>
+                    <p className="text-xs text-gray-400">{msgsDeTurista.length} mensajes</p>
+                  </div>
+                </div>
+
+                {/* Mensajes */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-gray-50" style={{ minHeight: 300 }}>
+                  {msgsDeTurista.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                      <div className="text-4xl">💬</div>
+                      <p className="text-sm">Sin mensajes con este turista</p>
+                    </div>
+                  ) : msgsDeTurista.map((m, i) => {
+                    const esPrestador = m.remitente === "prestador";
+                    return (
+                      <div key={m.id || i} className={`flex ${esPrestador ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[70%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          esPrestador
+                            ? "bg-[#1B5E20] text-white rounded-br-sm"
+                            : "bg-white text-gray-800 rounded-bl-sm border border-gray-100 shadow-sm"
+                        }`}>
+                          {!esPrestador && <p className="text-[10px] font-bold mb-1 opacity-60">{m.turista_nombre || "Turista"}</p>}
+                          <p>{m.texto}</p>
+                          <p className={`text-[10px] mt-1 ${esPrestador ? "text-white/60 text-right" : "text-gray-400"}`}>
+                            {formatHora(m.created_at)}
+                            {esPrestador && (m.leido ? " ✓✓" : " ✓")}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={bottomRef} />
+                </div>
+
+                {/* Input */}
+                <div className="px-4 py-3 border-t border-gray-100 flex items-end gap-2 bg-white">
+                  <textarea value={texto} onChange={e => setTexto(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }}
+                    placeholder={`Responder a ${selTurista.nombre}...`}
+                    rows={1} className="flex-1 resize-none text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#1B5E20]"
+                    style={{ minHeight: 40, maxHeight: 80 }} />
+                  <button onClick={enviar} disabled={!texto.trim() || sending}
+                    className="w-10 h-10 rounded-xl bg-[#1B5E20] hover:bg-[#145218] text-white flex items-center justify-center disabled:opacity-40 transition-colors flex-shrink-0">
+                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-400">
+                <p className="text-sm">Selecciona una conversación</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ModuloAnaliticas = ({ prestadorId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
