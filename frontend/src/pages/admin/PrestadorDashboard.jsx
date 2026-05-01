@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API, useAuth } from "@/App";
 import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck, Plus, Trash2, Save, Edit3,
   Calendar, CheckCircle, XCircle, AlertCircle,
-  Loader2,
+  Loader2, Send, MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -2762,6 +2762,7 @@ const PrestadorDashboard = () => {
             <p className="text-xs">Próximamente disponible</p>
           </div>
         )}
+        {tab === "mensajes"     && <ModuloMensajes prestadorId={prestador.id} prestadorNombre={prestador.nombre} />}
         {tab === "analiticas"   && <ModuloAnaliticas prestadorId={prestador.id} />}
       </main>
     </div>
