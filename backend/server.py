@@ -3315,209 +3315,111 @@ async def get_chat_history(session_id: str):
 
 # ============== SEED DATA — RUTAS, LUGARES Y PAQUETES ==============
 
-LUGARES_DATA = [
+# ─── DATOS BASE (solo se usan si la BD está vacía al primer arranque) ───
+
+LUGARES_DATA_LEGACY = [
     {"nombre": "Palacio de Hierro de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-     "descripcion": "Joya arquitectónica art nouveau construida en Bélgica y ensamblada en México. Alberga el Museo de Arte del Estado.",
-     "descripcion_larga": "El Palacio de Hierro fue fabricado en Bélgica y ensamblado en Orizaba en 1894. Su fachada de hierro pintada de verde y azul es icónica. Hoy funciona como Museo de Arte con exposiciones temporales y permanentes.",
+     "descripcion": "Joya art nouveau construida en Bélgica (1894). Museo de Arte del Estado.",
      "horarios": "Mar–Dom 10:00–18:00", "costo": "$30 MXN", "costo_min": 30, "costo_max": 30,
      "lat": 18.8534, "lng": -97.1014,
      "fotos": ["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg"],
      "tags": ["arquitectura","museo","arte","historia"], "calificacion": 4.8, "destacado": True,
      "direccion": "Av. Colón s/n, Centro, Orizaba, Ver."},
     {"nombre": "Teleférico de Orizaba", "region": "orizaba", "municipio": "Orizaba", "tipo": "actividad",
-     "descripcion": "Uno de los teleféricos más largos de México. Vistas panorámicas del Pico de Orizaba.",
+     "descripcion": "Vistas panorámicas al Pico de Orizaba (5,636m). 1.2 km de recorrido.",
      "horarios": "Mar–Dom 10:00–19:00", "costo": "$50 MXN", "costo_min": 50, "costo_max": 50,
-     "lat": 18.8480, "lng": -97.1050, "fotos": [], "tags": ["aventura","vistas","naturaleza"], "calificacion": 4.6, "destacado": True,
-     "direccion": "Cerro del Borrego, Orizaba, Ver."},
-    {"nombre": "Fortín de las Flores", "region": "orizaba", "municipio": "Fortín de las Flores", "tipo": "atraccion",
-     "descripcion": "Ciudad de las Flores, famosa por magnolias y gardenias. Parque Botánico y cafetales imperdibles.",
-     "horarios": "Parque Botánico: 9:00–17:00", "costo": "Entrada libre", "costo_min": 0, "costo_max": 100,
-     "lat": 18.9078, "lng": -96.9942, "fotos": [], "tags": ["flores","naturaleza","café"], "calificacion": 4.7, "destacado": True},
-    {"nombre": "Xico — Pueblo Mágico", "region": "orizaba", "municipio": "Xico", "tipo": "atraccion",
-     "descripcion": "Pueblo Mágico famoso por la Cascada de Texolo, sarapes y la Feria de María Magdalena.",
-     "horarios": "Todo el año", "costo": "Libre · Cascada $30 MXN", "costo_min": 0, "costo_max": 200,
-     "lat": 19.4180, "lng": -97.0080, "fotos": [], "tags": ["pueblo magico","cascada","artesanias"], "calificacion": 4.9, "destacado": True},
-    {"nombre": "Cascada de Elefante", "region": "orizaba", "municipio": "Orizaba", "tipo": "atraccion",
-     "descripcion": "Cascada de 40 metros ideal para senderismo.", "horarios": "8:00–17:00", "costo": "$30 MXN",
-     "costo_min": 30, "costo_max": 30, "lat": 18.8600, "lng": -97.0800, "fotos": [],
-     "tags": ["naturaleza","cascada","senderismo"], "calificacion": 4.5, "destacado": False},
+     "lat": 18.8480, "lng": -97.1050, "fotos": [], "tags": ["aventura","vistas","naturaleza"], "calificacion": 4.6, "destacado": True},
     {"nombre": "Museo de Antropología de Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
-     "descripcion": "Segundo museo de antropología más importante de México. Mayor colección de cabezas olmecas del mundo.",
+     "descripcion": "Segundo museo de antropología más importante de México. Cabezas olmecas colosales.",
      "horarios": "Mar–Dom 9:00–17:00", "costo": "$80 MXN", "costo_min": 0, "costo_max": 80,
-     "lat": 19.5347, "lng": -96.9266, "fotos": [], "tags": ["cultura","museo","arqueologia","olmecas"],
-     "calificacion": 4.9, "destacado": True, "direccion": "Av. Xalapa s/n, Xalapa, Ver.", "telefono": "228 815 4952"},
-    {"nombre": "Coatepec — Ciudad del Café", "region": "xalapa", "municipio": "Coatepec", "tipo": "atraccion",
-     "descripcion": "Pueblo Mágico y capital mundial del café de altura. Calles coloniales y aroma a café.",
-     "horarios": "Todo el año", "costo": "Libre · Tours $150–300 MXN", "costo_min": 0, "costo_max": 300,
-     "lat": 19.4524, "lng": -96.9614, "fotos": [], "tags": ["cafe","pueblo magico","gastronomia"], "calificacion": 4.8, "destacado": True},
-    {"nombre": "Naolinco — Pueblo Mágico", "region": "xalapa", "municipio": "Naolinco", "tipo": "atraccion",
-     "descripcion": "Pueblo Mágico famoso por zapatos artesanales, cascadas y puente colgante.",
-     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 200,
-     "lat": 19.6500, "lng": -96.8667, "fotos": [], "tags": ["pueblo magico","artesanias","calzado"], "calificacion": 4.6, "destacado": True},
-    {"nombre": "Lagos del Dique — Xalapa", "region": "xalapa", "municipio": "Xalapa", "tipo": "atraccion",
-     "descripcion": "Parque lacustre en el corazón de Xalapa para paseos en lancha y ciclismo.",
-     "horarios": "6:00–21:00", "costo": "Libre", "costo_min": 0, "costo_max": 100,
-     "lat": 19.5250, "lng": -96.9300, "fotos": [], "tags": ["naturaleza","parque","familia"], "calificacion": 4.4, "destacado": False},
+     "lat": 19.5347, "lng": -96.9266, "fotos": [], "tags": ["cultura","museo","arqueologia"], "calificacion": 4.9, "destacado": True},
     {"nombre": "Laguna de Catemaco", "region": "tuxtlas", "municipio": "Catemaco", "tipo": "atraccion",
-     "descripcion": "Laguna más grande de Veracruz. Famosa por brujos, monos y selva tropical.",
+     "descripcion": "La laguna más grande de Veracruz rodeada de selva tropical. Brujos y monos.",
      "horarios": "Lanchas 8:00–18:00", "costo": "$200–350 MXN por lancha", "costo_min": 200, "costo_max": 350,
-     "lat": 18.4220, "lng": -95.1140, "fotos": [], "tags": ["laguna","naturaleza","ecoturismo","brujos"], "calificacion": 4.7, "destacado": True},
-    {"nombre": "Reserva Nanciyaga", "region": "tuxtlas", "municipio": "Catemaco", "tipo": "actividad",
-     "descripcion": "Reserva ecológica con temazcal, lodazales y senderos en selva primaria.",
-     "horarios": "8:00–17:00", "costo": "$150 MXN · Temazcal $300", "costo_min": 150, "costo_max": 500,
-     "lat": 18.3800, "lng": -95.0900, "fotos": [], "tags": ["ecoturismo","temazcal","selva"],
-     "calificacion": 4.8, "destacado": True, "web": "https://nanciyaga.com"},
-    {"nombre": "San Andrés Tuxtla", "region": "tuxtlas", "municipio": "San Andrés Tuxtla", "tipo": "atraccion",
-     "descripcion": "Capital regional con puros artesanales. Puerta de entrada a Los Tuxtlas.",
-     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 200,
-     "lat": 18.4500, "lng": -95.2150, "fotos": [], "tags": ["puros","artesanias","gastronomia"], "calificacion": 4.3, "destacado": False},
+     "lat": 18.4220, "lng": -95.1140, "fotos": [], "tags": ["laguna","naturaleza","ecoturismo"], "calificacion": 4.7, "destacado": True},
     {"nombre": "Zona Arqueológica El Tajín", "region": "norte", "municipio": "Papantla", "tipo": "atraccion",
-     "descripcion": "Patrimonio UNESCO. Ciudad totonaca con la Pirámide de los Nichos.",
+     "descripcion": "Patrimonio UNESCO. Pirámide de los Nichos totonaca.",
      "horarios": "9:00–17:00", "costo": "$85 MXN", "costo_min": 0, "costo_max": 85,
-     "lat": 20.4472, "lng": -97.3778, "fotos": [],
-     "tags": ["arqueologia","UNESCO","totonaca","historia"], "calificacion": 4.9, "destacado": True,
-     "direccion": "Zona Arqueológica El Tajín, Papantla, Ver."},
-    {"nombre": "Voladores de Papantla", "region": "norte", "municipio": "Papantla", "tipo": "atraccion",
-     "descripcion": "Ritual Patrimonio Cultural Inmaterial UNESCO. Cinco hombres giran desde 30 metros de altura.",
-     "horarios": "Diario en El Tajín 11:00, 13:00, 15:00", "costo": "Donativo $50–100 MXN", "costo_min": 50, "costo_max": 100,
-     "lat": 20.4547, "lng": -97.3222, "fotos": [], "tags": ["cultura","UNESCO","totonaca","ritual"], "calificacion": 4.9, "destacado": True},
-    {"nombre": "Playas de Tuxpan", "region": "norte", "municipio": "Tuxpan de Rodríguez Cano", "tipo": "atraccion",
-     "descripcion": "Las playas más cercanas a la CDMX. Arena fina y malecón animado.",
-     "horarios": "Todo el año", "costo": "Libre", "costo_min": 0, "costo_max": 300,
-     "lat": 20.9500, "lng": -97.4000, "fotos": [], "tags": ["playa","mar","familia"], "calificacion": 4.3, "destacado": False},
+     "lat": 20.4472, "lng": -97.3778, "fotos": [], "tags": ["arqueologia","UNESCO","historia"], "calificacion": 4.9, "destacado": True},
     {"nombre": "San Juan de Ulúa", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
      "descripcion": "Fortaleza colonial del siglo XVI, primer edificio colonial de América.",
      "horarios": "Mar–Dom 9:00–16:30", "costo": "$75 MXN", "costo_min": 0, "costo_max": 75,
-     "lat": 19.2030, "lng": -96.1350, "fotos": [], "tags": ["historia","colonial","fortaleza"],
-     "calificacion": 4.7, "destacado": True, "direccion": "Isla de San Juan de Ulúa, Veracruz"},
+     "lat": 19.2030, "lng": -96.1350, "fotos": [], "tags": ["historia","colonial","fortaleza"], "calificacion": 4.7, "destacado": True},
     {"nombre": "Malecón de Veracruz", "region": "costa", "municipio": "Veracruz", "tipo": "atraccion",
-     "descripcion": "El malecón más famoso de México con Acuario, Baluarte y restaurantes de mariscos.",
-     "horarios": "Todo el año · Acuario 10:00–18:00", "costo": "Libre · Acuario $150 MXN", "costo_min": 0, "costo_max": 150,
-     "lat": 19.1934, "lng": -96.1370, "fotos": [], "tags": ["malecon","acuario","gastronomia","carnaval"], "calificacion": 4.6, "destacado": True},
-    {"nombre": "Boca del Río", "region": "costa", "municipio": "Boca del Río", "tipo": "atraccion",
-     "descripcion": "Zona gastronómica top de Veracruz. Mariscos frescos y restaurantes de playa.",
-     "horarios": "Todo el año", "costo": "Libre · Comida $150–500/persona", "costo_min": 0, "costo_max": 500,
-     "lat": 19.1070, "lng": -96.1150, "fotos": [], "tags": ["gastronomia","mariscos","playa"], "calificacion": 4.7, "destacado": True},
-    {"nombre": "Alvarado — Puerto Pesquero", "region": "costa", "municipio": "Alvarado", "tipo": "atraccion",
-     "descripcion": "Puerto pesquero auténtico con mariscos ultra frescos y laguna de Camaronera.",
-     "horarios": "Todo el año", "costo": "Libre · Lanchas $150/persona", "costo_min": 0, "costo_max": 200,
-     "lat": 18.7700, "lng": -95.7630, "fotos": [], "tags": ["pesca","mariscos","laguna"], "calificacion": 4.5, "destacado": False},
-]
-
-RUTAS_DATA = [
-    {"nombre": "Ruta Orizaba — Entre Cumbres y Flores", "slug": "orizaba", "region": "orizaba",
-     "descripcion": "Del Pico de Orizaba a los cafetales de Xico: arquitectura única y naturaleza exuberante.",
-     "descripcion_larga": "La región de Orizaba combina lo mejor de Veracruz. A 2,000 metros, el clima es fresco. El Palacio de Hierro, el Teleférico, Fortín de las Flores y Xico te esperan.",
-     "dias_recomendados": 3, "distancia_km": 45, "dificultad": "facil",
-     "costo_estimado_min": 1200, "costo_estimado_max": 3500,
-     "mejor_epoca": "Todo el año · Mejor: octubre a mayo",
-     "como_llegar": "Desde CDMX: 4h por autopista México-Orizaba. Desde Xalapa: 2h.",
-     "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg",
-     "tags": ["cafe","naturaleza","arquitectura","familia"]},
-    {"nombre": "Ruta Xalapa — La Capital de la Cultura", "slug": "xalapa", "region": "xalapa",
-     "descripcion": "La ciudad de las flores, el café y la niebla. Museos de clase mundial y Pueblos Mágicos.",
-     "descripcion_larga": "Xalapa a 1,400m: el MAX, Coatepec capital del café y Naolinco con sus zapatos artesanales.",
-     "dias_recomendados": 3, "distancia_km": 60, "dificultad": "facil",
-     "costo_estimado_min": 1500, "costo_estimado_max": 4000,
-     "mejor_epoca": "Todo el año · Mejor: noviembre a abril",
-     "como_llegar": "Desde CDMX: 4.5h en autopista.", "foto_portada": "",
-     "tags": ["cultura","museos","cafe","gastronomia"]},
-    {"nombre": "Ruta Los Tuxtlas — Selva, Magia y Laguna", "slug": "tuxtlas", "region": "tuxtlas",
-     "descripcion": "La región más biodiversa de México. Selva tropical, laguna mágica y brujos.",
-     "descripcion_larga": "La última gran selva de México. Catemaco, Nanciyaga y San Andrés Tuxtla te esperan.",
-     "dias_recomendados": 4, "distancia_km": 80, "dificultad": "moderada",
-     "costo_estimado_min": 2000, "costo_estimado_max": 5000,
-     "mejor_epoca": "Noviembre a mayo",
-     "como_llegar": "Desde Veracruz: 2.5h. Desde CDMX: 7h.", "foto_portada": "",
-     "tags": ["ecoturismo","selva","laguna","aventura"]},
-    {"nombre": "Ruta Norte — El Tajín y los Totonacas", "slug": "norte", "region": "norte",
-     "descripcion": "Patrimonio UNESCO y cultura viva. El Tajín, Voladores de Papantla y playas de Tuxpan.",
-     "descripcion_larga": "El Tajín Patrimonio UNESCO, Papantla con su vainilla y Tuxpan con sus playas.",
-     "dias_recomendados": 3, "distancia_km": 100, "dificultad": "facil",
-     "costo_estimado_min": 1500, "costo_estimado_max": 4500,
-     "mejor_epoca": "Todo el año · Cumbre Tajín: marzo",
-     "como_llegar": "Desde CDMX: 4h a Poza Rica, 30min a Papantla.", "foto_portada": "",
-     "tags": ["arqueologia","UNESCO","cultura","playa"]},
-    {"nombre": "Ruta Costa — Veracruz Puerto", "slug": "costa", "region": "costa",
-     "descripcion": "El puerto más antiguo de América. Fortalezas coloniales, carnaval y mariscos frescos.",
-     "descripcion_larga": "San Juan de Ulúa, el Malecón, Boca del Río y Alvarado forman el circuito costero.",
-     "dias_recomendados": 3, "distancia_km": 120, "dificultad": "facil",
-     "costo_estimado_min": 1800, "costo_estimado_max": 5000,
-     "mejor_epoca": "Todo el año · Carnaval: febrero",
-     "como_llegar": "Desde CDMX: 5h en autopista o vuelo de 1h.", "foto_portada": "",
-     "tags": ["historia","gastronomia","playa","carnaval"]},
-]
-
-PAQUETES_DATA = [
-    {"nombre": "Paquete Orizaba Express", "region": "orizaba",
-     "descripcion": "3 días entre el Pico de Orizaba, cafetales y flores de Fortín.",
-     "dias": 3, "precio_min": 3500, "precio_max": 7000,
-     "incluye": ["2 noches hospedaje boutique","Desayunos","Tour Palacio de Hierro + Teleférico","Tour cafetero Fortín","Visita Xico con guía"],
-     "no_incluye": ["Transporte de origen","Comidas y cenas","Gastos personales"],
-     "hoteles": [{"nombre": "Hotel Fiesta Inn Orizaba","estrellas": 4,"precio_noche": 1200,"descripcion": "Céntrico con alberca"},
-                 {"nombre": "Gran Hotel de Orizaba","estrellas": 3,"precio_noche": 750,"descripcion": "Hotel histórico en el centro"}],
-     "restaurantes": [{"nombre": "La Casona de las Flores","especialidad": "Cocina veracruzana","precio_promedio": 250},
-                      {"nombre": "Café de Altura La Esquina","especialidad": "Café de especialidad","precio_promedio": 80}],
-     "actividades": ["Teleférico","Cascada de Elefante","Tour café Fortín","Cascada Texolo Xico"]},
-    {"nombre": "Paquete Xalapa Cultural", "region": "xalapa",
-     "descripcion": "Museos, café de especialidad y Pueblos Mágicos en 3 días.",
-     "dias": 3, "precio_min": 3800, "precio_max": 7500,
-     "incluye": ["2 noches hotel boutique Xalapa","Desayunos","Entrada MAX","Tour cafetero Coatepec","Guía Naolinco"],
-     "no_incluye": ["Transporte de origen","Comidas","Compras"],
-     "hoteles": [{"nombre": "Mesón del Alférez","estrellas": 4,"precio_noche": 1400,"descripcion": "Boutique colonial"},
-                 {"nombre": "Hotel Xalapa","estrellas": 4,"precio_noche": 1100,"descripcion": "Clásico con jardines"}],
-     "restaurantes": [{"nombre": "La Sopa","especialidad": "Cocina veracruzana","precio_promedio": 180},
-                      {"nombre": "Café Tierra Luna","especialidad": "Café Coatepec","precio_promedio": 100}],
-     "actividades": ["Museo Antropología","Lagos del Dique","Tour café Coatepec","Naolinco"]},
-    {"nombre": "Paquete Veracruz Puerto & Costa", "region": "costa",
-     "descripcion": "Historia colonial, mariscos y playas del Golfo en 3 días.",
-     "dias": 3, "precio_min": 4200, "precio_max": 8500,
-     "incluye": ["2 noches hotel frente al mar","Desayunos buffet","Tour San Juan de Ulúa","Recorrido Centro Histórico","Acuario"],
-     "no_incluye": ["Transporte de origen","Comidas","Actividades extra"],
-     "hoteles": [{"nombre": "Hotel Emporio Veracruz","estrellas": 5,"precio_noche": 2200,"descripcion": "Lujo frente al malecón"},
-                 {"nombre": "Holiday Inn Veracruz Centro","estrellas": 4,"precio_noche": 1400,"descripcion": "Cómodo cerca del Zócalo"}],
-     "restaurantes": [{"nombre": "Mariscos Villa Rica","especialidad": "Mariscos frescos","precio_promedio": 300},
-                      {"nombre": "Los Portales del Parque","especialidad": "Antojitos jarochos","precio_promedio": 120}],
-     "actividades": ["San Juan de Ulúa","Malecón y Acuario","Gastronomía Boca del Río","Lanchas Alvarado"]},
+     "descripcion": "El malecón más famoso de México. Acuario, Baluarte y mariscos.",
+     "horarios": "Todo el año", "costo": "Libre · Acuario $150 MXN", "costo_min": 0, "costo_max": 150,
+     "lat": 19.1934, "lng": -96.1370, "fotos": [], "tags": ["malecon","acuario","gastronomia"], "calificacion": 4.6, "destacado": True},
 ]
 
 
 async def seed_rutas_y_lugares():
-    """Puebla la BD con rutas turísticas, lugares y paquetes si no existen."""
+    """Crea datos base SOLO si la BD está vacía.
+    Todo el contenido real lo gestiona el encargado desde el panel de administración."""
+
+    # Lugares: solo si no hay ninguno en la BD
     existing_lugares = await db.lugares.count_documents({})
     if existing_lugares == 0:
         lugares_to_insert = []
-        for l in LUGARES_DATA:
+        for l in LUGARES_DATA_LEGACY:
             doc = {**l, "id": str(uuid.uuid4()), "slug": slugify(l["nombre"])}
             lugares_to_insert.append(doc)
         if lugares_to_insert:
             await db.lugares.insert_many(lugares_to_insert)
-            logger.info(f"Seeded {len(lugares_to_insert)} lugares")
+            logger.info(f"Seeded {len(lugares_to_insert)} lugares base")
 
+    # Rutas: solo si no hay ninguna
     existing_rutas = await db.rutas.count_documents({})
     if existing_rutas == 0:
+        RUTAS_BASE = [
+            {"nombre": "Ruta Orizaba — Entre Cumbres y Flores", "slug": "orizaba", "region": "orizaba",
+             "descripcion": "Del Pico de Orizaba a los cafetales de Xico: arquitectura única y naturaleza.",
+             "descripcion_larga": "La región de Orizaba combina lo mejor de Veracruz a 2,000 metros.",
+             "dias_recomendados": 3, "distancia_km": 45, "dificultad": "facil",
+             "costo_estimado_min": 1200, "costo_estimado_max": 3500,
+             "mejor_epoca": "Todo el año · Mejor: octubre a mayo",
+             "como_llegar": "Desde CDMX: 4h por autopista México-Orizaba.",
+             "foto_portada": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/PalacioDeHierroOrizaba.jpg/1200px-PalacioDeHierroOrizaba.jpg",
+             "tags": ["cafe","naturaleza","arquitectura","familia"]},
+            {"nombre": "Ruta Xalapa — La Capital de la Cultura", "slug": "xalapa", "region": "xalapa",
+             "descripcion": "Museos de clase mundial, Pueblos Mágicos y el mejor café de altura.",
+             "descripcion_larga": "Xalapa a 1,400m: el MAX, Coatepec capital del café y Naolinco.",
+             "dias_recomendados": 3, "distancia_km": 60, "dificultad": "facil",
+             "costo_estimado_min": 1500, "costo_estimado_max": 4000,
+             "mejor_epoca": "Todo el año · Mejor: noviembre a abril",
+             "como_llegar": "Desde CDMX: 4.5h en autopista.", "foto_portada": "",
+             "tags": ["cultura","museos","cafe","gastronomia"]},
+            {"nombre": "Ruta Los Tuxtlas — Selva, Magia y Laguna", "slug": "tuxtlas", "region": "tuxtlas",
+             "descripcion": "La región más biodiversa de México. Selva, laguna mágica y brujos.",
+             "descripcion_larga": "Catemaco, Nanciyaga y San Andrés Tuxtla en selva tropical única.",
+             "dias_recomendados": 4, "distancia_km": 80, "dificultad": "moderada",
+             "costo_estimado_min": 2000, "costo_estimado_max": 5000,
+             "mejor_epoca": "Noviembre a mayo", "como_llegar": "Desde Veracruz: 2.5h.",
+             "foto_portada": "", "tags": ["ecoturismo","selva","laguna","aventura"]},
+            {"nombre": "Ruta Norte — El Tajín y los Totonacas", "slug": "norte", "region": "norte",
+             "descripcion": "Patrimonio UNESCO y cultura viva. El Tajín, Voladores y playas de Tuxpan.",
+             "descripcion_larga": "El Tajín UNESCO, Papantla con su vainilla y Tuxpan.",
+             "dias_recomendados": 3, "distancia_km": 100, "dificultad": "facil",
+             "costo_estimado_min": 1500, "costo_estimado_max": 4500,
+             "mejor_epoca": "Todo el año · Cumbre Tajín: marzo",
+             "como_llegar": "Desde CDMX: 4h a Poza Rica, 30min a Papantla.",
+             "foto_portada": "", "tags": ["arqueologia","UNESCO","cultura","playa"]},
+            {"nombre": "Ruta Costa — Veracruz Puerto", "slug": "costa", "region": "costa",
+             "descripcion": "El puerto más antiguo de América. Carnaval, mariscos y fortalezas coloniales.",
+             "descripcion_larga": "San Juan de Ulúa, el Malecón, Boca del Río y Alvarado.",
+             "dias_recomendados": 3, "distancia_km": 120, "dificultad": "facil",
+             "costo_estimado_min": 1800, "costo_estimado_max": 5000,
+             "mejor_epoca": "Todo el año · Carnaval: febrero",
+             "como_llegar": "Desde CDMX: 5h en autopista o vuelo de 1h.",
+             "foto_portada": "", "tags": ["historia","gastronomia","playa","carnaval"]},
+        ]
         rutas_to_insert = []
-        for r in RUTAS_DATA:
+        for r in RUTAS_BASE:
             paradas_cursor = db.lugares.find({"region": r["region"]}, {"_id": 0, "id": 1}).sort("destacado", -1)
             paradas = await paradas_cursor.to_list(10)
             doc = {**r, "id": str(uuid.uuid4()), "paradas": [p["id"] for p in paradas], "activa": True}
             rutas_to_insert.append(doc)
-        if rutas_to_insert:
-            await db.rutas.insert_many(rutas_to_insert)
-            logger.info(f"Seeded {len(rutas_to_insert)} rutas")
-
-    existing_paquetes = await db.paquetes.count_documents({})
-    if existing_paquetes == 0:
-        paquetes_to_insert = []
-        for p in PAQUETES_DATA:
-            lugar_ids_cursor = db.lugares.find({"region": p["region"]}, {"_id": 0, "id": 1})
-            lugar_ids = await lugar_ids_cursor.to_list(10)
-            doc = {**p, "id": str(uuid.uuid4()), "lugar_ids": [l["id"] for l in lugar_ids], "activo": True}
-            paquetes_to_insert.append(doc)
-        if paquetes_to_insert:
-            await db.paquetes.insert_many(paquetes_to_insert)
-            logger.info(f"Seeded {len(paquetes_to_insert)} paquetes")
-
+        await db.rutas.insert_many(rutas_to_insert)
+        logger.info(f"Seeded {len(rutas_to_insert)} rutas base")
 
 # ─── ENDPOINTS RUTAS, LUGARES, PAQUETES E ITINERARIO ───
 
@@ -3536,9 +3438,44 @@ async def get_ruta_by_region(region_slug: str):
     ruta = await db.rutas.find_one({"slug": region_slug, "activa": True}, {"_id": 0})
     if not ruta:
         raise HTTPException(status_code=404, detail="Ruta no encontrada")
-    lugares_cursor = db.lugares.find({"region": ruta["region"]}, {"_id": 0}).sort("destacado", -1)
-    lugares = await lugares_cursor.to_list(20)
-    return {"ruta": ruta, "lugares": lugares}
+    region = ruta["region"]
+
+    # Lugares de la región desde la BD
+    lugares = await db.lugares.find(
+        {"region": region}, {"_id": 0}
+    ).sort("destacado", -1).to_list(30)
+
+    # Municipios de la región para buscar prestadores reales
+    municipios_region = await db.municipios.find(
+        {"region": {"$regex": region, "$options": "i"}},
+        {"_id": 0, "id": 1, "nombre": 1}
+    ).to_list(50)
+    municipio_ids = [m["id"] for m in municipios_region]
+
+    # Hoteles verificados de la BD
+    hoteles = await db.prestadores.find(
+        {"tipo": "HOSPEDAJE", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "id": 1, "nombre": 1, "descripcion": 1, "foto_url": 1,
+         "calificacion_promedio": 1, "telefono": 1, "whatsapp": 1,
+         "horarios": 1, "direccion": 1, "lat": 1, "lng": 1}
+    ).limit(10).to_list(10)
+
+    # Restaurantes verificados de la BD
+    restaurantes = await db.prestadores.find(
+        {"tipo": "GASTRONOMÍA", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "id": 1, "nombre": 1, "descripcion": 1, "foto_url": 1,
+         "calificacion_promedio": 1, "telefono": 1, "whatsapp": 1,
+         "horarios": 1, "direccion": 1, "lat": 1, "lng": 1}
+    ).limit(10).to_list(10)
+
+    return {
+        "ruta": ruta,
+        "lugares": lugares,
+        "hoteles": hoteles,
+        "restaurantes": restaurantes,
+    }
 
 
 @api_router.get("/lugares")
@@ -3601,11 +3538,45 @@ async def get_paquetes(region: Optional[str] = None):
 
 @api_router.get("/paquetes/{region}")
 async def get_paquete_by_region(region: str):
-    paquete = await db.paquetes.find_one({"region": region.lower(), "activo": True}, {"_id": 0})
+    region_lower = region.lower()
+    paquete = await db.paquetes.find_one({"region": region_lower, "activo": True}, {"_id": 0})
     if not paquete:
         raise HTTPException(status_code=404, detail="Paquete no encontrado")
-    lugares_cursor = db.lugares.find({"region": region.lower()}, {"_id": 0}).sort("destacado", -1)
-    lugares = await lugares_cursor.to_list(20)
+
+    # Lugares destacados de la región
+    lugares = await db.lugares.find(
+        {"region": region_lower}, {"_id": 0}
+    ).sort("destacado", -1).to_list(20)
+
+    # Municipios de la región
+    municipios_region = await db.municipios.find(
+        {"region": {"$regex": region_lower, "$options": "i"}},
+        {"_id": 0, "id": 1}
+    ).to_list(50)
+    municipio_ids = [m["id"] for m in municipios_region]
+
+    # Hoteles reales de la BD
+    hoteles_bd = await db.prestadores.find(
+        {"tipo": "HOSPEDAJE", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "nombre": 1, "descripcion": 1, "calificacion_promedio": 1,
+         "foto_url": 1, "telefono": 1, "whatsapp": 1, "horarios": 1, "direccion": 1}
+    ).limit(5).to_list(5)
+
+    # Restaurantes reales de la BD
+    restaurantes_bd = await db.prestadores.find(
+        {"tipo": "GASTRONOMÍA", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "nombre": 1, "descripcion": 1, "calificacion_promedio": 1,
+         "foto_url": 1, "telefono": 1, "whatsapp": 1, "horarios": 1, "direccion": 1}
+    ).limit(5).to_list(5)
+
+    # Agregar datos reales al paquete
+    if hoteles_bd:
+        paquete["hoteles_reales"] = hoteles_bd
+    if restaurantes_bd:
+        paquete["restaurantes_reales"] = restaurantes_bd
+
     return {"paquete": paquete, "lugares": lugares}
 
 
@@ -3614,60 +3585,116 @@ async def generar_itinerario(req: ItinerarioRequest):
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="AI key no configurada")
 
+    # ── Obtener TODO el contexto de la BD ──
     ruta = await db.rutas.find_one({"region": req.region}, {"_id": 0})
-    lugares = await db.lugares.find(
-        {"region": req.region},
-        {"_id": 0, "nombre": 1, "tipo": 1, "descripcion": 1, "costo_min": 1, "costo_max": 1, "calificacion": 1}
-    ).to_list(20)
     paquete = await db.paquetes.find_one({"region": req.region}, {"_id": 0})
 
-    presupuesto_texto = {"bajo": "menos de $1,500 MXN por día", "medio": "$1,500–3,000 MXN por día",
-                         "alto": "más de $3,000 MXN por día"}.get(req.presupuesto, "moderado")
+    lugares = await db.lugares.find(
+        {"region": req.region},
+        {"_id": 0, "nombre": 1, "tipo": 1, "descripcion": 1,
+         "costo_min": 1, "costo_max": 1, "calificacion": 1, "horarios": 1}
+    ).to_list(30)
+
+    # Municipios de la región
+    municipios_region = await db.municipios.find(
+        {"region": {"$regex": req.region, "$options": "i"}},
+        {"_id": 0, "id": 1, "nombre": 1}
+    ).to_list(50)
+    municipio_ids = [m["id"] for m in municipios_region]
+
+    hoteles = await db.prestadores.find(
+        {"tipo": "HOSPEDAJE", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "nombre": 1, "descripcion": 1, "calificacion_promedio": 1, "horarios": 1, "direccion": 1}
+    ).limit(8).to_list(8)
+
+    restaurantes = await db.prestadores.find(
+        {"tipo": "GASTRONOMÍA", "verificado": True, "activo": True,
+         "municipio_id": {"$in": municipio_ids}},
+        {"_id": 0, "nombre": 1, "descripcion": 1, "calificacion_promedio": 1, "horarios": 1, "direccion": 1}
+    ).limit(8).to_list(8)
+
+    # ── Construir prompt con datos reales de la BD ──
+    presupuesto_texto = {
+        "bajo": "menos de $1,500 MXN por día por persona",
+        "medio": "$1,500–3,000 MXN por día por persona",
+        "alto": "más de $3,000 MXN por día por persona"
+    }.get(req.presupuesto, "moderado")
     intereses_texto = ", ".join(req.intereses) if req.intereses else "general"
-    lugares_texto = "\n".join([
-        f"- {l['nombre']} ({l['tipo']}) · ${l.get('costo_min',0)}–${l.get('costo_max',0)} MXN · Rating: {l.get('calificacion','N/A')}"
+
+    lugares_txt = "\n".join([
+        f"  🏛️ {l['nombre']} ({l['tipo']}) · ${l.get('costo_min',0)}–${l.get('costo_max',0)} MXN · ⭐{l.get('calificacion','N/A')} · {l.get('horarios','')}"
         for l in lugares
-    ])
+    ]) or "  (Sin lugares registrados en esta región)"
 
-    prompt = f"""Crea un itinerario turístico detallado para la región de {req.region.upper()} en Veracruz, México.
+    hoteles_txt = "\n".join([
+        f"  🏨 {h['nombre']} · ⭐{h.get('calificacion_promedio','N/A')} · {h.get('horarios','')} · {h.get('direccion','')}"
+        for h in hoteles
+    ]) or "  (Sin hoteles verificados registrados)"
 
-PARÁMETROS DEL VIAJERO:
+    restaurantes_txt = "\n".join([
+        f"  🍽️ {r['nombre']} · ⭐{r.get('calificacion_promedio','N/A')} · {r.get('horarios','')} · {r.get('direccion','')}"
+        for r in restaurantes
+    ]) or "  (Sin restaurantes verificados registrados)"
+
+    ruta_info = ""
+    if ruta:
+        ruta_info = f"""
+INFORMACIÓN DE LA RUTA:
+- Nombre: {ruta.get('nombre','')}
+- Duración recomendada: {ruta.get('dias_recomendados','')} días
+- Costo estimado: ${ruta.get('costo_estimado_min','')}–${ruta.get('costo_estimado_max','')} MXN por persona
+- Mejor época: {ruta.get('mejor_epoca','')}
+- Cómo llegar: {ruta.get('como_llegar','')}"""
+
+    prompt = f"""Eres el asistente oficial de turismo de Veracruz Contigo. Crea un itinerario DETALLADO y PERSONALIZADO para la región de {req.region.upper()}, Veracruz, México.
+
+PERFIL DEL VIAJERO:
 - Días disponibles: {req.dias}
 - Número de personas: {req.num_personas}
 - Presupuesto: {presupuesto_texto}
 - Intereses: {intereses_texto}
+{ruta_info}
 
-LUGARES DISPONIBLES EN LA REGIÓN:
-{lugares_texto}
+ATRACCIONES Y ACTIVIDADES (datos reales de la plataforma):
+{lugares_txt}
+
+HOSPEDAJE VERIFICADO EN LA REGIÓN:
+{hoteles_txt}
+
+GASTRONOMÍA VERIFICADA EN LA REGIÓN:
+{restaurantes_txt}
 
 INSTRUCCIONES:
-- Organiza el itinerario día por día (Día 1, Día 2, etc.)
-- Para cada día incluye: mañana, tarde y noche
-- Incluye estimados de costo por persona
-- Sugiere dónde comer en cada día con precio aproximado
-- Incluye tips de transporte entre lugares
-- Calcula el costo total aproximado del viaje
-- Sé específico con horarios (ej: "9:00 AM: Llegar al Palacio de Hierro")
-- Responde en español, con un tono amigable y entusiasta
-- Formato: usa emojis para hacer más visual el itinerario"""
+- Organiza DÍA POR DÍA con horarios específicos (ej: "9:00 AM 🏛️ Visitar el Palacio de Hierro")
+- Cada día DEBE incluir: desayuno, actividad mañana, comida, actividad tarde, cena y hospedaje
+- Usa SOLO los lugares, hoteles y restaurantes listados arriba
+- Incluye el costo estimado por persona en cada actividad
+- Calcula el COSTO TOTAL del viaje al final
+- Agrega tips de transporte entre lugares
+- Adapta el plan al presupuesto e intereses indicados
+- Usa emojis para hacer el itinerario visual y atractivo
+- Responde en español con tono amigable y entusiasta
+- Al final: qué empacar, mejor época y consejos locales"""
 
     import asyncio
     from groq import Groq
 
-    def call_gemini_itinerario():
+    def call_groq():
         client = Groq(api_key=GROQ_API_KEY)
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "Eres un experto guía turístico de Veracruz, México. Creas itinerarios detallados, prácticos y emocionantes."},
+                {"role": "system", "content": "Eres el guía turístico oficial de Veracruz Contigo. Conoces perfectamente cada rincón del estado y creas itinerarios detallados usando únicamente datos reales verificados de la plataforma."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=2000,
+            max_tokens=3000,
+            temperature=0.7,
         )
         return completion.choices[0].message.content
 
     loop = asyncio.get_event_loop()
-    itinerario_text = await loop.run_in_executor(None, call_gemini_itinerario)
+    itinerario_text = await loop.run_in_executor(None, call_groq)
 
     return {
         "itinerario": itinerario_text,
@@ -3677,6 +3704,9 @@ INSTRUCCIONES:
         "presupuesto": req.presupuesto,
         "ruta_info": ruta,
         "paquete_info": paquete,
+        "lugares_count": len(lugares),
+        "hoteles_count": len(hoteles),
+        "restaurantes_count": len(restaurantes),
     }
 
 
@@ -3921,8 +3951,7 @@ async def create_reserva(data: ReservaCreate, current_user: dict = Depends(get_c
                 f"Responde a esta reserva en tu panel: https://veracruz-amor.vercel.app/prestador-panel"
             )
             # Guardar el link de WhatsApp en la reserva para referencia
-            msg_enc = mensaje.replace(' ', '%20').replace('\n', '%0A').replace('*', '')
-            wa_link = f"https://wa.me/{wa_num}?text={msg_enc}"
+            wa_link = f"https://wa.me/{wa_num}?text={mensaje.replace(' ', '%20').replace('\n', '%0A').replace('*', '')}"
             await db.reservas.update_one(
                 {"id": reserva["id"]},
                 {"$set": {"whatsapp_notif_link": wa_link, "prestador_whatsapp": prestador.get("whatsapp")}}
