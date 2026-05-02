@@ -3951,7 +3951,8 @@ async def create_reserva(data: ReservaCreate, current_user: dict = Depends(get_c
                 f"Responde a esta reserva en tu panel: https://veracruz-amor.vercel.app/prestador-panel"
             )
             # Guardar el link de WhatsApp en la reserva para referencia
-            wa_link = f"https://wa.me/{wa_num}?text={mensaje.replace(' ', '%20').replace('\n', '%0A').replace('*', '')}"
+            mensaje_encoded = mensaje.replace(' ', '%20').replace('\n', '%0A').replace('*', '')
+            wa_link = f"https://wa.me/{wa_num}?text={mensaje_encoded}"
             await db.reservas.update_one(
                 {"id": reserva["id"]},
                 {"$set": {"whatsapp_notif_link": wa_link, "prestador_whatsapp": prestador.get("whatsapp")}}
