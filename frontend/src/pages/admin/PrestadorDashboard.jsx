@@ -75,12 +75,12 @@ const MOMENTOS = ["Desayuno","Brunch","Comida","Cena","Antojos nocturnos"];
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
 const TIPOS_PRESTADOR = {
-  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
-  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
-  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
-  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
-  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
-  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","promociones","resenas","mensajes","analiticas"] },
+  HOSPEDAJE:    { label: "Hospedaje",    tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
+  HOTEL:        { label: "Hotel",        tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
+  HOSTAL:       { label: "Hostal",       tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
+  CABANA:       { label: "Cabaña",       tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
+  GLAMPING:     { label: "Glamping",     tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
+  POSADA:       { label: "Posada",       tabs: ["perfil","galeria","habitaciones","reservas","checkin","limpieza","tarifas","cupones","promociones","ingresos","resenas","mensajes","analiticas"] },
   GASTRONOMÍA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
   GASTRONOMIA:  { label: "Restaurante",  tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
   CAFETERÍA:    { label: "Cafetería",    tabs: ["perfil","galeria","menu","reservas","promociones","resenas","mensajes","analiticas"] },
@@ -97,9 +97,11 @@ const TIPOS_PRESTADOR = {
 
 const TAB_LABELS = {
   perfil: "Perfil", galeria: "Galería", servicios: "Servicios",
-  reservas: "Reservas", menu: "Menú", habitaciones: "Habitaciones",
+  reservas: "Reservas", menu: "Menú", habitaciones: "🛏 Habitaciones",
   flota: "Flota", promociones: "Promociones", resenas: "Reseñas",
   mensajes: "💬 Mensajes", analiticas: "Analíticas",
+  checkin: "🔑 Check-in", tarifas: "💰 Tarifas", limpieza: "🧹 Limpieza",
+  ingresos: "📊 Ingresos", cupones: "🎁 Cupones",
 };
 
 const esAlimentos = (tipo) => TIPOS_ALIMENTOS.includes(norm(tipo));
@@ -2583,6 +2585,688 @@ const ModuloMensajes = ({ prestadorId, prestadorNombre }) => {
   );
 };
 
+// ══════════════════════════════════════════════════════════════
+// MÓDULO CHECK-IN / CHECK-OUT DIGITAL CON QR
+// ══════════════════════════════════════════════════════════════
+const ModuloCheckin = ({ prestadorId }) => {
+  const [reservas,  setReservas]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [qrModal,   setQrModal]   = useState(null); // reserva seleccionada para QR
+
+  useEffect(() => {
+    axios.get(`${API}/prestadores/${prestadorId}/reservas`, { params: { limit: 100 } })
+      .then(r => setReservas(r.data.reservas || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [prestadorId]);
+
+  const confirmarReserva = async (reserva) => {
+    try {
+      await axios.put(`${API}/reservas/${reserva.id}/estado`, { estado: "aceptada" });
+      setReservas(prev => prev.map(r => r.id === reserva.id ? { ...r, estado: "aceptada" } : r));
+      toast.success("✅ Reserva confirmada — QR generado");
+      // Notificar al turista por WhatsApp
+      try {
+        const { data } = await axios.post(`${API}/reservas/${reserva.id}/notificar-whatsapp`);
+        if (data.whatsapp_url) window.open(data.whatsapp_url, "_blank");
+      } catch {}
+    } catch { toast.error("Error al confirmar"); }
+  };
+
+  const registrarCheckin = async (id) => {
+    try {
+      await axios.put(`${API}/reservas/${id}/checkin`);
+      setReservas(prev => prev.map(r => r.id === id ? { ...r, checkin_at: new Date().toISOString(), estado: "en_curso" } : r));
+      toast.success("🔑 Check-in registrado");
+    } catch { toast.error("Error al registrar check-in"); }
+  };
+
+  const registrarCheckout = async (id) => {
+    try {
+      await axios.put(`${API}/reservas/${id}/checkout`);
+      setReservas(prev => prev.map(r => r.id === id ? { ...r, checkout_at: new Date().toISOString(), estado: "completada" } : r));
+      toast.success("👋 Check-out registrado");
+    } catch { toast.error("Error al registrar check-out"); }
+  };
+
+  const hoy = new Date().toISOString().split("T")[0];
+  const llegandoHoy  = reservas.filter(r => r.fecha_reserva === hoy && r.estado === "aceptada");
+  const enCasa       = reservas.filter(r => r.estado === "en_curso");
+  const saliendoHoy  = reservas.filter(r => r.fecha_salida === hoy && r.estado === "en_curso");
+  const pendientes   = reservas.filter(r => r.estado === "pendiente");
+
+  const QRCode = ({ texto, size = 150 }) => {
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(texto)}`;
+    return <img src={url} alt="QR" className="rounded-xl border border-gray-200" width={size} height={size} />;
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Llegando hoy",  value: llegandoHoy.length,  color: "bg-blue-50 text-blue-700",   emoji: "🛬" },
+          { label: "En casa",       value: enCasa.length,       color: "bg-green-50 text-green-700", emoji: "🏠" },
+          { label: "Saliendo hoy",  value: saliendoHoy.length,  color: "bg-amber-50 text-amber-700", emoji: "🛫" },
+          { label: "Por confirmar", value: pendientes.length,   color: "bg-red-50 text-red-700",     emoji: "⏳" },
+        ].map(s => (
+          <div key={s.label} className={`rounded-2xl p-4 ${s.color} border border-current/10`}>
+            <p className="text-2xl">{s.emoji}</p>
+            <p className="text-3xl font-black mt-1">{s.value}</p>
+            <p className="text-xs font-semibold mt-0.5 opacity-70">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pendientes de confirmar */}
+      {pendientes.length > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5">
+          <h3 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+            {pendientes.length} reserva{pendientes.length !== 1 ? "s" : ""} esperando confirmación
+          </h3>
+          <div className="space-y-2">
+            {pendientes.map(r => (
+              <div key={r.id} className="bg-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-amber-100">
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{r.turista_nombre || "Turista"}</p>
+                  <p className="text-xs text-gray-500">📅 {r.fecha_reserva}{r.fecha_salida ? ` → ${r.fecha_salida}` : ""} · {r.num_personas} persona{r.num_personas !== 1 ? "s" : ""}</p>
+                  {r.nota_turista && <p className="text-xs text-gray-400 italic mt-0.5">"{r.nota_turista}"</p>}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => confirmarReserva(r)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition-colors">
+                    <CheckCircle className="w-3.5 h-3.5" /> Confirmar + WhatsApp
+                  </button>
+                  <button onClick={() => { axios.put(`${API}/reservas/${r.id}/estado`, { estado: "cancelada" }); setReservas(prev => prev.filter(x => x.id !== r.id)); }}
+                    className="px-3 py-2 border border-red-200 text-red-500 rounded-xl text-xs font-bold hover:bg-red-50 transition-colors">
+                    Rechazar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Check-in hoy */}
+      {llegandoHoy.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <h3 className="font-bold text-gray-900 mb-3">🛬 Llegando hoy</h3>
+          <div className="space-y-2">
+            {llegandoHoy.map(r => (
+              <div key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{r.turista_nombre}</p>
+                  <p className="text-xs text-gray-500">Salida: {r.fecha_salida} · {r.num_personas} persona{r.num_personas !== 1 ? "s" : ""}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setQrModal(r)}
+                    className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors">
+                    📱 Ver QR
+                  </button>
+                  <button onClick={() => registrarCheckin(r.id)}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-colors">
+                    🔑 Registrar Check-in
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* En casa */}
+      {enCasa.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <h3 className="font-bold text-gray-900 mb-3">🏠 Huéspedes activos</h3>
+          <div className="space-y-2">
+            {enCasa.map(r => (
+              <div key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{r.turista_nombre}</p>
+                  <p className="text-xs text-gray-500">
+                    Check-in: {r.checkin_at ? new Date(r.checkin_at).toLocaleString("es-MX") : r.fecha_reserva} · Salida: {r.fecha_salida}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {r.fecha_salida === hoy && (
+                    <button onClick={() => registrarCheckout(r.id)}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-colors">
+                      👋 Check-out
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR */}
+      {qrModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setQrModal(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-gray-900 mb-1">QR de Check-in</h3>
+            <p className="text-xs text-gray-500 mb-4">Muestra este código al turista para registrar su llegada</p>
+            <div className="flex justify-center mb-4">
+              <QRCode texto={`${window.location.origin}/checkin/${qrModal.id}`} size={200} />
+            </div>
+            <p className="text-xs text-center text-gray-400 mb-4">Reserva #{qrModal.id.slice(-8).toUpperCase()}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => registrarCheckin(qrModal.id)}
+                className="py-2.5 bg-[#1B5E20] text-white rounded-xl text-xs font-bold hover:bg-[#145218]">
+                🔑 Check-in manual
+              </button>
+              <button onClick={() => setQrModal(null)}
+                className="py-2.5 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+// MÓDULO LIMPIEZA
+// ══════════════════════════════════════════════════════════════
+const ESTADOS_LIMPIEZA = {
+  lista:      { label: "Lista",       color: "bg-green-500",  emoji: "✅" },
+  limpiando:  { label: "En limpieza", color: "bg-amber-500",  emoji: "🧹" },
+  ocupada:    { label: "Ocupada",     color: "bg-blue-500",   emoji: "🛏" },
+  mantenimiento: { label: "Mantenimiento", color: "bg-red-500", emoji: "🔧" },
+};
+
+const ModuloLimpieza = ({ prestadorId }) => {
+  const [habitaciones, setHabs]    = useState([]);
+  const [loading,      setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API}/prestadores/${prestadorId}/habitaciones`)
+      .then(r => setHabs((r.data.habitaciones || []).map(h => ({
+        ...h, estado_limpieza: h.estado_limpieza || "lista",
+      }))))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [prestadorId]);
+
+  const cambiarEstado = async (habId, nuevoEstado) => {
+    try {
+      await axios.put(`${API}/habitaciones/${habId}`, { estado_limpieza: nuevoEstado });
+      setHabs(prev => prev.map(h => h.id === habId ? { ...h, estado_limpieza: nuevoEstado } : h));
+      toast.success(`Habitación marcada como ${ESTADOS_LIMPIEZA[nuevoEstado].label}`);
+    } catch { toast.error("Error al actualizar"); }
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">🧹 Control de Limpieza</h2>
+        <div className="flex gap-2 text-xs">
+          {Object.entries(ESTADOS_LIMPIEZA).map(([k, v]) => (
+            <span key={k} className="flex items-center gap-1 text-gray-500">{v.emoji} {v.label}</span>
+          ))}
+        </div>
+      </div>
+
+      {habitaciones.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-400">
+          <p className="text-4xl mb-2">🛏</p>
+          <p>Sin habitaciones registradas</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {habitaciones.map(h => {
+            const est = ESTADOS_LIMPIEZA[h.estado_limpieza] || ESTADOS_LIMPIEZA.lista;
+            return (
+              <div key={h.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className={`h-2 ${est.color}`} />
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-gray-900">{h.nombre}</h3>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full text-white ${est.color}`}>
+                      {est.emoji} {est.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">{h.capacidad} personas · ${h.precio_noche?.toLocaleString()}/noche</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(ESTADOS_LIMPIEZA).map(([k, v]) => (
+                      <button key={k} onClick={() => cambiarEstado(h.id, k)}
+                        disabled={h.estado_limpieza === k}
+                        className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                          h.estado_limpieza === k
+                            ? `${v.color} text-white border-transparent opacity-80`
+                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                        }`}>
+                        {v.emoji} {v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+// MÓDULO TARIFAS POR TEMPORADA
+// ══════════════════════════════════════════════════════════════
+const ModuloTarifas = ({ prestadorId }) => {
+  const [habitaciones, setHabs]    = useState([]);
+  const [tarifas,      setTarifas] = useState([]);
+  const [loading,      setLoading] = useState(true);
+  const [saving,       setSaving]  = useState(false);
+  const [showForm,     setShowForm]= useState(false);
+  const emptyTarifa = { nombre: "", fecha_inicio: "", fecha_fin: "", multiplicador: "1.5", habitacion_ids: [] };
+  const [form, setForm] = useState(emptyTarifa);
+
+  useEffect(() => {
+    Promise.all([
+      axios.get(`${API}/prestadores/${prestadorId}/habitaciones`),
+      axios.get(`${API}/prestadores/${prestadorId}/tarifas`).catch(() => ({ data: { tarifas: [] } })),
+    ]).then(([habRes, tarRes]) => {
+      setHabs(habRes.data.habitaciones || []);
+      setTarifas(tarRes.data.tarifas || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, [prestadorId]);
+
+  const saveTarifa = async () => {
+    if (!form.nombre || !form.fecha_inicio || !form.fecha_fin) return toast.error("Completa todos los campos");
+    setSaving(true);
+    try {
+      const { data } = await axios.post(`${API}/prestadores/${prestadorId}/tarifas`, form);
+      setTarifas(prev => [...prev, data]);
+      setShowForm(false); setForm(emptyTarifa);
+      toast.success("✅ Tarifa de temporada creada");
+    } catch { toast.error("Error al guardar"); }
+    finally { setSaving(false); }
+  };
+
+  const deleteTarifa = async (id) => {
+    if (!confirm("¿Eliminar esta tarifa?")) return;
+    await axios.delete(`${API}/prestadores/${prestadorId}/tarifas/${id}`).catch(() => {});
+    setTarifas(prev => prev.filter(t => t.id !== id));
+    toast.success("Tarifa eliminada");
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">💰 Tarifas por Temporada</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Ajusta precios en puentes, vacaciones y temporada alta</p>
+        </div>
+        <button onClick={() => setShowForm(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#1B5E20] text-white rounded-xl text-sm font-bold hover:bg-[#145218]">
+          <Plus className="w-4 h-4" /> Nueva tarifa
+        </button>
+      </div>
+
+      {tarifas.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 text-gray-400">
+          <p className="text-4xl mb-2">💰</p>
+          <p className="font-medium text-gray-600">Sin tarifas especiales</p>
+          <p className="text-sm mt-1">Las tarifas aplican automáticamente en las fechas indicadas</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {tarifas.map(t => (
+            <div key={t.id} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="font-bold text-gray-900">{t.nombre}</p>
+                <p className="text-xs text-gray-500 mt-0.5">📅 {t.fecha_inicio} → {t.fecha_fin}</p>
+                <p className="text-xs font-semibold text-[#1B5E20] mt-1">
+                  × {t.multiplicador} sobre precio base ({Math.round((t.multiplicador - 1) * 100)}% más)
+                </p>
+                {t.habitacion_ids?.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Aplica a {t.habitacion_ids.length} habitación{t.habitacion_ids.length !== 1 ? "es" : ""}
+                  </p>
+                )}
+              </div>
+              <button onClick={() => deleteTarifa(t.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Form nueva tarifa */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-gray-900">Nueva tarifa de temporada</h3>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre de la temporada</label>
+              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]"
+                placeholder="Ej: Semana Santa, Puente Nov, Navidad..." />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha inicio</label>
+                <input type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))}
+                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha fin</label>
+                <input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))}
+                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Multiplicador de precio (1.5 = 50% más caro)
+              </label>
+              <input type="number" step="0.1" min="1" max="5" value={form.multiplicador}
+                onChange={e => setForm(f => ({ ...f, multiplicador: e.target.value }))}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+              <p className="text-xs text-gray-400 mt-1">
+                Con ×{form.multiplicador}: habitación de $1,000 costaría ${Math.round(1000 * parseFloat(form.multiplicador || 1)).toLocaleString()}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">Cancelar</button>
+              <button onClick={saveTarifa} disabled={saving} className="flex-1 py-2.5 bg-[#1B5E20] text-white rounded-xl text-sm font-bold hover:bg-[#145218] disabled:opacity-50">
+                {saving ? "Guardando..." : "Crear tarifa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+// MÓDULO INGRESOS
+// ══════════════════════════════════════════════════════════════
+const ModuloIngresos = ({ prestadorId }) => {
+  const [reservas,  setReservas]  = useState([]);
+  const [habs,      setHabs]      = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [mes,       setMes]       = useState(new Date().getMonth());
+  const [año,       setAño]       = useState(new Date().getFullYear());
+  const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+  useEffect(() => {
+    Promise.all([
+      axios.get(`${API}/prestadores/${prestadorId}/reservas`, { params: { limit: 500 } }),
+      axios.get(`${API}/prestadores/${prestadorId}/habitaciones`),
+    ]).then(([rRes, hRes]) => {
+      setReservas(rRes.data.reservas || []);
+      setHabs(hRes.data.habitaciones || []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, [prestadorId]);
+
+  const reservasMes = reservas.filter(r => {
+    const f = new Date(r.fecha_reserva + "T12:00:00");
+    return f.getMonth() === mes && f.getFullYear() === año && r.estado !== "cancelada";
+  });
+
+  const calcIngreso = (r) => {
+    const hab = habs.find(h => h.id === r.habitacion_id || h.id === r.servicio_id);
+    if (!hab) return 0;
+    const noches = r.fecha_salida
+      ? Math.max(1, Math.round((new Date(r.fecha_salida) - new Date(r.fecha_reserva)) / 86400000))
+      : 1;
+    return hab.precio_noche * noches;
+  };
+
+  const totalMes    = reservasMes.reduce((s, r) => s + calcIngreso(r), 0);
+  const completadas = reservasMes.filter(r => r.estado === "completada").length;
+  const enCurso     = reservasMes.filter(r => r.estado === "en_curso").length;
+
+  // Ingresos por habitación
+  const ingresosPorHab = habs.map(h => ({
+    ...h,
+    total: reservasMes.filter(r => r.habitacion_id === h.id || r.servicio_id === h.id).reduce((s, r) => s + calcIngreso(r), 0),
+    reservas: reservasMes.filter(r => r.habitacion_id === h.id || r.servicio_id === h.id).length,
+  })).sort((a, b) => b.total - a.total);
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-gray-900">📊 Reporte de Ingresos</h2>
+        <div className="flex items-center gap-2">
+          <button onClick={() => { if (mes === 0) { setMes(11); setAño(y => y-1); } else setMes(m => m-1); }}
+            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50">‹</button>
+          <span className="font-bold text-gray-900 text-sm min-w-[80px] text-center">{MESES[mes]} {año}</span>
+          <button onClick={() => { if (mes === 11) { setMes(0); setAño(y => y+1); } else setMes(m => m+1); }}
+            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50">›</button>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-5 text-white col-span-2 sm:col-span-1">
+          <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Ingresos del mes</p>
+          <p className="text-3xl font-black mt-1">${totalMes.toLocaleString()}</p>
+          <p className="text-white/60 text-xs mt-1">MXN</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">Reservas</p>
+          <p className="text-3xl font-black mt-1 text-gray-900">{reservasMes.length}</p>
+          <p className="text-xs text-gray-400 mt-1">{completadas} completadas</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">Promedio/reserva</p>
+          <p className="text-3xl font-black mt-1 text-gray-900">
+            ${reservasMes.length > 0 ? Math.round(totalMes / reservasMes.length).toLocaleString() : 0}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">MXN por reserva</p>
+        </div>
+      </div>
+
+      {/* Por habitación */}
+      {ingresosPorHab.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Ingresos por habitación</h3>
+          <div className="space-y-3">
+            {ingresosPorHab.map(h => (
+              <div key={h.id} className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{h.nombre}</p>
+                    <p className="text-sm font-black text-[#1B5E20] flex-shrink-0 ml-2">${h.total.toLocaleString()}</p>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#1B5E20] rounded-full transition-all"
+                      style={{ width: totalMes > 0 ? `${Math.round(h.total / totalMes * 100)}%` : "0%" }} />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">{h.reservas} reserva{h.reservas !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lista de reservas */}
+      {reservasMes.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-2xl border border-gray-100 text-gray-400">
+          <p>Sin reservas en {MESES[mes]} {año}</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 grid grid-cols-4 text-xs font-bold text-gray-400 uppercase">
+            <span>Turista</span><span>Fechas</span><span>Habitación</span><span className="text-right">Ingreso</span>
+          </div>
+          {reservasMes.map(r => {
+            const hab = habs.find(h => h.id === r.habitacion_id || h.id === r.servicio_id);
+            return (
+              <div key={r.id} className="px-5 py-3 border-b border-gray-50 last:border-0 grid grid-cols-4 text-sm items-center">
+                <span className="font-semibold text-gray-800 truncate">{r.turista_nombre || "—"}</span>
+                <span className="text-xs text-gray-500">{r.fecha_reserva}{r.fecha_salida ? `→${r.fecha_salida}` : ""}</span>
+                <span className="text-xs text-gray-500 truncate">{hab?.nombre || "—"}</span>
+                <span className="text-right font-black text-[#1B5E20]">${calcIngreso(r).toLocaleString()}</span>
+              </div>
+            );
+          })}
+          <div className="px-5 py-3 bg-green-50 flex items-center justify-between">
+            <span className="font-bold text-gray-900 text-sm">Total {MESES[mes]}</span>
+            <span className="font-black text-[#1B5E20] text-lg">${totalMes.toLocaleString()} MXN</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════
+// MÓDULO CUPONES Y DESCUENTOS
+// ══════════════════════════════════════════════════════════════
+const ModuloCupones = ({ prestadorId }) => {
+  const [cupones,  setCupones]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [saving,   setSaving]   = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const empty = { codigo: "", descuento_pct: 10, max_usos: 10, fecha_fin: "", descripcion: "" };
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => {
+    axios.get(`${API}/prestadores/${prestadorId}/cupones`).catch(() => ({ data: { cupones: [] } }))
+      .then(r => setCupones(r.data.cupones || [])).finally(() => setLoading(false));
+  }, [prestadorId]);
+
+  const generarCodigo = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  };
+
+  const saveCupon = async () => {
+    if (!form.codigo || !form.descuento_pct) return toast.error("Código y descuento son obligatorios");
+    setSaving(true);
+    try {
+      const { data } = await axios.post(`${API}/prestadores/${prestadorId}/cupones`, form);
+      setCupones(prev => [...prev, data]);
+      setShowForm(false); setForm(empty);
+      toast.success("🎁 Cupón creado");
+    } catch { toast.error("Error al crear cupón"); }
+    finally { setSaving(false); }
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-gray-300" /></div>;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">🎁 Cupones y Descuentos</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Crea códigos que los turistas aplican al reservar</p>
+        </div>
+        <button onClick={() => { setForm({ ...empty, codigo: generarCodigo() }); setShowForm(true); }}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#1B5E20] text-white rounded-xl text-sm font-bold hover:bg-[#145218]">
+          <Plus className="w-4 h-4" /> Nuevo cupón
+        </button>
+      </div>
+
+      {cupones.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 text-gray-400">
+          <p className="text-4xl mb-2">🎁</p>
+          <p className="font-medium text-gray-600">Sin cupones activos</p>
+          <p className="text-sm mt-1">Crea descuentos para atraer más turistas</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {cupones.map(c => (
+            <div key={c.id} className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="relative">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-black text-2xl text-[#1B5E20]">{c.descuento_pct}% OFF</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{c.descripcion || "Descuento especial"}</p>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${c.activo ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    {c.activo ? "Activo" : "Inactivo"}
+                  </span>
+                </div>
+                <div className="bg-gray-50 rounded-xl px-4 py-2.5 flex items-center justify-between">
+                  <p className="font-mono font-black text-gray-900 tracking-widest text-lg">{c.codigo}</p>
+                  <button onClick={() => { navigator.clipboard.writeText(c.codigo); toast.success("Código copiado"); }}
+                    className="text-xs text-blue-500 hover:underline font-semibold">Copiar</button>
+                </div>
+                <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
+                  <span>Usos: {c.usos_actuales || 0}/{c.max_usos}</span>
+                  {c.fecha_fin && <span>Expira: {c.fecha_fin}</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-gray-900">Nuevo cupón de descuento</h3>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Código</label>
+              <div className="flex gap-2 mt-1">
+                <input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value.toUpperCase() }))}
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-[#1B5E20]"
+                  placeholder="VERANO25" />
+                <button onClick={() => setForm(f => ({ ...f, codigo: generarCodigo() }))}
+                  className="px-3 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50">
+                  🎲 Generar
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Descuento %</label>
+                <input type="number" min="1" max="100" value={form.descuento_pct}
+                  onChange={e => setForm(f => ({ ...f, descuento_pct: e.target.value }))}
+                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Máx. usos</label>
+                <input type="number" min="1" value={form.max_usos}
+                  onChange={e => setForm(f => ({ ...f, max_usos: e.target.value }))}
+                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fecha de expiración</label>
+              <input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción</label>
+              <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
+                className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#1B5E20]"
+                placeholder="Descuento de temporada baja..." />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">Cancelar</button>
+              <button onClick={saveCupon} disabled={saving} className="flex-1 py-2.5 bg-[#1B5E20] text-white rounded-xl text-sm font-bold hover:bg-[#145218] disabled:opacity-50">
+                {saving ? "Creando..." : "Crear cupón"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ModuloAnaliticas = ({ prestadorId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2763,6 +3447,11 @@ const PrestadorDashboard = () => {
           </div>
         )}
         {tab === "mensajes"     && <ModuloMensajes prestadorId={prestador.id} prestadorNombre={prestador.nombre} />}
+        {tab === "checkin"      && <ModuloCheckin  prestadorId={prestador.id} />}
+        {tab === "limpieza"     && <ModuloLimpieza prestadorId={prestador.id} />}
+        {tab === "tarifas"      && <ModuloTarifas  prestadorId={prestador.id} />}
+        {tab === "ingresos"     && <ModuloIngresos prestadorId={prestador.id} />}
+        {tab === "cupones"      && <ModuloCupones  prestadorId={prestador.id} />}
         {tab === "analiticas"   && <ModuloAnaliticas prestadorId={prestador.id} />}
       </main>
     </div>
